@@ -70,12 +70,11 @@
                 Actual</label>
             <select name="available"
                 style="width: 100%; padding: 12px 16px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface-strong); color: var(--text); outline: none;">
-                <option value="Disponible hoy" {% if professional.available=="Disponible hoy" %}selected{% endif %}>
+                <option value="Disponible hoy" {% if professional.available == "Disponible hoy" %}selected{% endif %}>
                     Disponible hoy</option>
-                <option value="Agenda abierta" {% if professional.available=="Agenda abierta" %}selected{% endif %}>
+                <option value="Agenda abierta" {% if professional.available == "Agenda abierta" %}selected{% endif %}>
                     Agenda abierta</option>
-                <option value="No disponible temporalmente" {% if professional.available=="No disponible temporalmente"
-                    %}selected{% endif %}>No disponible temporalmente</option>
+                <option value="No disponible temporalmente" {% if professional.available == "No disponible temporalmente" %}selected{% endif %}>No disponible temporalmente</option>
             </select>
         </div>
 
@@ -155,8 +154,7 @@
                 <input type="hidden" name="job_id" value="{{ job.id }}">
                 <button type="submit"
                     class="{% if professional.credits == 0 %}secondary-button{% else %}primary-button{% endif %}"
-                    style="padding: 0 16px; min-height: 40px; font-size: 13px;" {% if professional.credits==0
-                    %}disabled{% endif %}>
+                    style="padding: 0 16px; min-height: 40px; font-size: 13px;" {% if professional.credits == 0 %}disabled{% endif %}>
                     Aceptar
                 </button>
             </form>
