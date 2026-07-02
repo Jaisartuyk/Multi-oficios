@@ -1,0 +1,233 @@
+{% load static %}
+<!doctype html>
+<html lang="es" data-theme="light">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#0b2f4f">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="ObraYa">
+    <meta name="description" content="Conecta con maestros de confianza para construcción, pintura, plomería y más en Ecuador.">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="{% static 'img/icon-192.png' %}">
+    <title>{% block title %}ObraYa{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}?v=20260702-1">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" defer></script>
+    <script src="{% static 'js/app.js' %}?v=20260702-1" defer></script>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div class="app-shell">
+        <header class="topbar">
+            <a class="brand" href="{% if user.is_authenticated %}{% url 'dashboard_redirect' %}{% else %}{% url 'login' %}{% endif %}" aria-label="ObraYa inicio">
+                <span class="brand-mark">OY</span>
+                <span>
+                    <strong>ObraYa</strong>
+                    <small>Confianza para construir</small>
+                </span>
+            </a>
+            <div style="display: flex; gap: 8px; align-items: center;">
+                {% if user.is_authenticated %}
+                    <!-- Notification Bell -->
+                    <button class="icon-button" type="button" id="notif-bell" aria-label="Notificaciones" title="Notificaciones" style="position: relative;">
+                        <i data-lucide="bell"></i>
+                        <span id="notif-badge" style="display: none; position: absolute; top: 4px; right: 4px; width: 10px; height: 10px; background: #dc3545; border-radius: 50%; border: 2px solid var(--surface);"></span>
+                    </button>
+                    <a href="{% url 'logout' %}" class="icon-button" style="text-decoration: none;" aria-label="Cerrar sesión" title="Cerrar sesión">
+                        <i data-lucide="log-out"></i>
+                    </a>
+                {% else %}
+                    <a href="{% url 'login' %}" class="icon-button" style="text-decoration: none;" aria-label="Iniciar sesión" title="Iniciar sesión">
+                        <i data-lucide="user"></i>
+                    </a>
+                {% endif %}
+                <button class="icon-button" type="button" data-theme-toggle aria-label="Cambiar tema">
+                    <i data-lucide="moon"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Notification Panel (hidden by default) -->
+        {% if user.is_authenticated %}
+        <div id="notif-panel" style="display: none; position: fixed; top: 60px; right: 8px; left: 8px; max-width: 400px; margin-left: auto; z-index: 100; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); padding: 12px; max-height: 400px; overflow-y: auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <strong style="font-size: 15px;">Notificaciones</strong>
+                <button type="button" id="notif-mark-all" style="background: none; border: none; color: var(--green); font-size: 12px; font-weight: 600; cursor: pointer;">Marcar todas leídas</button>
+            </div>
+            <div id="notif-list">
+                <p style="color: var(--muted); font-size: 13px; text-align: center; padding: 20px 0;">Sin notificaciones nuevas</p>
+            </div>
+        </div>
+        {% endif %}
+
+        <main>
+            {% if messages %}
+                <div style="padding: 10px 14px 0;">
+                {% for message in messages %}
+                    <div class="search-card" style="margin-top: 0; padding: 10px 14px; color: {% if message.tags == 'error' %}#dc3545{% else %}var(--green){% endif %};">
+                        <strong>{{ message }}</strong>
+                    </div>
+                {% endfor %}
+                </div>
+            {% endif %}
+            {% block content %}{% endblock %}
+        </main>
+
+        <nav class="bottom-nav" aria-label="Navegacion principal">
+            {% if user.is_authenticated %}
+                {% if user.is_superuser or user.profile.role == 'ADMIN' %}
+                    <a href="{% url 'admin_panel' %}" class="{% if request.resolver_match.url_name == 'admin_panel' %}active{% endif %}">
+                        <i data-lucide="bar-chart-3"></i>
+                        <span>Resumen</span>
+                    </a>
+                    <a href="{% url 'admin_users' %}" class="{% if request.resolver_match.url_name == 'admin_users' %}active{% endif %}">
+                        <i data-lucide="users"></i>
+                        <span>Usuarios</span>
+                    </a>
+                    <a href="{% url 'admin_add_professional' %}" class="{% if request.resolver_match.url_name == 'admin_add_professional' %}active{% endif %}">
+                        <i data-lucide="user-plus"></i>
+                        <span>Crear</span>
+                    </a>
+                {% elif user.profile.role == 'PROFESSIONAL' %}
+                    <a href="{% url 'professional_dashboard' %}#professional-profile" class="{% if request.resolver_match.url_name == 'professional_dashboard' %}active{% endif %}">
+                        <i data-lucide="user-round"></i>
+                        <span>Mi perfil</span>
+                    </a>
+                    <a href="{% url 'professional_dashboard' %}#job-market">
+                        <i data-lucide="briefcase-business"></i>
+                        <span>Bolsa</span>
+                    </a>
+                    <a href="{% url 'professional_dashboard' %}#my-jobs">
+                        <i data-lucide="clipboard-check"></i>
+                        <span>Trabajos</span>
+                    </a>
+                {% else %}
+                    <a href="{% url 'home' %}" class="{% if request.resolver_match.url_name == 'home' %}active{% endif %}">
+                        <i data-lucide="home"></i>
+                        <span>Inicio</span>
+                    </a>
+                    <a href="{% url 'estimator' %}" class="{% if request.resolver_match.url_name == 'estimator' %}active{% endif %}">
+                        <i data-lucide="sparkles"></i>
+                        <span>IA</span>
+                    </a>
+                    <a href="{% url 'client_dashboard' %}" class="{% if request.resolver_match.url_name == 'client_dashboard' %}active{% endif %}">
+                        <i data-lucide="layout-dashboard"></i>
+                        <span>Mi panel</span>
+                    </a>
+                {% endif %}
+            {% else %}
+                <a href="{% url 'login' %}" class="{% if request.resolver_match.url_name == 'login' %}active{% endif %}">
+                    <i data-lucide="log-in"></i>
+                    <span>Entrar</span>
+                </a>
+                <a href="{% url 'register' %}" class="{% if request.resolver_match.url_name == 'register' %}active{% endif %}">
+                    <i data-lucide="user-plus"></i>
+                    <span>Registro</span>
+                </a>
+                <a href="{% url 'login' %}">
+                    <i data-lucide="shield-check"></i>
+                    <span>ObraYa</span>
+                </a>
+            {% endif %}
+        </nav>
+    </div>
+
+    <script>
+    // === Service Worker Registration ===
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js', { scope: '/' })
+            .then(function(reg) { console.log('SW registrado', reg.scope); })
+            .catch(function(err) { console.log('SW error', err); });
+    }
+
+    {% if user.is_authenticated %}
+    // === Notification System ===
+    (function() {
+        const bell = document.getElementById('notif-bell');
+        const badge = document.getElementById('notif-badge');
+        const panel = document.getElementById('notif-panel');
+        const list = document.getElementById('notif-list');
+        const markAll = document.getElementById('notif-mark-all');
+        let panelOpen = false;
+
+        function fetchNotifs() {
+            fetch('/api/notifications/')
+                .then(r => r.json())
+                .then(data => {
+                    if (data.unread_count > 0) {
+                        badge.style.display = 'block';
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                    if (data.notifications.length === 0) {
+                        list.innerHTML = '<p style="color: var(--muted); font-size: 13px; text-align: center; padding: 20px 0;">Sin notificaciones nuevas</p>';
+                        return;
+                    }
+                    const icons = {
+                        'JOB_ACCEPTED': 'check-circle',
+                        'JOB_REOPENED': 'rotate-ccw',
+                        'NEW_JOB': 'briefcase',
+                        'CREDITS': 'coins',
+                        'SYSTEM': 'info'
+                    };
+                    list.innerHTML = data.notifications.map(n => `
+                        <a href="${n.link}" data-notif-id="${n.id}" style="display: flex; gap: 10px; padding: 10px; border-radius: 12px; background: var(--green-soft); margin-bottom: 6px; text-decoration: none; color: var(--text); align-items: flex-start; transition: opacity 0.2s;">
+                            <i data-lucide="${icons[n.type] || 'bell'}" style="min-width: 20px; color: var(--green);"></i>
+                            <div style="flex: 1; min-width: 0;">
+                                <strong style="font-size: 13px; display: block;">${n.title}</strong>
+                                <span style="font-size: 12px; color: var(--muted); display: block; margin-top: 2px;">${n.message}</span>
+                                <small style="font-size: 11px; color: var(--muted);">${n.created}</small>
+                            </div>
+                        </a>
+                    `).join('');
+                    if (window.lucide) window.lucide.createIcons();
+                })
+                .catch(() => {});
+        }
+
+        if (bell) {
+            bell.addEventListener('click', function(e) {
+                e.stopPropagation();
+                panelOpen = !panelOpen;
+                panel.style.display = panelOpen ? 'block' : 'none';
+                if (panelOpen) fetchNotifs();
+            });
+        }
+
+        if (markAll) {
+            markAll.addEventListener('click', function() {
+                fetch('/api/notifications/read/', {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': getCookie('csrftoken'), 'Content-Type': 'application/x-www-form-urlencoded' }
+                }).then(() => {
+                    badge.style.display = 'none';
+                    list.innerHTML = '<p style="color: var(--muted); font-size: 13px; text-align: center; padding: 20px 0;">Sin notificaciones nuevas</p>';
+                });
+            });
+        }
+
+        // Close panel on outside click
+        document.addEventListener('click', function(e) {
+            if (panel && panelOpen && !panel.contains(e.target) && e.target !== bell && !bell.contains(e.target)) {
+                panelOpen = false;
+                panel.style.display = 'none';
+            }
+        });
+
+        function getCookie(name) {
+            const v = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+            return v ? v.pop() : '';
+        }
+
+        // Poll every 30 seconds
+        fetchNotifs();
+        setInterval(fetchNotifs, 30000);
+    })();
+    {% endif %}
+    </script>
+</body>
+</html>

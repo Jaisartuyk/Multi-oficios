@@ -1,0 +1,26 @@
+{
+  "name": "ObraYa - Confianza para Construir",
+  "short_name": "ObraYa",
+  "description": "Conecta con maestros de confianza para tus proyectos de construcción, pintura, plomería y más.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f6f8fb",
+  "theme_color": "#0b2f4f",
+  "lang": "es",
+  "categories": ["business", "utilities"],
+  "icons": [
+    {
+      "src": "/static/img/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/static/img/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

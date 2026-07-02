@@ -1,0 +1,72 @@
+{% extends 'core/base.html' %}
+
+{% block title %}{{ title }} | ObraYa Admin{% endblock %}
+
+{% block content %}
+<section class="profile-hero">
+    <div class="profile-head">
+        <a href="{% url 'admin_users' %}" class="icon-button" style="text-decoration: none;" aria-label="Volver">
+            <i data-lucide="arrow-left"></i>
+        </a>
+        <div>
+            <h1>{{ title }}</h1>
+            <p>Formulario para registrar o editar datos del Profesional/Trabajador</p>
+        </div>
+    </div>
+</section>
+
+<div class="result-card">
+    <form method="post" class="estimate-form">
+        {% csrf_token %}
+        
+        <h3 style="margin-top: 0; margin-bottom: 15px; border-bottom: 1px solid var(--line); padding-bottom: 8px;">1. Datos de Cuenta (Usuario)</h3>
+        {% for field in form %}
+            {% if field.name == 'username' or field.name == 'email' or field.name == 'first_name' or field.name == 'last_name' or field.name == 'password' %}
+                <div style="margin-bottom: 12px;">
+                    <label for="{{ field.id_for_label }}" style="display: block; margin-bottom: 6px; color: var(--muted); font-weight: 700; font-size: 13px;">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}
+                        <small style="color: var(--muted); font-size: 11px; display: block; margin-top: 4px;">{{ field.help_text }}</small>
+                    {% endif %}
+                    {% if field.errors %}
+                        <span style="color: #dc3545; font-size: 12px;">{{ field.errors|striptags }}</span>
+                    {% endif %}
+                </div>
+            {% endif %}
+        {% endfor %}
+
+        <h3 style="margin-top: 25px; margin-bottom: 15px; border-bottom: 1px solid var(--line); padding-bottom: 8px;">2. Perfil Profesional y WhatsApp</h3>
+        {% for field in form %}
+            {% if field.name != 'username' and field.name != 'email' and field.name != 'first_name' and field.name != 'last_name' and field.name != 'password' %}
+                <div style="margin-bottom: 12px;">
+                    <label for="{{ field.id_for_label }}" style="display: block; margin-bottom: 6px; color: var(--muted); font-weight: 700; font-size: 13px;">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}
+                        <small style="color: var(--muted); font-size: 11px; display: block; margin-top: 4px;">{{ field.help_text }}</small>
+                    {% endif %}
+                    {% if field.errors %}
+                        <span style="color: #dc3545; font-size: 12px;">{{ field.errors|striptags }}</span>
+                    {% endif %}
+                </div>
+            {% endif %}
+        {% endfor %}
+
+        <button type="submit" class="primary-button" style="width: 100%; margin-top: 20px;">
+            <i data-lucide="save"></i> Guardar Profesional
+        </button>
+    </form>
+</div>
+
+<script>
+    // Aplicar estilos a los inputs del formulario
+    document.querySelectorAll('.estimate-form input, .estimate-form textarea').forEach(input => {
+        input.style.width = '100%';
+        input.style.padding = '12px 16px';
+        input.style.border = '1px solid var(--line)';
+        input.style.borderRadius = '16px';
+        input.style.background = 'var(--surface-strong)';
+        input.style.color = 'var(--text)';
+        input.style.outline = 'none';
+    });
+</script>
+{% endblock %}

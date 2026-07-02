@@ -1,0 +1,71 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Panel Administrativo | ObraYa{% endblock %}
+
+{% block content %}
+<section class="admin-hero">
+    <span class="eyebrow"><i data-lucide="activity"></i> Panel administrativo</span>
+    <h1>Operación y control de ObraYa en vivo.</h1>
+    <p>Gestiona usuarios, trabajos creados con IA, reportes y crecimiento desde tu dashboard moderno.</p>
+</section>
+
+<!-- Accesos directos rápidos -->
+<div class="hero-actions" style="grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 24px;">
+    <a class="primary-button" href="{% url 'admin_users' %}">
+        <i data-lucide="users"></i>
+        Gestionar Usuarios
+    </a>
+    <a class="secondary-button" href="{% url 'admin_add_professional' %}" style="background: var(--surface-strong); color: var(--text);">
+        <i data-lucide="user-plus"></i>
+        Nuevo Profesional
+    </a>
+</div>
+
+<section class="metric-grid">
+    <article>
+        <span>Clientes Registrados</span>
+        <strong>{{ clients_count }}</strong>
+        <small style="color: var(--blue);">Activos</small>
+    </article>
+    <article>
+        <span>Profesionales</span>
+        <strong>{{ pros_count }}</strong>
+        <small style="color: var(--green);">Verificados</small>
+    </article>
+</section>
+
+<section class="dashboard-panel">
+    <div class="panel-header">
+        <h2>Solicitudes Recientes de Clientes (IA)</h2>
+        <span>Últimas solicitudes</span>
+    </div>
+    {% if recent_jobs %}
+        <div class="pro-list" style="margin-top: 10px;">
+            {% for job in recent_jobs %}
+                <div class="pro-card" style="grid-template-columns: 1fr; cursor: default; background: var(--surface); border: 1px solid var(--line);">
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                            <strong style="font-size: 15px;">{{ job.title }}</strong>
+                            <span class="verified-review" style="font-size: 10px;">{{ job.get_status_display }}</span>
+                        </div>
+                        <p style="color: var(--muted); font-size: 12px; margin: 4px 0;">
+                            Cliente: <strong>{{ job.client.username }}</strong> 
+                            {% if job.professional %} | Profesional: <strong>{{ job.professional.name }}</strong>{% endif %}
+                        </p>
+                        <small style="color: var(--muted); font-size: 11px;">Solicitado el: {{ job.created_at|date:"d/m/Y H:i" }}</small>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p style="color: var(--muted); text-align: center; padding: 20px;">No hay solicitudes registradas aún.</p>
+    {% endif %}
+</section>
+
+<section class="moderation-list">
+    <h2>Moderación inteligente</h2>
+    <article><i data-lucide="user-check"></i><span>Validación de identidad pendiente: {{ pros_count }} perfiles</span></article>
+    <article><i data-lucide="message-square-warning"></i><span>Reseñas marcadas para revisión: 0 casos</span></article>
+    <article><i data-lucide="credit-card"></i><span>Pagos retenidos por garantía: 0 trabajos</span></article>
+</section>
+{% endblock %}

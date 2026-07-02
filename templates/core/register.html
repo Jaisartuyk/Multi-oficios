@@ -1,0 +1,94 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Crear Cuenta | ObraYa{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Estilizar los radio select de Django */
+    .estimate-form ul {
+        list-style: none;
+        padding: 0;
+        margin: 8px 0;
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    .estimate-form ul li {
+        background: var(--surface-strong);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 12px 16px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .estimate-form ul li label {
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 14px;
+        margin: 0 !important;
+        color: var(--text) !important;
+    }
+    .estimate-form ul li input[type="radio"] {
+        width: 18px !important;
+        height: 18px !important;
+        margin: 0;
+        cursor: pointer;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="section-block">
+    <div class="section-title">
+        <h2>Únete a ObraYa</h2>
+        <span>Regístrate</span>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="search-card" style="margin-bottom: 15px; color: {% if message.tags == 'error' %}var(--error-color, #dc3545){% else %}var(--green){% endif %};">
+                <strong>{{ message }}</strong>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="result-card">
+        <form method="post" class="estimate-form">
+            {% csrf_token %}
+            {% for field in form %}
+                <div style="margin-bottom: 12px;">
+                    <label for="{{ field.id_for_label }}" style="display: block; margin-bottom: 6px; color: var(--muted); font-weight: 700; font-size: 13px;">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}
+                        <small style="color: var(--muted); font-size: 11px; display: block; margin-top: 4px;">{{ field.help_text }}</small>
+                    {% endif %}
+                    {% if field.errors %}
+                        <span style="color: #dc3545; font-size: 12px;">{{ field.errors|striptags }}</span>
+                    {% endif %}
+                </div>
+            {% endfor %}
+            <button type="submit" class="primary-button" style="width: 100%; margin-top: 15px;">
+                <i data-lucide="user-plus"></i> Crear mi cuenta
+            </button>
+        </form>
+        <p style="text-align: center; margin-top: 20px; font-size: 14px; color: var(--muted);">
+            ¿Ya tienes cuenta? <a href="{% url 'login' %}" style="color: var(--blue); font-weight: 700;">Inicia sesión</a>
+        </p>
+    </div>
+</section>
+
+<script>
+    // Aplicar estilos a los inputs de django por defecto
+    document.querySelectorAll('.estimate-form input').forEach(input => {
+        input.style.width = '100%';
+        input.style.padding = '12px 16px';
+        input.style.border = '1px solid var(--line)';
+        input.style.borderRadius = '16px';
+        input.style.background = 'var(--surface-strong)';
+        input.style.color = 'var(--text)';
+        input.style.outline = 'none';
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,82 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Gestionar Usuarios | ObraYa{% endblock %}
+
+{% block content %}
+<section class="profile-hero">
+    <div class="profile-head">
+        <a href="{% url 'admin_panel' %}" class="icon-button" style="text-decoration: none;" aria-label="Volver">
+            <i data-lucide="arrow-left"></i>
+        </a>
+        <div>
+            <h1>Gestión de Usuarios</h1>
+            <p>Lista completa de Clientes, Trabajadores y Administradores</p>
+        </div>
+    </div>
+</section>
+
+<!-- Botones de Acción para crear -->
+<div class="hero-actions" style="grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 24px;">
+    <a class="primary-button" href="{% url 'admin_add_professional' %}" style="font-size: 13px;">
+        <i data-lucide="user-plus"></i> + Profesional
+    </a>
+    <a class="secondary-button" href="{% url 'admin_add_client' %}" style="font-size: 13px;">
+        <i data-lucide="user-plus"></i> + Cliente
+    </a>
+</div>
+
+<section class="section-block">
+    <div class="section-title">
+        <h2>Usuarios en el Sistema</h2>
+        <span>Todos los registros</span>
+    </div>
+
+    {% if users_list %}
+        <div class="pro-list">
+            {% for u in users_list %}
+                <div class="pro-card" style="grid-template-columns: auto 1fr auto; align-items: center;">
+                    <div class="avatar">{{ u.username|slice:":2"|upper }}</div>
+                    <div class="pro-info">
+                        <strong>{{ u.first_name }} {{ u.last_name }} ({{ u.username }})</strong>
+                        <span style="color: var(--muted); font-size: 13px;">{{ u.email }}</span>
+                        
+                        <div style="margin-top: 6px;">
+                            <span class="verified-review" style="
+                                {% if u.profile.role == 'ADMIN' %}background: #f8d7da; color: #721c24;
+                                {% elif u.profile.role == 'PROFESSIONAL' %}background: var(--green-soft); color: var(--green);
+                                {% else %}background: #d9e2ec; color: var(--blue);{% endif %}">
+                                {{ u.profile.get_role_display }}
+                            </span>
+                            {% if u.profile.phone %}
+                                <span style="font-size: 11px; color: var(--muted); margin-left: 8px;">
+                                    <i data-lucide="phone" style="width: 12px; height: 12px; display: inline; vertical-align: middle;"></i> {{ u.profile.phone }}
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 6px; align-items: flex-end;">
+                        {% if u.profile.role == 'PROFESSIONAL' %}
+                            <a href="{% url 'admin_edit_professional' u.id %}" class="verified-review" style="background: var(--surface-strong); color: var(--text); padding: 4px 8px; text-decoration: none;">
+                                <i data-lucide="edit-3" style="width: 14px; height: 14px;"></i> Editar
+                            </a>
+                        {% elif u.profile.role == 'CLIENT' %}
+                            <a href="{% url 'admin_edit_client' u.id %}" class="verified-review" style="background: var(--surface-strong); color: var(--text); padding: 4px 8px; text-decoration: none;">
+                                <i data-lucide="edit-3" style="width: 14px; height: 14px;"></i> Editar
+                            </a>
+                        {% endif %}
+                        
+                        {% if u.id != user.id %}
+                            <a href="{% url 'admin_delete_user' u.id %}" onclick="return confirm('¿Estás seguro de que deseas eliminar este usuario? Se borrarán todos sus datos asociados.')" class="verified-review" style="background: #f8d7da; color: #721c24; padding: 4px 8px; text-decoration: none;">
+                                <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i> Eliminar
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p style="color: var(--muted); text-align: center; padding: 20px;">No hay usuarios registrados en el sistema.</p>
+    {% endif %}
+</section>
+{% endblock %}

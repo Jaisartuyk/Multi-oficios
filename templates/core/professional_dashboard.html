@@ -1,0 +1,224 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Panel de Profesional | ObraYa{% endblock %}
+
+{% block content %}
+<section class="profile-hero">
+    <div class="profile-head">
+        <div class="avatar big">{{ professional.initials }}</div>
+        <div>
+            <h1>Hola, {{ professional.name }}</h1>
+            <p>{{ professional.specialty }} — {{ professional.level }}</p>
+        </div>
+    </div>
+</section>
+
+<!-- Estadísticas en tarjetas rápidas -->
+<section class="reputation-grid" style="margin-bottom: 24px; grid-template-columns: repeat(3, 1fr);">
+    <article>
+        <strong>{{ professional.rating }} ⭐</strong>
+        <span>Calificación</span>
+    </article>
+    <article>
+        <strong>{{ professional.jobs }}</strong>
+        <span>Trabajos</span>
+    </article>
+    <article style="background: var(--green-soft); border-color: var(--green); display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
+        <strong style="color: var(--green); font-size: 20px;">{{ professional.credits }}</strong>
+        <span style="color: var(--green); font-weight: 700;">Créditos 🪙</span>
+    </article>
+</section>
+
+<!-- Editar estado del profesional -->
+<section class="detail-card" id="professional-profile">
+    <h2>Mi Disponibilidad y Estado</h2>
+    <form method="post" class="estimate-form" style="margin-top: 12px;">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="update_profile">
+        
+        <div style="margin-bottom: 12px;">
+            <label style="display: block; margin-bottom: 6px; color: var(--muted); font-weight: 700; font-size: 13px;">Disponibilidad Actual</label>
+            <select name="available" style="width: 100%; padding: 12px 16px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface-strong); color: var(--text); outline: none;">
+                <option value="Disponible hoy" {% if professional.available == "Disponible hoy" %}selected{% endif %}>Disponible hoy</option>
+                <option value="Agenda abierta" {% if professional.available == "Agenda abierta" %}selected{% endif %}>Agenda abierta</option>
+                <option value="No disponible temporalmente" {% if professional.available == "No disponible temporalmente" %}selected{% endif %}>No disponible temporalmente</option>
+            </select>
+        </div>
+
+        <div style="margin-bottom: 12px;">
+            <label style="display: block; margin-bottom: 6px; color: var(--muted); font-weight: 700; font-size: 13px;">Especialidad</label>
+            <input type="text" name="specialty" value="{{ professional.specialty }}" style="width: 100%; padding: 12px 16px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface-strong); color: var(--text); outline: none;">
+        </div>
+
+        <div style="margin-bottom: 12px;">
+            <label style="display: block; margin-bottom: 6px; color: var(--muted); font-weight: 700; font-size: 13px;">Ubicación / Sector</label>
+            <div style="display: flex; gap: 8px;">
+                <input type="text" id="location_input" name="location" value="{{ professional.location }}" style="flex: 1; padding: 12px 16px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface-strong); color: var(--text); outline: none;" placeholder="Ej. Urdesa Central, Guayaquil">
+                <button type="button" id="btn-location" class="secondary-button" style="padding: 0 16px; border-radius: 16px; white-space: nowrap; display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                    <i data-lucide="map-pin"></i> Usar mi ubicación
+                </button>
+            </div>
+            <input type="hidden" id="lat_input" name="lat" value="{{ professional.lat|stringformat:'f' }}">
+            <input type="hidden" id="lng_input" name="lng" value="{{ professional.lng|stringformat:'f' }}">
+        </div>
+
+        <div style="margin-bottom: 12px;">
+            <label style="display: block; margin-bottom: 6px; color: var(--muted); font-weight: 700; font-size: 13px;">Sobre Mí</label>
+            <textarea name="about" style="width: 100%; padding: 12px 16px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface-strong); color: var(--text); outline: none; resize: vertical;">{{ professional.about }}</textarea>
+        </div>
+
+        <button type="submit" class="secondary-button" style="width: 100%;">
+            <i data-lucide="save"></i> Actualizar Perfil
+        </button>
+    </form>
+</section>
+
+<!-- Bolsa de Trabajo (Trabajos Disponibles para Aceptar) -->
+<section class="section-block" id="job-market">
+    <div class="section-title">
+        <h2>Bolsa de Trabajo</h2>
+        <span>Solicitudes de Clientes</span>
+    </div>
+
+    {% if professional.credits == 0 %}
+        <div class="search-card" style="margin-top: 0; margin-bottom: 16px; background: rgba(220, 53, 69, 0.1); border-color: rgba(220, 53, 69, 0.2); color: #dc3545; padding: 12px 16px; border-radius: 16px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <i data-lucide="alert-circle" style="stroke: #dc3545;"></i>
+                <strong style="font-size: 14px;">No puedes aceptar trabajos</strong>
+            </div>
+            <p style="margin: 4px 0 0; font-size: 13px; opacity: 0.9;">No tienes créditos de trabajo disponibles. Solicita una recarga física al administrador para poder aceptar nuevas solicitudes.</p>
+        </div>
+    {% endif %}
+
+    {% if pending_jobs %}
+        <div class="pro-list">
+            {% for job in pending_jobs %}
+                <div class="pro-card" style="grid-template-columns: 1fr auto; align-items: start;">
+                    <div>
+                        <strong style="font-size: 16px; display: block; margin-bottom: 4px;">{{ job.title }}</strong>
+                        <p style="color: var(--muted); font-size: 13px; margin: 4px 0;">{{ job.description }}</p>
+                        <div class="trust-row">
+                            <span><i data-lucide="user"></i> {{ job.client.username }}</span>
+                            <span><i data-lucide="dollar-sign"></i> {{ job.estimated_price }}</span>
+                            <span><i data-lucide="clock"></i> {{ job.estimated_time }}</span>
+                        </div>
+                    </div>
+                    <form method="post" style="margin-left: 8px;">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="accept_job">
+                        <input type="hidden" name="job_id" value="{{ job.id }}">
+                        <button type="submit" class="{% if professional.credits == 0 %}secondary-button{% else %}primary-button{% endif %}" style="padding: 0 16px; min-height: 40px; font-size: 13px;" {% if professional.credits == 0 %}disabled{% endif %}>
+                            Aceptar
+                        </button>
+                    </form>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p style="color: var(--muted); text-align: center; padding: 20px;">No hay nuevas solicitudes en la bolsa de trabajo en este momento.</p>
+    {% endif %}
+</section>
+
+<!-- Mis Trabajos Aceptados -->
+<section class="section-block" id="my-jobs">
+    <div class="section-title">
+        <h2>Mis Trabajos Aceptados</h2>
+        <span>En progreso / Completados</span>
+    </div>
+
+    {% if jobs %}
+        <div class="pro-list">
+            {% for job in jobs %}
+                <div class="pro-card" style="grid-template-columns: 1fr; cursor: default;">
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                            <strong style="font-size: 16px;">{{ job.title }}</strong>
+                            <span class="verified-review" style="background: #def8ec; color: var(--green);">{{ job.get_status_display }}</span>
+                        </div>
+                        <p style="color: var(--muted); font-size: 13px; margin: 4px 0;">{{ job.description }}</p>
+                        <div class="trust-row" style="margin-top: 6px;">
+                            <span><i data-lucide="user"></i> Cliente: {{ job.client.username }}</span>
+                            <span><i data-lucide="phone"></i> WhatsApp: {{ job.client.profile.phone|default:"No registrado" }}</span>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p style="color: var(--muted); text-align: center; padding: 20px;">Aún no has aceptado ningún trabajo.</p>
+    {% endif %}
+</section>
+
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAtEPZgbPBwnJGrvIuwplRJDFbr0tmbnyQ&libraries=places"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const locationInput = document.getElementById("location_input");
+        const latInput = document.getElementById("lat_input");
+        const lngInput = document.getElementById("lng_input");
+        const btnLocation = document.getElementById("btn-location");
+
+        if (typeof google !== 'undefined' && google.maps && google.maps.places) {
+            const autocomplete = new google.maps.places.Autocomplete(locationInput, {
+                types: ['geocode', 'establishment'],
+            });
+
+            autocomplete.addListener("place_changed", () => {
+                const place = autocomplete.getPlace();
+                if (place.geometry && place.geometry.location) {
+                    latInput.value = place.geometry.location.lat();
+                    lngInput.value = place.geometry.location.lng();
+                }
+            });
+            
+            // Prevent Enter from submitting the form when selecting a place
+            locationInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                }
+            });
+        }
+
+        if(btnLocation) {
+            btnLocation.addEventListener("click", function() {
+                if (navigator.geolocation) {
+                    btnLocation.innerHTML = '<i data-lucide="loader"></i> Buscando...';
+                    if (typeof lucide !== 'undefined') lucide.createIcons();
+                    
+                    navigator.geolocation.getCurrentPosition(function(position) {
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+                        latInput.value = lat;
+                        lngInput.value = lng;
+                        
+                        if (typeof google !== 'undefined' && google.maps) {
+                            const geocoder = new google.maps.Geocoder();
+                            const latlng = { lat: parseFloat(lat), lng: parseFloat(lng) };
+                            geocoder.geocode({ location: latlng }, function(results, status) {
+                                if (status === "OK" && results[0]) {
+                                    locationInput.value = results[0].formatted_address;
+                                } else {
+                                    locationInput.value = lat + ", " + lng;
+                                }
+                                resetButton();
+                            });
+                        } else {
+                            locationInput.value = lat + ", " + lng;
+                            resetButton();
+                        }
+                    }, function(error) {
+                        alert("Error obteniendo ubicación: " + error.message);
+                        resetButton();
+                    });
+                } else {
+                    alert("Geolocalización no soportada.");
+                }
+            });
+        }
+
+        function resetButton() {
+            btnLocation.innerHTML = '<i data-lucide="map-pin"></i> Usar mi ubicación';
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+    });
+</script>
+{% endblock %}

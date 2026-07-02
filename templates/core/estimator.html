@@ -1,0 +1,59 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Cotizador Inteligente | ObraYa{% endblock %}
+
+{% block content %}
+<section class="ai-panel">
+    <span class="eyebrow"><i data-lucide="sparkles"></i> Cotizador Inteligente</span>
+    <h1>Describe el trabajo o sube una foto.</h1>
+    <p>La IA transforma una solicitud informal en una cotizacion clara para cliente y profesional.</p>
+    <form method="post" class="estimate-form">
+        {% csrf_token %}
+        <textarea name="brief" rows="6" placeholder="Ej: quiero arreglar una pared humeda, pintar el cuarto y revisar un tomacorriente..."></textarea>
+        <label class="upload-box">
+            <i data-lucide="upload-cloud"></i>
+            <span>Agregar foto del trabajo</span>
+            <input type="file" disabled>
+        </label>
+        <button class="primary-button" type="submit"><i data-lucide="wand-2"></i>Generar cotizacion IA</button>
+    </form>
+</section>
+
+{% if result %}
+<section class="result-card">
+    <h2>Cotizacion referencial</h2>
+    <p><strong>Solicitud:</strong> {{ result.brief }}</p>
+    <div class="result-row">
+        <i data-lucide="clipboard-check"></i>
+        <span>{{ result.technical }}</span>
+    </div>
+    <div class="quote-grid">
+        <article>
+            <h3>Materiales</h3>
+            {% for material in result.materials %}
+            <span>{{ material }}</span>
+            {% endfor %}
+        </article>
+        <article>
+            <h3>Tiempo</h3>
+            <strong>{{ result.time }}</strong>
+        </article>
+        <article>
+            <h3>Presupuesto</h3>
+            <strong>{{ result.budget }}</strong>
+        </article>
+    </div>
+    <button class="secondary-button" type="button"><i data-lucide="file-text"></i>Crear PDF profesional</button>
+</section>
+{% endif %}
+
+<section class="assistant-card">
+    <h2>Asistente de contratacion</h2>
+    <div class="match-list">
+        <span><i data-lucide="map-pin"></i> Ubicacion y distancia</span>
+        <span><i data-lucide="star"></i> Reputacion y puntualidad</span>
+        <span><i data-lucide="calendar-check"></i> Disponibilidad real</span>
+        <span><i data-lucide="shield-alert"></i> Deteccion de fraude</span>
+    </div>
+</section>
+{% endblock %}

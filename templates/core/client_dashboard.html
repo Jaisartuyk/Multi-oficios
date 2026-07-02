@@ -1,0 +1,91 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Panel de Cliente | ObraYa{% endblock %}
+
+{% block content %}
+<section class="profile-hero">
+    <div class="profile-head">
+        <div class="avatar big">{{ user.username|slice:":2"|upper }}</div>
+        <div>
+            <h1>Hola, {{ user.first_name|default:user.username }}</h1>
+            <p>Panel de Control - Cliente</p>
+        </div>
+    </div>
+</section>
+
+<div class="hero-actions" style="grid-template-columns: 1fr; margin-bottom: 24px;">
+    <a class="primary-button" href="{% url 'estimator' %}">
+        <i data-lucide="sparkles"></i>
+        Solicitar Nueva Cotización IA
+    </a>
+</div>
+
+<section class="section-block">
+    <div class="section-title">
+        <h2>Mis Solicitudes y Cotizaciones</h2>
+        <span>Historial</span>
+    </div>
+
+    {% if requests %}
+        <div class="pro-list">
+            {% for request_obj in requests %}
+                <div class="pro-card" style="grid-template-columns: 1fr auto; cursor: default;">
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                            <strong style="font-size: 16px;">{{ request_obj.title }}</strong>
+                            <span class="verified-review" style="background: 
+                                {% if request_obj.status == 'PENDING' %}var(--green-soft)
+                                {% elif request_obj.status == 'ACCEPTED' %}#d9e2ec
+                                {% elif request_obj.status == 'COMPLETED' %}#def8ec
+                                {% else %}#f8d7da{% endif %};
+                                color:
+                                {% if request_obj.status == 'PENDING' %}var(--green)
+                                {% elif request_obj.status == 'ACCEPTED' %}var(--blue)
+                                {% elif request_obj.status == 'COMPLETED' %}var(--green)
+                                {% else %}#721c24{% endif %};">
+                                {{ request_obj.get_status_display }}
+                            </span>
+                        </div>
+                        <p style="color: var(--muted); font-size: 13px; margin: 4px 0;">{{ request_obj.description }}</p>
+                        <div class="trust-row" style="margin-top: 6px;">
+                            <span><i data-lucide="calendar"></i> {{ request_obj.created_at|date:"d/m/Y H:i" }}</span>
+                            {% if request_obj.estimated_price %}
+                                <span><i data-lucide="dollar-sign"></i> {{ request_obj.estimated_price }}</span>
+                            {% endif %}
+                            {% if request_obj.estimated_time %}
+                                <span><i data-lucide="clock"></i> {{ request_obj.estimated_time }}</span>
+                            {% endif %}
+                        </div>
+                        
+                        {% if request_obj.professional %}
+                            <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); font-size: 12px; display: flex; flex-direction: column; gap: 8px;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <i data-lucide="user-check" style="color: var(--green); width: 16px; height: 16px;"></i>
+                                    <span>Asignado a: <a href="{% url 'professional_detail' request_obj.professional.id %}" style="color: var(--blue); text-decoration: underline; font-weight: 700;" title="Ver perfil y contacto">{{ request_obj.professional.name }}</a> ({{ request_obj.professional.specialty }})</span>
+                                </div>
+                                {% if request_obj.status == 'ACCEPTED' %}
+                                    <form method="post" style="margin-top: 4px; width: 100%;">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="reopen_job">
+                                        <input type="hidden" name="job_id" value="{{ request_obj.id }}">
+                                        <button type="submit" class="secondary-button" style="width: 100%; min-height: 36px; padding: 0 12px; font-size: 12px; border-radius: 12px; background: rgba(220, 53, 69, 0.08); color: #dc3545; display: flex; align-items: center; justify-content: center; gap: 6px; border: none; cursor: pointer;">
+                                            <i data-lucide="rotate-ccw" style="width: 14px; height: 14px;"></i> Volver a publicar (Reabrir bolsa)
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="result-card" style="text-align: center; padding: 40px 20px;">
+            <i data-lucide="inbox" style="width: 48px; height: 48px; color: var(--muted); margin-bottom: 12px;"></i>
+            <h3 style="margin: 0 0 8px;">Aún no tienes solicitudes</h3>
+            <p style="color: var(--muted); margin: 0 0 20px; font-size: 14px;">Utiliza nuestro cotizador inteligente para solicitar tu primer servicio.</p>
+            <a class="primary-button" href="{% url 'estimator' %}" style="display: inline-flex;">Empezar</a>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

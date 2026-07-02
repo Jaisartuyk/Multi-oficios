@@ -1,0 +1,67 @@
+{% extends 'core/base.html' %}
+
+{% block title %}{{ professional.name }} | ObraYa{% endblock %}
+
+{% block content %}
+<section class="profile-hero">
+    <div class="profile-head">
+        <div class="avatar big">{{ professional.initials }}</div>
+        <div>
+            <span class="eyebrow"><i data-lucide="badge-check"></i> {{ professional.badge }}</span>
+            <h1>{{ professional.name }}</h1>
+            <p>{{ professional.specialty }}</p>
+        </div>
+    </div>
+    <div class="profile-actions">
+        {% if professional.user.profile.phone %}
+            <a class="primary-button" href="tel:{{ professional.user.profile.phone }}" style="text-decoration: none;"><i data-lucide="phone"></i>Llamar</a>
+            <a class="whatsapp-button" href="https://wa.me/{{ professional.user.profile.phone|cut:'+'|cut:' ' }}" target="_blank" style="text-decoration: none;"><i data-lucide="message-circle"></i>WhatsApp</a>
+        {% else %}
+            <span style="color: var(--muted); font-size: 13px; font-weight: 600;">Teléfono no disponible</span>
+        {% endif %}
+    </div>
+</section>
+
+<section class="reputation-grid">
+    <article><strong>{{ professional.rating }}</strong><span>Estrellas</span></article>
+    <article><strong>{{ professional.jobs }}</strong><span>Trabajos</span></article>
+    <article><strong>{{ professional.punctuality }}%</strong><span>Puntualidad</span></article>
+    <article><strong>{{ professional.response }}</strong><span>Respuesta</span></article>
+</section>
+
+<section class="detail-card">
+    <h2>Confianza digital</h2>
+    <div class="level-line">
+        <span>Nuevo</span><span>Confiable</span><span>Profesional</span><span>Experto</span><span>Maestro Elite</span>
+    </div>
+    <div class="level-progress"><span style="width: 92%"></span></div>
+    <p>{{ professional.about }}</p>
+    <div class="chips">
+        <span>{{ professional.level }}</span>
+        <span>{{ professional.experience }}</span>
+        <span>{{ professional.location }}</span>
+        <span>{{ professional.available }}</span>
+    </div>
+</section>
+
+<section class="section-block">
+    <div class="section-title">
+        <h2>Portafolio</h2>
+        <span>Trabajos verificados</span>
+    </div>
+    <div class="portfolio-grid">
+        {% for item in professional.portfolio %}
+        <article>
+            <i data-lucide="image"></i>
+            <strong>{{ item }}</strong>
+        </article>
+        {% endfor %}
+    </div>
+</section>
+
+<section class="detail-card">
+    <h2>Opiniones verificadas</h2>
+    <blockquote>"Trabajo limpio, llego a tiempo y explico cada gasto antes de comprar materiales."</blockquote>
+    <span class="verified-review"><i data-lucide="check-circle"></i> Pago y servicio confirmados por ObraYa</span>
+</section>
+{% endblock %}

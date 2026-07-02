@@ -1,0 +1,166 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}ObraYa | Servicios de hogar y construccion{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <div class="hero-copy">
+        <span class="eyebrow"><i data-lucide="shield-check"></i> Profesionales verificados cerca de ti</span>
+        <h1>Contrata oficios de confianza sin vueltas.</h1>
+        <p>Publica tu trabajo, recibe cotizaciones inteligentes y elige por reputacion, disponibilidad y precio.</p>
+        <div class="hero-actions">
+            <a class="primary-button" href="{% url 'estimator' %}">
+                <i data-lucide="camera"></i>
+                Solicitar Servicio
+            </a>
+            <button class="secondary-button" type="button" data-scroll-target="map-section">
+                <i data-lucide="map-pin"></i>
+                Ver cercanos
+            </button>
+        </div>
+    </div>
+    <div class="hero-media">
+        <img src="{% static 'img/obraya-hero.png' %}" alt="Profesional de ObraYa listo para un servicio">
+        <div class="floating-score">
+            <strong>4.9</strong>
+            <span>Promedio verificado</span>
+        </div>
+    </div>
+</section>
+
+<section class="search-card">
+    <form method="get" action="{% url 'home' %}">
+        <label for="smart-search">Búsqueda inteligente</label>
+        <div class="search-box">
+            <i data-lucide="search"></i>
+            <input id="smart-search" type="search" name="q" value="{{ q|default:'' }}" placeholder="Ej: necesito reparar una fuga en la cocina">
+            <button type="submit">Buscar</button>
+        </div>
+        {% if q %}
+            <p style="margin: 8px 0 0; font-size: 13px; color: var(--muted);">
+                Resultados para: "<strong>{{ q }}</strong>" — <a href="{% url 'home' %}" style="color: var(--blue);">Limpiar búsqueda</a>
+            </p>
+        {% endif %}
+    </form>
+</section>
+
+<section class="section-block">
+    <div class="section-title">
+        <h2>Categorias destacadas</h2>
+        <span>Respuesta rapida</span>
+    </div>
+    <div class="category-grid">
+        {% for category in categories %}
+        <article class="category-card">
+            <i data-lucide="{{ category.icon }}"></i>
+            <strong>{{ category.name }}</strong>
+            <small>{{ category.demand }}</small>
+        </article>
+        {% endfor %}
+    </div>
+</section>
+
+<section class="section-block">
+    <div class="section-title">
+        <h2>Profesionales recomendados</h2>
+        <span>IA + reputacion</span>
+    </div>
+    <div class="pro-list">
+        {% for professional in professionals %}
+        <a class="pro-card" href="{% url 'professional_detail' professional.id %}">
+            <div class="avatar">{{ professional.initials }}</div>
+            <div class="pro-info">
+                <strong>{{ professional.name }}</strong>
+                <span>{{ professional.specialty }}</span>
+                <div class="trust-row">
+                    <span><i data-lucide="star"></i>{{ professional.rating }}</span>
+                    <span>{{ professional.jobs }} trabajos</span>
+                    <span>{{ professional.level }}</span>
+                </div>
+            </div>
+            <div class="eta">
+                <strong>{{ professional.eta }}</strong>
+                <small>{{ professional.distance }}</small>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+</section>
+
+<section class="map-panel" id="map-section">
+    <div>
+        <h2>Mapa interactivo</h2>
+        <p>Profesionales cercanos, tiempo de llegada y seguimiento en camino.</p>
+    </div>
+    <div class="map-shell">
+        <div
+            id="obraya-map"
+            class="google-map"
+            data-has-key="{% if google_maps_api_key %}true{% else %}false{% endif %}"
+            data-professionals='[
+                {% for professional in professionals %}
+                {
+                    "name": "{{ professional.name|escapejs }}",
+                    "specialty": "{{ professional.specialty|escapejs }}",
+                    "level": "{{ professional.level|escapejs }}",
+                    "rating": "{{ professional.rating }}",
+                    "eta": "{{ professional.eta|escapejs }}",
+                    "lat": {{ professional.lat|stringformat:"f" }},
+                    "lng": {{ professional.lng|stringformat:"f" }}
+                }{% if not forloop.last %},{% endif %}
+                {% endfor %}
+            ]'
+            aria-label="Mapa de profesionales cercanos"
+        >
+            <div class="map-loading">
+                <i data-lucide="loader"></i>
+                <span>Cargando mapa de Guayaquil...</span>
+            </div>
+            <div class="mini-map" aria-label="Mapa simulado de profesionales cercanos">
+                <span class="pin pin-a"></span>
+                <span class="pin pin-b"></span>
+                <span class="pin pin-c"></span>
+                <span class="route"></span>
+            </div>
+        </div>
+        <div class="map-status">
+            <i data-lucide="navigation"></i>
+            <span data-map-status-text>Centro de busqueda: Guayaquil, Ecuador</span>
+        </div>
+    </div>
+</section>
+
+{% if google_maps_api_key %}
+<script>
+    window.initObraYaMap = function () {
+        window.__obraYaGoogleMapsReady = true;
+        if (window.renderObraYaMap) {
+            window.renderObraYaMap();
+        }
+    };
+    window.gm_authFailure = function () {
+        if (window.showObraYaMapFallback) {
+            window.showObraYaMapFallback('Google Maps rechazo la API key - revisa API, facturacion o restricciones');
+        }
+    };
+</script>
+<script async defer src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&callback=initObraYaMap&loading=async"></script>
+{% endif %}
+
+<section class="section-block">
+    <div class="section-title">
+        <h2>Servicios mas solicitados</h2>
+        <span>Cotizacion referencial</span>
+    </div>
+    <div class="service-grid">
+        {% for service in services %}
+        <article class="service-card">
+            <strong>{{ service.name }}</strong>
+            <span>{{ service.range }}</span>
+            <small>{{ service.time }}</small>
+        </article>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}
