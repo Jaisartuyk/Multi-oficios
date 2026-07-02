@@ -1,1 +1,1 @@
-web: gunicorn obraya.wsgi --log-file -
+web: python manage.py migrate && gunicorn obraya.wsgi --log-file -
