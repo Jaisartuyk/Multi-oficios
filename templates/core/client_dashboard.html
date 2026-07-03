@@ -64,14 +64,24 @@
                                     <span>Asignado a: <a href="{% url 'professional_detail' request_obj.professional.id %}" style="color: var(--blue); text-decoration: underline; font-weight: 700;" title="Ver perfil y contacto">{{ request_obj.professional.name }}</a> ({{ request_obj.professional.specialty }})</span>
                                 </div>
                                 {% if request_obj.status == 'ACCEPTED' %}
-                                    <form method="post" style="margin-top: 4px; width: 100%;">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="action" value="reopen_job">
-                                        <input type="hidden" name="job_id" value="{{ request_obj.id }}">
-                                        <button type="submit" class="secondary-button" style="width: 100%; min-height: 36px; padding: 0 12px; font-size: 12px; border-radius: 12px; background: rgba(220, 53, 69, 0.08); color: #dc3545; display: flex; align-items: center; justify-content: center; gap: 6px; border: none; cursor: pointer;">
-                                            <i data-lucide="rotate-ccw" style="width: 14px; height: 14px;"></i> Volver a publicar (Reabrir bolsa)
-                                        </button>
-                                    </form>
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 6px; width: 100%;">
+                                        <form method="post" style="margin: 0; width: 100%;">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="action" value="complete_job">
+                                            <input type="hidden" name="job_id" value="{{ request_obj.id }}">
+                                            <button type="submit" class="secondary-button" style="width: 100%; min-height: 36px; padding: 0 12px; font-size: 12px; border-radius: 12px; background: var(--green-soft); color: var(--green); display: flex; align-items: center; justify-content: center; gap: 6px; border: none; cursor: pointer; font-weight: 700;">
+                                                <i data-lucide="check-circle" style="width: 14px; height: 14px;"></i> Completado
+                                            </button>
+                                        </form>
+                                        <form method="post" style="margin: 0; width: 100%;">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="action" value="reopen_job">
+                                            <input type="hidden" name="job_id" value="{{ request_obj.id }}">
+                                            <button type="submit" class="secondary-button" style="width: 100%; min-height: 36px; padding: 0 12px; font-size: 12px; border-radius: 12px; background: rgba(220, 53, 69, 0.08); color: #dc3545; display: flex; align-items: center; justify-content: center; gap: 6px; border: none; cursor: pointer; font-weight: 700;">
+                                                <i data-lucide="rotate-ccw" style="width: 14px; height: 14px;"></i> Reabrir Bolsa
+                                            </button>
+                                        </form>
+                                    </div>
                                 {% endif %}
                             </div>
                         {% endif %}

@@ -313,6 +313,29 @@ def client_dashboard(request):
             except JobRequest.DoesNotExist:
                 messages.error(request, 'No se pudo reabrir la solicitud o ya no se encuentra en estado aceptado.')
             return redirect('client_dashboard')
+        elif action == 'complete_job':
+            job_id = request.POST.get('job_id')
+            try:
+                job = JobRequest.objects.get(id=job_id, client=request.user, status='ACCEPTED')
+                job.status = 'COMPLETED'
+                job.save()
+                
+                pro = job.professional
+                if pro:
+                    pro.jobs += 1
+                    pro.save()
+                    if pro.user:
+                        Notification.objects.create(
+                            recipient=pro.user,
+                            notif_type='SYSTEM',
+                            title='¡Trabajo Completado!',
+                            message=f'El cliente ha confirmado que completaste el trabajo "{job.title}". Tu reputación ha subido.',
+                            link='/dashboard/profesional/#my-jobs'
+                        )
+                messages.success(request, '¡Has marcado el trabajo como completado con éxito!')
+            except JobRequest.DoesNotExist:
+                messages.error(request, 'No se pudo completar el trabajo.')
+            return redirect('client_dashboard')
 
     requests = JobRequest.objects.filter(client=request.user).order_by('-created_at')
     return render(request, 'core/client_dashboard.html', {'requests': requests})
@@ -386,6 +409,52 @@ def professional_dashboard(request):
             except JobRequest.DoesNotExist:
                 messages.error(request, 'El trabajo ya no está disponible.')
                 return redirect('/dashboard/profesional/#job-market')
+        elif action == 'complete_job':
+            job_id = request.POST.get('job_id')
+            try:
+                job = JobRequest.objects.get(id=job_id, professional=professional, status='ACCEPTED')
+                job.status = 'COMPLETED'
+                job.save()
+                
+                professional.jobs += 1
+                professional.save()
+                
+                Notification.objects.create(
+                    recipient=job.client,
+                    notif_type='SYSTEM',
+                    title='¡Trabajo Completado!',
+                    message=f'El profesional {professional.name} ha marcado el trabajo "{job.title}" como completado.',
+                    link='/dashboard/cliente/'
+                )
+                messages.success(request, '¡Has marcado el trabajo como completado con éxito! Tu historial se ha actualizado.')
+                return redirect('/dashboard/profesional/#my-jobs')
+            except JobRequest.DoesNotExist:
+                messages.error(request, 'No se pudo completar el trabajo.')
+                return redirect('/dashboard/profesional/#my-jobs')
+        elif action == 'cancel_job':
+            job_id = request.POST.get('job_id')
+            try:
+                job = JobRequest.objects.get(id=job_id, professional=professional, status='ACCEPTED')
+                job.status = 'PENDING'
+                job.professional = None
+                job.save()
+                
+                # Refund 1 credit
+                professional.credits += 1
+                professional.save()
+                
+                Notification.objects.create(
+                    recipient=job.client,
+                    notif_type='JOB_REOPENED',
+                    title='Asignación cancelada',
+                    message=f'El profesional {professional.name} ha cancelado su asignación para tu trabajo "{job.title}". Se ha vuelto a publicar en la bolsa.',
+                    link='/dashboard/cliente/'
+                )
+                messages.success(request, 'Has cancelado el trabajo. Se te ha reembolsado el crédito consumido.')
+                return redirect('/dashboard/profesional/#job-market')
+            except JobRequest.DoesNotExist:
+                messages.error(request, 'No se pudo cancelar el trabajo.')
+                return redirect('/dashboard/profesional/#my-jobs')
         return redirect('professional_dashboard')
 
     print(f"DEBUG: API KEY in settings is -> '{settings.GOOGLE_MAPS_API_KEY}'")

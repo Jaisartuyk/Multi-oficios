@@ -3,57 +3,293 @@
 {% block title %}Cotizador Inteligente | ObraYa{% endblock %}
 
 {% block content %}
+<style>
+    .ai-panel {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        box-shadow: var(--shadow);
+        border-radius: 24px;
+        padding: 28px 24px;
+        margin-bottom: 24px;
+        animation: slideUp 0.5s ease-out;
+    }
+
+    @keyframes slideUp {
+        from { opacity: 0; transform: translateY(15px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .ai-panel textarea {
+        width: 100%;
+        padding: 14px 16px;
+        border: 1.5px solid var(--line);
+        border-radius: 16px;
+        background: var(--surface-strong);
+        color: var(--text);
+        outline: none;
+        font-size: 15px;
+        font-family: inherit;
+        resize: vertical;
+        transition: all 0.3s ease;
+        margin-bottom: 16px;
+    }
+
+    .ai-panel textarea:focus {
+        border-color: var(--blue);
+        background: var(--surface);
+        box-shadow: 0 0 0 4px rgba(19, 93, 159, 0.12);
+    }
+
+    .upload-box {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        border: 2px dashed var(--line);
+        border-radius: 16px;
+        cursor: not-allowed;
+        background: var(--surface-strong);
+        color: var(--muted);
+        transition: all 0.2s ease;
+        margin-bottom: 20px;
+        opacity: 0.8;
+    }
+
+    .upload-box i {
+        margin-bottom: 8px;
+        color: var(--muted);
+    }
+
+    .upload-box span {
+        font-size: 13px;
+        font-weight: 700;
+    }
+
+    .result-card {
+        border-radius: 24px;
+        padding: 28px 24px;
+        margin-bottom: 24px;
+        border-left: 5px solid var(--green);
+        background: var(--surface);
+        box-shadow: var(--shadow);
+        animation: fadeIn 0.4s ease-out;
+    }
+
+    .result-card h2 {
+        font-size: 20px;
+        font-weight: 800;
+        margin: 0 0 12px 0;
+        color: var(--text);
+    }
+
+    .result-brief {
+        background: var(--surface-strong);
+        padding: 12px 16px;
+        border-radius: 12px;
+        font-size: 14px;
+        line-height: 1.5;
+        margin-bottom: 18px;
+        border-left: 3px solid var(--blue);
+    }
+
+    .result-row {
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+        font-size: 14px;
+        line-height: 1.5;
+        color: var(--text);
+        margin-bottom: 20px;
+    }
+
+    .result-row i {
+        color: var(--green);
+        margin-top: 2px;
+    }
+
+    .quote-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    @media (min-width: 380px) {
+        .quote-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .quote-block {
+        background: var(--surface-strong);
+        border-radius: 16px;
+        padding: 16px;
+        border: 1px solid var(--line);
+    }
+
+    .quote-block h3 {
+        margin: 0 0 10px 0;
+        font-size: 12px;
+        font-weight: 800;
+        text-transform: uppercase;
+        color: var(--muted);
+        letter-spacing: 0.5px;
+    }
+
+    .materials-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .material-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        color: var(--text);
+    }
+
+    .material-item i {
+        color: var(--green);
+        min-width: 16px;
+    }
+
+    .quote-value {
+        font-size: 18px;
+        font-weight: 800;
+        color: var(--text);
+    }
+
+    .assistant-card {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 24px;
+        padding: 24px;
+        box-shadow: var(--shadow);
+    }
+
+    .assistant-card h2 {
+        font-size: 18px;
+        font-weight: 800;
+        margin: 0 0 16px 0;
+        color: var(--text);
+    }
+
+    .match-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+
+    .match-item {
+        background: var(--surface-strong);
+        border-radius: 14px;
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--text);
+        border: 1px solid var(--line);
+    }
+
+    .match-item i {
+        color: var(--blue);
+    }
+</style>
+
 <section class="ai-panel">
     <span class="eyebrow"><i data-lucide="sparkles"></i> Cotizador Inteligente</span>
-    <h1>Describe el trabajo o sube una foto.</h1>
-    <p>La IA transforma una solicitud informal en una cotizacion clara para cliente y profesional.</p>
+    <h1 style="margin: 12px 0 8px 0; font-size: 26px; font-weight: 800; line-height: 1.1;">Describe tu trabajo</h1>
+    <p style="margin: 0 0 20px 0; font-size: 14px; color: var(--muted); line-height: 1.4;">
+        Nuestra IA analizará tu problema y calculará materiales, tiempo y un presupuesto estimado de referencia.
+    </p>
     <form method="post" class="estimate-form">
         {% csrf_token %}
-        <textarea name="brief" rows="6" placeholder="Ej: quiero arreglar una pared humeda, pintar el cuarto y revisar un tomacorriente..."></textarea>
+        <textarea name="brief" rows="5" placeholder="Ej: Pintar la sala de estar (4x3m) color blanco mate, reparar grieta en panel de yeso y cambiar 2 tomacorrientes que no funcionan..." required></textarea>
         <label class="upload-box">
-            <i data-lucide="upload-cloud"></i>
-            <span>Agregar foto del trabajo</span>
-            <input type="file" disabled>
+            <i data-lucide="upload-cloud" style="width: 24px; height: 24px;"></i>
+            <span>Sube fotos del trabajo</span>
+            <span style="font-size: 11px; font-weight: 400; opacity: 0.7; margin-top: 2px;">(Próximamente disponible)</span>
+            <input type="file" style="display:none;" disabled>
         </label>
-        <button class="primary-button" type="submit"><i data-lucide="wand-2"></i>Generar cotizacion IA</button>
+        <button class="primary-button" type="submit" style="width: 100%;">
+            <i data-lucide="wand-2"></i> Generar cotización con IA
+        </button>
     </form>
 </section>
 
 {% if result %}
 <section class="result-card">
-    <h2>Cotizacion referencial</h2>
-    <p><strong>Solicitud:</strong> {{ result.brief }}</p>
+    <h2>Cotización Referencial de IA</h2>
+    <div class="result-brief">
+        <strong>Detalle del Trabajo:</strong> {{ result.brief }}
+    </div>
+    
     <div class="result-row">
-        <i data-lucide="clipboard-check"></i>
+        <i data-lucide="shield-check" style="width: 20px; height: 20px;"></i>
         <span>{{ result.technical }}</span>
     </div>
+
     <div class="quote-grid">
-        <article>
-            <h3>Materiales</h3>
-            {% for material in result.materials %}
-            <span>{{ material }}</span>
-            {% endfor %}
-        </article>
-        <article>
-            <h3>Tiempo</h3>
-            <strong>{{ result.time }}</strong>
-        </article>
-        <article>
-            <h3>Presupuesto</h3>
-            <strong>{{ result.budget }}</strong>
-        </article>
+        <div class="quote-block">
+            <h3>Materiales Sugeridos</h3>
+            <div class="materials-list">
+                {% for material in result.materials %}
+                <div class="material-item">
+                    <i data-lucide="check-square" style="width: 16px; height: 16px;"></i>
+                    <span>{{ material }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div class="quote-block">
+                <h3>Tiempo Estimado</h3>
+                <div class="quote-value" style="color: var(--blue);">
+                    <i data-lucide="clock" style="width: 16px; height: 16px; display: inline-block; vertical-align: middle; margin-right: 4px;"></i>
+                    {{ result.time }}
+                </div>
+            </div>
+            
+            <div class="quote-block">
+                <h3>Presupuesto</h3>
+                <div class="quote-value" style="color: var(--green);">
+                    <i data-lucide="dollar-sign" style="width: 16px; height: 16px; display: inline-block; vertical-align: middle; margin-right: 2px;"></i>
+                    {{ result.budget }}
+                </div>
+            </div>
+        </div>
     </div>
-    <button class="secondary-button" type="button"><i data-lucide="file-text"></i>Crear PDF profesional</button>
 </section>
 {% endif %}
 
-<section class="assistant-card">
-    <h2>Asistente de contratacion</h2>
-    <div class="match-list">
-        <span><i data-lucide="map-pin"></i> Ubicacion y distancia</span>
-        <span><i data-lucide="star"></i> Reputacion y puntualidad</span>
-        <span><i data-lucide="calendar-check"></i> Disponibilidad real</span>
-        <span><i data-lucide="shield-alert"></i> Deteccion de fraude</span>
+<section class="assistant-card" style="margin-bottom: 24px;">
+    <h2>Asistente de Contratación</h2>
+    <p style="font-size: 13px; color: var(--muted); margin: 0 0 16px 0; line-height: 1.4;">
+        Para garantizar la calidad de tu servicio, el sistema evalúa automáticamente a cada profesional:
+    </p>
+    <div class="match-grid">
+        <div class="match-item">
+            <i data-lucide="map-pin" style="width: 18px; height: 18px;"></i>
+            <span>Distancia Cercana</span>
+        </div>
+        <div class="match-item">
+            <i data-lucide="star" style="width: 18px; height: 18px;"></i>
+            <span>Alta Reputación</span>
+        </div>
+        <div class="match-item">
+            <i data-lucide="calendar-check" style="width: 18px; height: 18px;"></i>
+            <span>Disponibilidad Hoy</span>
+        </div>
+        <div class="match-item">
+            <i data-lucide="shield-check" style="width: 18px; height: 18px;"></i>
+            <span>Perfil Verificado</span>
+        </div>
     </div>
 </section>
 {% endblock %}

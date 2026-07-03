@@ -426,10 +426,10 @@
     {% if jobs %}
         <div>
             {% for job in jobs %}
-                <div class="ticket-card" style="border-left: 4px solid var(--green);">
+                <div class="ticket-card" style="border-left: 4px solid {% if job.status == 'COMPLETED' %}var(--green){% else %}var(--blue){% endif %};">
                     <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 6px;">
                         <strong style="font-size: 16px; color: var(--text);">{{ job.title }}</strong>
-                        <span class="ticket-badge" style="background: #def8ec; color: var(--green);">{{ job.get_status_display }}</span>
+                        <span class="ticket-badge" style="background: {% if job.status == 'COMPLETED' %}var(--green-soft){% else %}rgba(19, 93, 159, 0.1){% endif %}; color: {% if job.status == 'COMPLETED' %}var(--green){% else %}var(--blue){% endif %};">{{ job.get_status_display }}</span>
                     </div>
                     <p style="color: var(--muted); font-size: 13px; margin: 4px 0 12px 0;">{{ job.description }}</p>
                     
@@ -437,14 +437,39 @@
                         <div style="font-size: 13px; color: var(--text);">
                             <span style="display: block; font-weight: 600; margin-bottom: 2px;"><i data-lucide="user" style="width: 14px; height: 14px; display: inline; vertical-align: middle; margin-right: 4px;"></i>{{ job.client.username }}</span>
                         </div>
-                        {% if job.client.profile.phone %}
+                        {% if job.client.profile.phone and job.status == 'ACCEPTED' %}
                             <a href="https://wa.me/593{{ job.client.profile.phone }}?text=Hola%20{{ job.client.username }},%20soy%20{{ professional.name }}%20de%20ObraYa.%20Acepté%20tu%20solicitud%20para%20{{ job.title }}." target="_blank" class="whatsapp-btn-link">
                                 <i data-lucide="message-circle" style="width: 16px; height: 16px;"></i> WhatsApp
                             </a>
+                        {% elif job.status == 'COMPLETED' %}
+                            <span style="font-size: 12px; color: var(--green); font-weight: 700; display: flex; align-items: center; gap: 4px;">
+                                <i data-lucide="check" style="width: 16px; height: 16px;"></i> Terminado
+                            </span>
                         {% else %}
                             <span style="font-size: 11px; color: var(--muted);">Sin teléfono registrado</span>
                         {% endif %}
                     </div>
+
+                    {% if job.status == 'ACCEPTED' %}
+                        <div style="display: flex; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--line); width: 100%;">
+                            <form method="post" style="margin: 0; flex: 1;">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="complete_job">
+                                <input type="hidden" name="job_id" value="{{ job.id }}">
+                                <button type="submit" class="secondary-button" style="width: 100%; min-height: 36px; padding: 0 8px; font-size: 11px; border-radius: 12px; background: var(--green-soft); color: var(--green); display: flex; align-items: center; justify-content: center; gap: 4px; border: none; cursor: pointer; font-weight: 700;">
+                                    <i data-lucide="check-circle" style="width: 13px; height: 13px;"></i> Completar
+                                </button>
+                            </form>
+                            <form method="post" style="margin: 0; flex: 1;" onsubmit="return confirm('¿Estás seguro de cancelar este trabajo? Tu crédito será devuelto.');">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="cancel_job">
+                                <input type="hidden" name="job_id" value="{{ job.id }}">
+                                <button type="submit" class="secondary-button" style="width: 100%; min-height: 36px; padding: 0 8px; font-size: 11px; border-radius: 12px; background: rgba(220, 53, 69, 0.08); color: #dc3545; display: flex; align-items: center; justify-content: center; gap: 4px; border: none; cursor: pointer; font-weight: 700;">
+                                    <i data-lucide="x-circle" style="width: 13px; height: 13px;"></i> Cancelar / Devolver
+                                </button>
+                            </form>
+                        </div>
+                    {% endif %}
                 </div>
             {% endfor %}
         </div>
