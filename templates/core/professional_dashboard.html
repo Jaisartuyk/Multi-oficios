@@ -155,33 +155,80 @@
     }
 
     .pro-form-group {
-        margin-bottom: 16px;
+        margin-bottom: 20px;
     }
 
     .pro-form-group label {
         display: block;
-        margin-bottom: 6px;
-        color: var(--muted);
+        margin-bottom: 8px;
+        color: var(--text);
         font-weight: 700;
-        font-size: 13px;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .pro-input-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+        width: 100%;
+    }
+
+    .pro-input-wrapper i.pro-icon {
+        position: absolute;
+        left: 16px;
+        color: var(--muted);
+        pointer-events: none;
+        transition: color 0.3s;
     }
 
     .pro-input, .pro-select, .pro-textarea {
         width: 100%;
-        padding: 12px 16px;
-        border: 1px solid var(--line);
+        padding: 14px 16px 14px 46px;
+        border: 1.5px solid var(--line);
         border-radius: 16px;
         background: var(--surface-strong);
         color: var(--text);
         outline: none;
-        font-size: 14px;
-        transition: all 0.2s ease;
+        font-size: 15px;
+        transition: all 0.3s ease;
     }
 
     .pro-input:focus, .pro-select:focus, .pro-textarea:focus {
         border-color: var(--blue);
         background: var(--surface);
-        box-shadow: 0 0 0 4px rgba(19, 93, 159, 0.08);
+        box-shadow: 0 0 0 4px rgba(19, 93, 159, 0.12);
+    }
+
+    .pro-input:focus ~ i.pro-icon, .pro-select:focus ~ i.pro-icon, .pro-textarea:focus ~ i.pro-icon {
+        color: var(--blue);
+    }
+
+    .save-profile-btn {
+        background: linear-gradient(135deg, var(--green), #128c57);
+        color: #ffffff;
+        box-shadow: 0 6px 20px rgba(24, 167, 106, 0.15);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 48px;
+        gap: 8px;
+        border: 0;
+        border-radius: 16px;
+        font-weight: 800;
+        cursor: pointer;
+        width: 100%;
+        transition: transform 160ms ease, box-shadow 160ms ease, filter 160ms ease;
+    }
+
+    .save-profile-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(24, 167, 106, 0.3);
+    }
+
+    .save-profile-btn:active {
+        transform: translateY(0);
     }
 
     .whatsapp-btn-link {
@@ -273,24 +320,31 @@
         
         <div class="pro-form-group">
             <label>Disponibilidad Actual</label>
-            <select name="available" class="pro-select">
-                <option value="Disponible hoy" {% if professional.available == "Disponible hoy" %}selected{% endif %}>Disponible hoy</option>
-                <option value="Agenda abierta" {% if professional.available == "Agenda abierta" %}selected{% endif %}>Agenda abierta</option>
-                <option value="No disponible temporalmente" {% if professional.available == "No disponible temporalmente" %}selected{% endif %}>No disponible temporalmente</option>
-            </select>
+            <div class="pro-input-wrapper">
+                <i data-lucide="calendar" class="pro-icon" style="width: 20px; height: 20px;"></i>
+                <select name="available" class="pro-select">
+                    <option value="Disponible hoy" {% if professional.available == "Disponible hoy" %}selected{% endif %}>Disponible hoy</option>
+                    <option value="Agenda abierta" {% if professional.available == "Agenda abierta" %}selected{% endif %}>Agenda abierta</option>
+                    <option value="No disponible temporalmente" {% if professional.available == "No disponible temporalmente" %}selected{% endif %}>No disponible temporalmente</option>
+                </select>
+            </div>
         </div>
 
         <div class="pro-form-group">
             <label>Especialidad</label>
-            <input type="text" name="specialty" value="{{ professional.specialty }}" class="pro-input">
+            <div class="pro-input-wrapper">
+                <i data-lucide="briefcase" class="pro-icon" style="width: 20px; height: 20px;"></i>
+                <input type="text" name="specialty" value="{{ professional.specialty }}" class="pro-input">
+            </div>
         </div>
 
         <div class="pro-form-group">
             <label>Ubicación / Sector</label>
-            <div style="display: flex; gap: 8px;">
-                <input type="text" id="location_input" name="location" value="{{ professional.location }}" class="pro-input" placeholder="Ej. Urdesa Central, Guayaquil" style="flex: 1;">
-                <button type="button" id="btn-location" class="secondary-button" style="padding: 0 16px; border-radius: 16px; white-space: nowrap; display: flex; align-items: center; gap: 6px; cursor: pointer; min-height: 44px; font-size: 13px;">
-                    <i data-lucide="map-pin" style="width: 16px; height: 16px;"></i> GPS
+            <div class="pro-input-wrapper">
+                <i data-lucide="map-pin" class="pro-icon" style="width: 20px; height: 20px;"></i>
+                <input type="text" id="location_input" name="location" value="{{ professional.location }}" class="pro-input" placeholder="Ej. Urdesa Central, Guayaquil" style="padding-right: 90px; flex: 1;">
+                <button type="button" id="btn-location" class="secondary-button" style="position: absolute; right: 8px; min-height: unset; height: 38px; padding: 0 12px; border-radius: 10px; font-size: 11px; display: flex; align-items: center; gap: 4px; z-index: 5; background: var(--green-soft); color: var(--green);">
+                    <i data-lucide="map-pin" style="width: 14px; height: 14px;"></i> GPS
                 </button>
             </div>
             <input type="hidden" id="lat_input" name="lat" value="{{ professional.lat|stringformat:'f' }}">
@@ -299,10 +353,13 @@
 
         <div class="pro-form-group">
             <label>Sobre Mí</label>
-            <textarea name="about" class="pro-textarea" style="resize: vertical; min-height: 80px;">{{ professional.about }}</textarea>
+            <div class="pro-input-wrapper" style="align-items: flex-start;">
+                <i data-lucide="align-left" class="pro-icon" style="width: 20px; height: 20px; top: 16px;"></i>
+                <textarea name="about" class="pro-textarea" style="resize: vertical; min-height: 100px; padding-top: 14px;">{{ professional.about }}</textarea>
+            </div>
         </div>
 
-        <button type="submit" class="secondary-button" style="width: 100%; min-height: 44px;">
+        <button type="submit" class="save-profile-btn">
             <i data-lucide="save"></i> Guardar Perfil
         </button>
     </form>
