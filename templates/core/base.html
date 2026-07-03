@@ -241,11 +241,30 @@
             return v ? v.pop() : '';
         }
 
-        // Poll every 30 seconds
+    // Poll every 30 seconds
         fetchNotifs();
         setInterval(fetchNotifs, 30000);
     })();
     {% endif %}
     </script>
+
+    <!-- PWA Install Banner -->
+    <div id="pwa-install-banner" style="display: none; position: fixed; bottom: 80px; left: 16px; right: 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); padding: 16px; z-index: 9999; align-items: center; justify-content: space-between; gap: 12px; animation: slideUp 0.4s ease-out;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <img src="{% static 'img/logo.png' %}" alt="ObraYa Logo" style="width: 42px; height: 42px; object-fit: cover; border-radius: 10px;">
+            <div>
+                <strong style="display: block; font-size: 14px; color: var(--text);">Instala ObraYa</strong>
+                <span style="font-size: 11px; color: var(--muted); display: block; margin-top: 2px;">Acceso rápido y alertas directas</span>
+            </div>
+        </div>
+        <div style="display: flex; gap: 8px; align-items: center;">
+            <button id="pwa-install-btn" style="background: var(--blue); color: white; border: none; padding: 8px 16px; border-radius: 12px; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; white-space: nowrap;">
+                <i data-lucide="download" style="width: 14px; height: 14px; display: inline-block;"></i> Instalar
+            </button>
+            <button id="pwa-close-btn" style="background: none; border: none; color: var(--muted); cursor: pointer; padding: 4px; display: flex; align-items: center;" aria-label="Cerrar">
+                <i data-lucide="x" style="width: 18px; height: 18px;"></i>
+            </button>
+        </div>
+    </div>
 </body>
 </html>

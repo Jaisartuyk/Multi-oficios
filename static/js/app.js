@@ -238,4 +238,66 @@ document.addEventListener('DOMContentLoaded', () => {
     initProfessionalDashboard();
     updateThemeIcon();
     refreshIcons();
+
+    // PWA Installation prompt logic
+    let deferredPrompt;
+    const installBanner = document.getElementById('pwa-install-banner');
+    const installBtn = document.getElementById('pwa-install-btn');
+    const closeBtn = document.getElementById('pwa-close-btn');
+
+    // Check if running in standalone mode (already installed)
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+
+    if (!isStandalone && localStorage.getItem('pwa-banner-dismissed') !== 'true') {
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Prevent Chrome 67 and earlier from automatically showing the prompt
+            e.preventDefault();
+            // Stash the event so it can be triggered later
+            deferredPrompt = e;
+            // Show the banner
+            if (installBanner) {
+                installBanner.style.display = 'flex';
+                // Refresh Lucide icons in case they need to render inside the banner
+                if (window.lucide) window.lucide.createIcons();
+            }
+        });
+    }
+
+    if (installBtn) {
+        installBtn.addEventListener('click', () => {
+            if (!deferredPrompt) return;
+            // Show the prompt
+            deferredPrompt.prompt();
+            // Wait for the user to respond to the prompt
+            deferredPrompt.userChoice.then((choiceResult) => {
+                if (choiceResult.outcome === 'accepted') {
+                    console.log('User accepted the install prompt');
+                } else {
+                    console.log('User dismissed the install prompt');
+                }
+                deferredPrompt = null;
+                if (installBanner) {
+                    installBanner.style.display = 'none';
+                }
+            });
+        });
+    }
+
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+            if (installBanner) {
+                installBanner.style.display = 'none';
+            }
+            // Save dismissal state in localStorage
+            localStorage.setItem('pwa-banner-dismissed', 'true');
+        });
+    }
+
+    // Hide banner if app is installed successfully
+    window.addEventListener('appinstalled', () => {
+        if (installBanner) {
+            installBanner.style.display = 'none';
+        }
+        deferredPrompt = null;
+    });
 });
