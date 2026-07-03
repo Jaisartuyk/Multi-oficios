@@ -3,36 +3,244 @@
 {% block title %}Panel de Profesional | ObraYa{% endblock %}
 
 {% block content %}
-<section class="profile-hero">
-    <div class="profile-head">
-        <div class="avatar big">{{ professional.initials }}</div>
+<style>
+    /* Estilos Premium para el Dashboard del Profesional */
+    .pro-hero-card {
+        background: linear-gradient(135deg, var(--navy), var(--blue));
+        border-radius: 24px;
+        padding: 24px;
+        color: #ffffff;
+        margin-bottom: 24px;
+        box-shadow: var(--shadow);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .pro-hero-card::after {
+        content: '';
+        position: absolute;
+        width: 150px;
+        height: 150px;
+        background: rgba(24, 167, 106, 0.15);
+        border-radius: 50%;
+        top: -30px;
+        right: -30px;
+        filter: blur(20px);
+    }
+
+    .pro-profile-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .pro-avatar-container {
+        position: relative;
+    }
+
+    .pro-avatar {
+        width: 64px;
+        height: 64px;
+        background: rgba(255, 255, 255, 0.15);
+        border: 2px solid rgba(255, 255, 255, 0.4);
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        font-weight: 800;
+        color: #ffffff;
+        backdrop-filter: blur(10px);
+    }
+
+    .status-dot {
+        position: absolute;
+        bottom: -2px;
+        right: -2px;
+        width: 16px;
+        height: 16px;
+        background: var(--green);
+        border: 3px solid var(--navy);
+        border-radius: 50%;
+        animation: pulseStatus 2s infinite;
+    }
+
+    @keyframes pulseStatus {
+        0% { box-shadow: 0 0 0 0 rgba(24, 167, 106, 0.6); }
+        70% { box-shadow: 0 0 0 8px rgba(24, 167, 106, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(24, 167, 106, 0); }
+    }
+
+    .pro-stats-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        margin-bottom: 24px;
+    }
+
+    .stat-card {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 16px 12px;
+        text-align: center;
+        box-shadow: var(--shadow);
+        transition: transform 0.2s ease, border-color 0.2s;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-4px);
+    }
+
+    .stat-card.credits-highlight {
+        background: var(--green-soft);
+        border-color: var(--green);
+    }
+
+    .stat-card strong {
+        display: block;
+        font-size: 18px;
+        font-weight: 800;
+        color: var(--text);
+        margin-bottom: 4px;
+    }
+
+    .stat-card span {
+        font-size: 11px;
+        color: var(--muted);
+        text-transform: uppercase;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+    }
+
+    .ticket-card {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        padding: 20px;
+        margin-bottom: 16px;
+        box-shadow: var(--shadow);
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+    .ticket-card:hover {
+        border-color: var(--blue);
+        transform: scale(1.01);
+    }
+
+    .ticket-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 10px;
+    }
+
+    .ticket-badge {
+        font-size: 11px;
+        font-weight: 700;
+        padding: 4px 10px;
+        border-radius: 20px;
+        text-transform: uppercase;
+    }
+
+    .badge-price {
+        background: var(--green-soft);
+        color: var(--green);
+    }
+
+    .badge-time {
+        background: rgba(19, 93, 159, 0.1);
+        color: var(--blue);
+    }
+
+    .pro-form-group {
+        margin-bottom: 16px;
+    }
+
+    .pro-form-group label {
+        display: block;
+        margin-bottom: 6px;
+        color: var(--muted);
+        font-weight: 700;
+        font-size: 13px;
+    }
+
+    .pro-input, .pro-select, .pro-textarea {
+        width: 100%;
+        padding: 12px 16px;
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        background: var(--surface-strong);
+        color: var(--text);
+        outline: none;
+        font-size: 14px;
+        transition: all 0.2s ease;
+    }
+
+    .pro-input:focus, .pro-select:focus, .pro-textarea:focus {
+        border-color: var(--blue);
+        background: var(--surface);
+        box-shadow: 0 0 0 4px rgba(19, 93, 159, 0.08);
+    }
+
+    .whatsapp-btn-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: #25d366;
+        color: #ffffff;
+        padding: 8px 16px;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 13px;
+        text-decoration: none;
+        transition: filter 0.2s;
+    }
+
+    .whatsapp-btn-link:hover {
+        filter: brightness(0.95);
+    }
+</style>
+
+<section class="pro-hero-card">
+    <div class="pro-profile-wrapper">
+        <div class="pro-avatar-container">
+            <div class="pro-avatar">{{ professional.initials }}</div>
+            {% if professional.available == "Disponible hoy" or professional.available == "Agenda abierta" %}
+                <div class="status-dot"></div>
+            {% endif %}
+        </div>
         <div>
-            <h1>Hola, {{ professional.name }}</h1>
-            <p>{{ professional.specialty }} — {{ professional.level }}</p>
+            <h1 style="margin: 0; font-size: 24px; font-weight: 800;">Hola, {{ professional.name }}</h1>
+            <p style="margin: 4px 0 0; opacity: 0.9; font-size: 14px;">
+                {{ professional.specialty }} &bull; {{ professional.level }}
+            </p>
         </div>
     </div>
 </section>
 
 <!-- Estadísticas en tarjetas rápidas -->
-<section class="reputation-grid" style="margin-bottom: 24px; grid-template-columns: repeat(3, 1fr);">
-    <article>
+<section class="pro-stats-grid">
+    <div class="stat-card">
+        <i data-lucide="star" style="width: 20px; height: 20px; color: #f59e0b; margin: 0 auto 6px; display: block;"></i>
         <strong>{{ professional.rating }} ⭐</strong>
         <span>Calificación</span>
-    </article>
-    <article>
+    </div>
+    <div class="stat-card">
+        <i data-lucide="briefcase" style="width: 20px; height: 20px; color: var(--blue); margin: 0 auto 6px; display: block;"></i>
         <strong>{{ professional.jobs }}</strong>
         <span>Trabajos</span>
-    </article>
-    <article
-        style="background: var(--green-soft); border-color: var(--green); display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
-        <strong style="color: var(--green); font-size: 20px;">{{ professional.credits }}</strong>
-        <span style="color: var(--green); font-weight: 700;">Créditos 🪙</span>
-    </article>
+    </div>
+    <div class="stat-card credits-highlight">
+        <i data-lucide="coins" style="width: 20px; height: 20px; color: var(--green); margin: 0 auto 6px; display: block;"></i>
+        <strong>{{ professional.credits }}</strong>
+        <span>Créditos 🪙</span>
+    </div>
 </section>
 
 <!-- Explicación del Sistema de Créditos -->
-<section class="detail-card"
-    style="margin-bottom: 24px; background: linear-gradient(145deg, var(--surface), var(--background)); border: 1px solid var(--green); box-shadow: 0 4px 12px rgba(11, 203, 116, 0.1);">
+<section class="detail-card" style="margin-bottom: 24px; background: linear-gradient(145deg, var(--surface), var(--background)); border: 1px solid var(--green); box-shadow: 0 4px 12px rgba(11, 203, 116, 0.1);">
     <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
         <i data-lucide="info" style="color: var(--green);"></i>
         <h2 style="margin: 0; color: var(--green);">¿Cómo funcionan los créditos?</h2>
@@ -42,128 +250,112 @@
     </p>
     <ul style="font-size: 13px; color: var(--muted); margin-bottom: 16px; padding-left: 20px; line-height: 1.6;">
         <li>Ver los trabajos en la bolsa es <strong>100% gratis</strong>.</li>
-        <li>Solo se descuenta <strong>1 crédito</strong> cuando decides presionar "Aceptar" para ver el teléfono del
-            cliente.</li>
+        <li>Solo se descuenta <strong>1 crédito</strong> cuando decides presionar "Aceptar" para ver el teléfono del cliente.</li>
         <li>Te regalamos 3 créditos iniciales para que pruebes la app.</li>
     </ul>
-    <div
-        style="background: var(--surface-strong); padding: 12px; border-radius: 12px; border: 1px dashed var(--line); text-align: center;">
+    <div style="background: var(--surface-strong); padding: 12px; border-radius: 12px; border: 1px dashed var(--line); text-align: center;">
         <strong style="display: block; font-size: 13px; margin-bottom: 8px;">¿Te quedaste sin créditos?</strong>
-        <a href="https://wa.me/593968192046?text=Hola%20Administrador,%20deseo%20comprar%20un%20paquete%20de%20créditos%20para%20ObraYa"
-            target="_blank" class="primary-button"
-            style="display: inline-flex; text-decoration: none; font-size: 13px; padding: 0 16px; min-height: 36px;">
+        <a href="https://wa.me/593968192046?text=Hola%20Administrador,%20deseo%20comprar%20un%20paquete%20de%20créditos%20para%20ObraYa" target="_blank" class="primary-button" style="display: inline-flex; text-decoration: none; font-size: 13px; padding: 0 16px; min-height: 36px;">
             <i data-lucide="message-circle"></i> Escribir al Administrador
         </a>
     </div>
 </section>
 
 <!-- Editar estado del profesional -->
-<section class="detail-card" id="professional-profile">
-    <h2>Mi Disponibilidad y Estado</h2>
-    <form method="post" class="estimate-form" style="margin-top: 12px;">
+<section class="detail-card" id="professional-profile" style="margin-bottom: 24px;">
+    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
+        <i data-lucide="user-cog" style="color: var(--primary);"></i>
+        <h2 style="margin: 0;">Mi Disponibilidad y Estado</h2>
+    </div>
+    <form method="post" style="margin-top: 12px;">
         {% csrf_token %}
         <input type="hidden" name="action" value="update_profile">
-
-        <div style="margin-bottom: 12px;">
-            <label
-                style="display: block; margin-bottom: 6px; color: var(--muted); font-weight: 700; font-size: 13px;">Disponibilidad
-                Actual</label>
-            <select name="available"
-                style="width: 100%; padding: 12px 16px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface-strong); color: var(--text); outline: none;">
-                <option value="Disponible hoy" {% if professional.available == "Disponible hoy" %}selected{% endif %}>
-                    Disponible hoy</option>
-                <option value="Agenda abierta" {% if professional.available == "Agenda abierta" %}selected{% endif %}>
-                    Agenda abierta</option>
+        
+        <div class="pro-form-group">
+            <label>Disponibilidad Actual</label>
+            <select name="available" class="pro-select">
+                <option value="Disponible hoy" {% if professional.available == "Disponible hoy" %}selected{% endif %}>Disponible hoy</option>
+                <option value="Agenda abierta" {% if professional.available == "Agenda abierta" %}selected{% endif %}>Agenda abierta</option>
                 <option value="No disponible temporalmente" {% if professional.available == "No disponible temporalmente" %}selected{% endif %}>No disponible temporalmente</option>
             </select>
         </div>
 
-        <div style="margin-bottom: 12px;">
-            <label
-                style="display: block; margin-bottom: 6px; color: var(--muted); font-weight: 700; font-size: 13px;">Especialidad</label>
-            <input type="text" name="specialty" value="{{ professional.specialty }}"
-                style="width: 100%; padding: 12px 16px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface-strong); color: var(--text); outline: none;">
+        <div class="pro-form-group">
+            <label>Especialidad</label>
+            <input type="text" name="specialty" value="{{ professional.specialty }}" class="pro-input">
         </div>
 
-        <div style="margin-bottom: 12px;">
-            <label
-                style="display: block; margin-bottom: 6px; color: var(--muted); font-weight: 700; font-size: 13px;">Ubicación
-                / Sector</label>
+        <div class="pro-form-group">
+            <label>Ubicación / Sector</label>
             <div style="display: flex; gap: 8px;">
-                <input type="text" id="location_input" name="location" value="{{ professional.location }}"
-                    style="flex: 1; padding: 12px 16px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface-strong); color: var(--text); outline: none;"
-                    placeholder="Ej. Urdesa Central, Guayaquil">
-                <button type="button" id="btn-location" class="secondary-button"
-                    style="padding: 0 16px; border-radius: 16px; white-space: nowrap; display: flex; align-items: center; gap: 6px; cursor: pointer;">
-                    <i data-lucide="map-pin"></i> Usar mi ubicación
+                <input type="text" id="location_input" name="location" value="{{ professional.location }}" class="pro-input" placeholder="Ej. Urdesa Central, Guayaquil" style="flex: 1;">
+                <button type="button" id="btn-location" class="secondary-button" style="padding: 0 16px; border-radius: 16px; white-space: nowrap; display: flex; align-items: center; gap: 6px; cursor: pointer; min-height: 44px; font-size: 13px;">
+                    <i data-lucide="map-pin" style="width: 16px; height: 16px;"></i> GPS
                 </button>
             </div>
             <input type="hidden" id="lat_input" name="lat" value="{{ professional.lat|stringformat:'f' }}">
             <input type="hidden" id="lng_input" name="lng" value="{{ professional.lng|stringformat:'f' }}">
         </div>
 
-        <div style="margin-bottom: 12px;">
-            <label
-                style="display: block; margin-bottom: 6px; color: var(--muted); font-weight: 700; font-size: 13px;">Sobre
-                Mí</label>
-            <textarea name="about"
-                style="width: 100%; padding: 12px 16px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface-strong); color: var(--text); outline: none; resize: vertical;">{{ professional.about }}</textarea>
+        <div class="pro-form-group">
+            <label>Sobre Mí</label>
+            <textarea name="about" class="pro-textarea" style="resize: vertical; min-height: 80px;">{{ professional.about }}</textarea>
         </div>
 
-        <button type="submit" class="secondary-button" style="width: 100%;">
-            <i data-lucide="save"></i> Actualizar Perfil
+        <button type="submit" class="secondary-button" style="width: 100%; min-height: 44px;">
+            <i data-lucide="save"></i> Guardar Perfil
         </button>
     </form>
 </section>
 
 <!-- Bolsa de Trabajo (Trabajos Disponibles para Aceptar) -->
-<section class="section-block" id="job-market">
+<section class="section-block" id="job-market" style="margin-bottom: 24px;">
     <div class="section-title">
         <h2>Bolsa de Trabajo</h2>
         <span>Solicitudes de Clientes</span>
     </div>
 
     {% if professional.credits == 0 %}
-    <div class="search-card"
-        style="margin-top: 0; margin-bottom: 16px; background: rgba(220, 53, 69, 0.1); border-color: rgba(220, 53, 69, 0.2); color: #dc3545; padding: 12px 16px; border-radius: 16px;">
-        <div style="display: flex; align-items: center; gap: 8px;">
-            <i data-lucide="alert-circle" style="stroke: #dc3545;"></i>
-            <strong style="font-size: 14px;">No puedes aceptar trabajos</strong>
+        <div class="search-card" style="margin-top: 0; margin-bottom: 16px; background: rgba(220, 53, 69, 0.08); border-color: rgba(220, 53, 69, 0.2); color: #dc3545; padding: 16px; border-radius: 16px; display: flex; gap: 12px; align-items: flex-start;">
+            <i data-lucide="alert-circle" style="stroke: #dc3545; min-width: 20px;"></i>
+            <div>
+                <strong style="font-size: 14px; display: block; margin-bottom: 4px;">No puedes aceptar trabajos</strong>
+                <p style="margin: 0; font-size: 13px; opacity: 0.9;">No tienes créditos suficientes. Haz clic arriba para escribirle al administrador y recargar tu cuenta.</p>
+            </div>
         </div>
-        <p style="margin: 4px 0 0; font-size: 13px; opacity: 0.9;">No tienes créditos de trabajo disponibles. Solicita
-            una recarga física al administrador para poder aceptar nuevas solicitudes.</p>
-    </div>
     {% endif %}
 
     {% if pending_jobs %}
-    <div class="pro-list">
-        {% for job in pending_jobs %}
-        <div class="pro-card" style="grid-template-columns: 1fr auto; align-items: start;">
-            <div>
-                <strong style="font-size: 16px; display: block; margin-bottom: 4px;">{{ job.title }}</strong>
-                <p style="color: var(--muted); font-size: 13px; margin: 4px 0;">{{ job.description }}</p>
-                <div class="trust-row">
-                    <span><i data-lucide="user"></i> {{ job.client.username }}</span>
-                    <span><i data-lucide="dollar-sign"></i> {{ job.estimated_price }}</span>
-                    <span><i data-lucide="clock"></i> {{ job.estimated_time }}</span>
+        <div>
+            {% for job in pending_jobs %}
+                <div class="ticket-card">
+                    <div class="ticket-header">
+                        <strong style="font-size: 16px; color: var(--text); display: block; max-width: 75%;">{{ job.title }}</strong>
+                        <span class="ticket-badge badge-price">{{ job.estimated_price }}</span>
+                    </div>
+                    <p style="color: var(--muted); font-size: 13px; margin: 8px 0 12px 0; line-height: 1.4;">{{ job.description }}</p>
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed var(--line); padding-top: 12px; margin-top: 12px;">
+                        <div class="trust-row" style="margin: 0;">
+                            <span><i data-lucide="user" style="width: 14px; height: 14px;"></i> {{ job.client.username }}</span>
+                            <span><i data-lucide="clock" style="width: 14px; height: 14px;"></i> {{ job.estimated_time }}</span>
+                        </div>
+                        <form method="post" style="margin: 0;">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="accept_job">
+                            <input type="hidden" name="job_id" value="{{ job.id }}">
+                            <button type="submit" class="{% if professional.credits == 0 %}secondary-button{% else %}primary-button{% endif %}" style="padding: 0 16px; min-height: 36px; font-size: 13px; font-weight: 700;" {% if professional.credits == 0 %}disabled{% endif %}>
+                                Aceptar
+                            </button>
+                        </form>
+                    </div>
                 </div>
-            </div>
-            <form method="post" style="margin-left: 8px;">
-                {% csrf_token %}
-                <input type="hidden" name="action" value="accept_job">
-                <input type="hidden" name="job_id" value="{{ job.id }}">
-                <button type="submit"
-                    class="{% if professional.credits == 0 %}secondary-button{% else %}primary-button{% endif %}"
-                    style="padding: 0 16px; min-height: 40px; font-size: 13px;" {% if professional.credits == 0 %}disabled{% endif %}>
-                    Aceptar
-                </button>
-            </form>
+            {% endfor %}
         </div>
-        {% endfor %}
-    </div>
     {% else %}
-    <p style="color: var(--muted); text-align: center; padding: 20px;">No hay nuevas solicitudes en la bolsa de trabajo
-        en este momento.</p>
+        <p style="color: var(--muted); text-align: center; padding: 24px; background: var(--surface); border-radius: 16px; border: 1px solid var(--line);">
+            No hay nuevas solicitudes en este momento.
+        </p>
     {% endif %}
 </section>
 
@@ -175,34 +367,40 @@
     </div>
 
     {% if jobs %}
-    <div class="pro-list">
-        {% for job in jobs %}
-        <div class="pro-card" style="grid-template-columns: 1fr; cursor: default;">
-            <div>
-                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
-                    <strong style="font-size: 16px;">{{ job.title }}</strong>
-                    <span class="verified-review" style="background: #def8ec; color: var(--green);">{{
-                        job.get_status_display }}</span>
+        <div>
+            {% for job in jobs %}
+                <div class="ticket-card" style="border-left: 4px solid var(--green);">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 6px;">
+                        <strong style="font-size: 16px; color: var(--text);">{{ job.title }}</strong>
+                        <span class="ticket-badge" style="background: #def8ec; color: var(--green);">{{ job.get_status_display }}</span>
+                    </div>
+                    <p style="color: var(--muted); font-size: 13px; margin: 4px 0 12px 0;">{{ job.description }}</p>
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--line); padding-top: 12px; margin-top: 12px;">
+                        <div style="font-size: 13px; color: var(--text);">
+                            <span style="display: block; font-weight: 600; margin-bottom: 2px;"><i data-lucide="user" style="width: 14px; height: 14px; display: inline; vertical-align: middle; margin-right: 4px;"></i>{{ job.client.username }}</span>
+                        </div>
+                        {% if job.client.profile.phone %}
+                            <a href="https://wa.me/593{{ job.client.profile.phone }}?text=Hola%20{{ job.client.username }},%20soy%20{{ professional.name }}%20de%20ObraYa.%20Acepté%20tu%20solicitud%20para%20{{ job.title }}." target="_blank" class="whatsapp-btn-link">
+                                <i data-lucide="message-circle" style="width: 16px; height: 16px;"></i> WhatsApp
+                            </a>
+                        {% else %}
+                            <span style="font-size: 11px; color: var(--muted);">Sin teléfono registrado</span>
+                        {% endif %}
+                    </div>
                 </div>
-                <p style="color: var(--muted); font-size: 13px; margin: 4px 0;">{{ job.description }}</p>
-                <div class="trust-row" style="margin-top: 6px;">
-                    <span><i data-lucide="user"></i> Cliente: {{ job.client.username }}</span>
-                    <span><i data-lucide="phone"></i> WhatsApp: {{ job.client.profile.phone|default:"No registrado"
-                        }}</span>
-                </div>
-            </div>
+            {% endfor %}
         </div>
-        {% endfor %}
-    </div>
     {% else %}
-    <p style="color: var(--muted); text-align: center; padding: 20px;">Aún no has aceptado ningún trabajo.</p>
+        <p style="color: var(--muted); text-align: center; padding: 24px; background: var(--surface); border-radius: 16px; border: 1px solid var(--line);">
+            Aún no has aceptado ningún trabajo.
+        </p>
     {% endif %}
 </section>
 
-<script
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAtEPZgbPBwnJGrvIuwplRJDFbr0tmbnyQ&libraries=places"></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAtEPZgbPBwnJGrvIuwplRJDFbr0tmbnyQ&libraries=places"></script>
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
+    document.addEventListener("DOMContentLoaded", function() {
         const locationInput = document.getElementById("location_input");
         const latInput = document.getElementById("lat_input");
         const lngInput = document.getElementById("lng_input");
@@ -220,31 +418,30 @@
                     lngInput.value = place.geometry.location.lng();
                 }
             });
-
-            // Prevent Enter from submitting the form when selecting a place
-            locationInput.addEventListener('keydown', function (e) {
+            
+            locationInput.addEventListener('keydown', function(e) {
                 if (e.key === 'Enter') {
                     e.preventDefault();
                 }
             });
         }
 
-        if (btnLocation) {
-            btnLocation.addEventListener("click", function () {
+        if(btnLocation) {
+            btnLocation.addEventListener("click", function() {
                 if (navigator.geolocation) {
-                    btnLocation.innerHTML = '<i data-lucide="loader"></i> Buscando...';
+                    btnLocation.innerHTML = '<i data-lucide="loader"></i> ...';
                     if (typeof lucide !== 'undefined') lucide.createIcons();
-
-                    navigator.geolocation.getCurrentPosition(function (position) {
+                    
+                    navigator.geolocation.getCurrentPosition(function(position) {
                         const lat = position.coords.latitude;
                         const lng = position.coords.longitude;
                         latInput.value = lat;
                         lngInput.value = lng;
-
+                        
                         if (typeof google !== 'undefined' && google.maps) {
                             const geocoder = new google.maps.Geocoder();
                             const latlng = { lat: parseFloat(lat), lng: parseFloat(lng) };
-                            geocoder.geocode({ location: latlng }, function (results, status) {
+                            geocoder.geocode({ location: latlng }, function(results, status) {
                                 if (status === "OK" && results[0]) {
                                     locationInput.value = results[0].formatted_address;
                                 } else {
@@ -256,7 +453,7 @@
                             locationInput.value = lat + ", " + lng;
                             resetButton();
                         }
-                    }, function (error) {
+                    }, function(error) {
                         alert("Error obteniendo ubicación: " + error.message);
                         resetButton();
                     });
@@ -267,7 +464,7 @@
         }
 
         function resetButton() {
-            btnLocation.innerHTML = '<i data-lucide="map-pin"></i> Usar mi ubicación';
+            btnLocation.innerHTML = '<i data-lucide="map-pin" style="width: 16px; height: 16px;"></i> GPS';
             if (typeof lucide !== 'undefined') lucide.createIcons();
         }
     });
