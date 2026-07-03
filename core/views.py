@@ -80,7 +80,7 @@ def estimator(request):
             'budget': f'{estimated_price} referencial',
         }
         
-        JobRequest.objects.create(
+        job = JobRequest.objects.create(
             client=request.user,
             title=brief[:100],
             description=brief,
@@ -88,6 +88,16 @@ def estimator(request):
             estimated_time=estimated_time,
             status='PENDING'
         )
+        # Notificar a todos los profesionales sobre el nuevo trabajo
+        pros = Professional.objects.filter(user__isnull=False)
+        for pro in pros:
+            Notification.objects.create(
+                recipient=pro.user,
+                notif_type='NEW_JOB',
+                title='💼 ¡Nuevo Trabajo Disponible!',
+                message=f'Se busca para: "{job.title}". Revisa los detalles en la bolsa.',
+                link='/dashboard/profesional/#job-market'
+            )
         messages.success(request, '¡Tu cotización ha sido procesada y guardada en tu panel!')
         
     return render(request, 'core/estimator.html', {'result': result})
@@ -308,6 +318,18 @@ def client_dashboard(request):
                         notif_type='JOB_REOPENED',
                         title='Trabajo devuelto a la bolsa',
                         message=f'El cliente ha reabierto la solicitud "{job.title}". Ya no estás asignado a este trabajo.',
+                        link='/dashboard/profesional/#job-market'
+                    )
+                # Notificar a los demás profesionales que hay una oportunidad reabierta
+                pros = Professional.objects.filter(user__isnull=False)
+                if old_professional:
+                    pros = pros.exclude(id=old_professional.id)
+                for pro in pros:
+                    Notification.objects.create(
+                        recipient=pro.user,
+                        notif_type='NEW_JOB',
+                        title='💼 ¡Oportunidad Reabierta!',
+                        message=f'El trabajo "{job.title}" está disponible de nuevo en la bolsa.',
                         link='/dashboard/profesional/#job-market'
                     )
             except JobRequest.DoesNotExist:
