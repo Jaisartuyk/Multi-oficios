@@ -23,11 +23,11 @@
 <body>
     <div class="app-shell">
         <header class="topbar">
-            <a class="brand" href="{% if user.is_authenticated %}{% url 'dashboard_redirect' %}{% else %}{% url 'login' %}{% endif %}" aria-label="ObraYa inicio">
-                <span class="brand-mark">OY</span>
+            <a class="brand" href="{% if user.is_authenticated %}{% url 'dashboard_redirect' %}{% else %}{% url 'login' %}{% endif %}" aria-label="ObraYa inicio" style="display: flex; align-items: center;">
+                <img src="{% static 'img/logo.png' %}" alt="ObraYa Logo" style="height: 38px; width: 38px; object-fit: cover; border-radius: 10px; margin-right: 8px;">
                 <span>
-                    <strong>ObraYa</strong>
-                    <small>Confianza para construir</small>
+                    <strong style="font-weight: 800; font-size: 16px; line-height: 1.1;">ObraYa</strong>
+                    <small style="font-size: 11px; color: var(--muted); display: block;">Confianza para construir</small>
                 </span>
             </a>
             <div style="display: flex; gap: 8px; align-items: center;">
