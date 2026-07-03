@@ -3,52 +3,259 @@
 {% block title %}Iniciar Sesión | ObraYa{% endblock %}
 
 {% block content %}
-<section class="section-block">
-    <div class="section-title">
-        <h2>Bienvenido de vuelta</h2>
-        <span>Inicia sesión</span>
-    </div>
+<style>
+    .login-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 20px 10px;
+        animation: fadeIn 0.6s ease-out;
+    }
 
-    {% if messages %}
-        {% for message in messages %}
-            <div class="search-card" style="margin-bottom: 15px; color: {% if message.tags == 'error' %}var(--error-color, #dc3545){% else %}var(--green){% endif %};">
-                <strong>{{ message }}</strong>
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .login-card {
+        width: 100%;
+        max-width: 400px;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        box-shadow: var(--shadow);
+        border-radius: 24px;
+        padding: 32px 24px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .login-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 6px;
+        background: linear-gradient(135deg, var(--navy), var(--green));
+    }
+
+    .login-header {
+        text-align: center;
+        margin-bottom: 28px;
+    }
+
+    .login-logo {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 56px;
+        height: 56px;
+        border-radius: 16px;
+        background: linear-gradient(135deg, var(--navy), var(--green));
+        color: #ffffff;
+        font-size: 24px;
+        font-weight: 800;
+        margin-bottom: 16px;
+        box-shadow: 0 8px 20px rgba(11, 47, 79, 0.15);
+    }
+
+    .login-header h2 {
+        font-size: 24px;
+        font-weight: 800;
+        margin: 0 0 6px 0;
+        color: var(--text);
+    }
+
+    .login-header p {
+        color: var(--muted);
+        font-size: 14px;
+        margin: 0;
+    }
+
+    .input-group {
+        position: relative;
+        margin-bottom: 20px;
+    }
+
+    .input-group label {
+        display: block;
+        margin-bottom: 8px;
+        color: var(--text);
+        font-weight: 700;
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .input-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .input-wrapper i.input-icon {
+        position: absolute;
+        left: 16px;
+        color: var(--muted);
+        pointer-events: none;
+        transition: color 0.3s;
+    }
+
+    .input-wrapper input {
+        width: 100%;
+        padding: 14px 16px 14px 46px;
+        border: 1.5px solid var(--line);
+        border-radius: 16px;
+        background: var(--surface-strong);
+        color: var(--text);
+        outline: none;
+        font-size: 15px;
+        transition: all 0.3s ease;
+    }
+
+    .input-wrapper input:focus {
+        border-color: var(--blue);
+        background: var(--surface);
+        box-shadow: 0 0 0 4px rgba(19, 93, 159, 0.12);
+    }
+
+    .input-wrapper input:focus ~ i.input-icon {
+        color: var(--blue);
+    }
+
+    .password-toggle {
+        position: absolute;
+        right: 16px;
+        background: none;
+        border: none;
+        color: var(--muted);
+        cursor: pointer;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .password-toggle:hover {
+        color: var(--text);
+    }
+
+    .alert-banner {
+        background: rgba(220, 53, 69, 0.08);
+        border: 1px solid rgba(220, 53, 69, 0.2);
+        color: #dc3545;
+        padding: 12px 16px;
+        border-radius: 16px;
+        margin-bottom: 20px;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .success-banner {
+        background: rgba(24, 167, 106, 0.08);
+        border: 1px solid rgba(24, 167, 106, 0.2);
+        color: var(--green);
+        padding: 12px 16px;
+        border-radius: 16px;
+        margin-bottom: 20px;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+</style>
+
+<div class="login-container">
+    <div class="login-card">
+        <div class="login-header">
+            <div class="login-logo">
+                <i data-lucide="shield-check" style="width: 28px; height: 28px;"></i>
             </div>
-        {% endfor %}
-    {% endif %}
+            <h2>ObraYa</h2>
+            <p>Conectando soluciones profesionales</p>
+        </div>
 
-    <div class="result-card">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="{% if message.tags == 'error' %}alert-banner{% else %}success-banner{% endif %}">
+                    <i data-lucide="{% if message.tags == 'error' %}alert-circle{% else %}check-circle{% endif %}" style="width: 20px; height: 20px;"></i>
+                    <strong>{{ message }}</strong>
+                </div>
+            {% endfor %}
+        {% endif %}
+
         <form method="post" class="estimate-form">
             {% csrf_token %}
+            
             {% for field in form %}
-                <div style="margin-bottom: 12px;">
-                    <label for="{{ field.id_for_label }}" style="display: block; margin-bottom: 6px; color: var(--muted); font-weight: 700; font-size: 13px;">{{ field.label }}</label>
-                    {{ field }}
+                <div class="input-group">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    <div class="input-wrapper">
+                        {% if 'password' in field.name.lower %}
+                            <i data-lucide="lock" class="input-icon" style="width: 20px; height: 20px;"></i>
+                            {{ field }}
+                            <button type="button" class="password-toggle" onclick="togglePasswordVisibility('{{ field.id_for_label }}', this)">
+                                <i data-lucide="eye" style="width: 20px; height: 20px;"></i>
+                            </button>
+                        {% else %}
+                            <i data-lucide="user" class="input-icon" style="width: 20px; height: 20px;"></i>
+                            {{ field }}
+                        {% endif %}
+                    </div>
                     {% if field.errors %}
-                        <span style="color: #dc3545; font-size: 12px;">{{ field.errors|striptags }}</span>
+                        <span style="color: #dc3545; font-size: 12px; display: block; margin-top: 6px;">{{ field.errors|striptags }}</span>
                     {% endif %}
                 </div>
             {% endfor %}
+
             <button type="submit" class="primary-button" style="width: 100%; margin-top: 10px;">
                 <i data-lucide="log-in"></i> Iniciar sesión
             </button>
         </form>
-        <p style="text-align: center; margin-top: 20px; font-size: 14px; color: var(--muted);">
-            ¿No tienes cuenta? <a href="{% url 'register' %}" style="color: var(--blue); font-weight: 700;">Regístrate aquí</a>
+
+        <p style="text-align: center; margin-top: 24px; font-size: 14px; color: var(--muted); margin-bottom: 0;">
+            ¿No tienes cuenta? <a href="{% url 'register' %}" style="color: var(--blue); font-weight: 700; transition: color 0.2s;">Regístrate aquí</a>
         </p>
     </div>
-</section>
+</div>
 
 <script>
-    // Aplicar estilos a los inputs de django por defecto
-    document.querySelectorAll('.estimate-form input').forEach(input => {
-        input.style.width = '100%';
-        input.style.padding = '12px 16px';
-        input.style.border = '1px solid var(--line)';
-        input.style.borderRadius = '16px';
-        input.style.background = 'var(--surface-strong)';
-        input.style.color = 'var(--text)';
-        input.style.outline = 'none';
+    document.addEventListener("DOMContentLoaded", function() {
+        // Configurar dinámicamente los inputs generados por Django
+        const usernameInput = document.querySelector('.input-group input[name*="username"]');
+        const passwordInput = document.querySelector('.input-group input[name*="password"]');
+
+        if (usernameInput) {
+            usernameInput.placeholder = "Ingresa tu usuario";
+        }
+        if (passwordInput) {
+            passwordInput.placeholder = "Ingresa tu contraseña";
+        }
+
+        // Refrescar íconos de lucide
+        if (window.lucide) {
+            window.lucide.createIcons();
+        }
     });
+
+    function togglePasswordVisibility(fieldId, button) {
+        const passwordInput = document.getElementById(fieldId);
+        const icon = button.querySelector('i');
+        
+        if (passwordInput.type === "password") {
+            passwordInput.type = "text";
+            icon.setAttribute('data-lucide', 'eye-off');
+        } else {
+            passwordInput.type = "password";
+            icon.setAttribute('data-lucide', 'eye');
+        }
+        
+        if (window.lucide) {
+            window.lucide.createIcons();
+        }
+    }
 </script>
 {% endblock %}
