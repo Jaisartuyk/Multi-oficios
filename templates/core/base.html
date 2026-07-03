@@ -155,8 +155,15 @@
         let panelOpen = false;
         let lastUnreadCount = 0;
 
-        if ('Notification' in window && Notification.permission !== 'granted' && Notification.permission !== 'denied') {
-            Notification.requestPermission();
+        // Solicitud de permisos nativos móvil
+        function requestNotificationPermission() {
+            if ('Notification' in window && Notification.permission === 'default') {
+                Notification.requestPermission().then(permission => {
+                    if (permission === 'granted') {
+                        console.log('Permiso de notificaciones otorgado.');
+                    }
+                });
+            }
         }
 
         function fetchNotifs() {
@@ -169,11 +176,22 @@
                         // Si hay nuevas notificaciones que antes no estaban, hacer push nativo
                         if (data.unread_count > lastUnreadCount && 'Notification' in window && Notification.permission === 'granted') {
                             const latest = data.notifications[0];
-                            new Notification("ObraYa: " + latest.title, {
+                            const title = "ObraYa: " + latest.title;
+                            const options = {
                                 body: latest.message,
                                 icon: '/static/img/icon-192.png',
-                                vibrate: [200, 100, 200]
-                            });
+                                vibrate: [200, 100, 200],
+                                data: { url: latest.link || '/' }
+                            };
+
+                            // Compatibilidad con móviles usando el Service Worker registrado
+                            if ('serviceWorker' in navigator && 'showNotification' in ServiceWorkerRegistration.prototype) {
+                                navigator.serviceWorker.ready.then(function(registration) {
+                                    registration.showNotification(title, options);
+                                });
+                            } else {
+                                new Notification(title, options);
+                            }
                         }
                     } else {
                         badge.style.display = 'none';
@@ -203,6 +221,26 @@
                         </a>
                     `).join('');
                     if (window.lucide) window.lucide.createIcons();
+
+                    // Bind click event to mark notification as read
+                    list.querySelectorAll('a[data-notif-id]').forEach(link => {
+                        link.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            const notifId = this.dataset.notifId;
+                            const targetUrl = this.getAttribute('href');
+                            
+                            fetch('/api/notifications/read/', {
+                                method: 'POST',
+                                headers: { 
+                                    'X-CSRFToken': getCookie('csrftoken'), 
+                                    'Content-Type': 'application/x-www-form-urlencoded' 
+                                },
+                                body: 'id=' + encodeURIComponent(notifId)
+                            }).finally(() => {
+                                window.location.href = targetUrl;
+                            });
+                        });
+                    });
                 })
                 .catch(() => {});
         }
@@ -212,6 +250,10 @@
                 e.stopPropagation();
                 panelOpen = !panelOpen;
                 panel.style.display = panelOpen ? 'block' : 'none';
+                
+                // Pedir permisos en respuesta a un clic (obligatorio para iOS Safari)
+                requestNotificationPermission();
+                
                 if (panelOpen) fetchNotifs();
             });
         }
