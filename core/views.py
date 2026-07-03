@@ -7,7 +7,7 @@ from django.contrib import messages
 from django.db import models
 from django.views.decorators.http import require_POST
 from .access import redirect_to_role_dashboard, role_required
-from .models import Category, Professional, Service, JobRequest, UserProfile, Notification
+from .models import Category, Professional, Service, JobRequest, UserProfile, Notification, Recharge
 from .forms import CustomUserCreationForm, AdminProfessionalForm, AdminClientForm
 from django.contrib.auth.forms import AuthenticationForm
 
