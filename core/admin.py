@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Category, Professional, Service, UserProfile, JobRequest, Notification
+from .models import Category, Professional, Service, UserProfile, JobRequest, Notification, Recharge
 
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
@@ -39,3 +39,10 @@ class NotificationAdmin(admin.ModelAdmin):
     @admin.action(description='Marcar como leídas')
     def mark_as_read(self, request, queryset):
         queryset.update(is_read=True)
+
+@admin.register(Recharge)
+class RechargeAdmin(admin.ModelAdmin):
+    list_display = ('professional', 'amount_paid', 'credits_added', 'payment_method', 'created_at')
+    list_filter = ('payment_method', 'created_at')
+    search_fields = ('professional__name', 'professional__user__username')
+    date_hierarchy = 'created_at'

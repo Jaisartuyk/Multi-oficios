@@ -118,6 +118,45 @@ function initProfessionalDashboard() {
         return;
     }
 
+    let lastUnreadCount = 0;
+
+    // Solicitar permiso para notificaciones nativas del teléfono (Web Notifications API)
+    if ('Notification' in window) {
+        if (Notification.permission === 'default' || Notification.permission === 'prompt') {
+            Notification.requestPermission();
+        }
+    }
+
+    function fetchNotifs() {
+        fetch('/api/notifications/')
+            .then(res => res.json())
+            .then(data => {
+                const badge = document.querySelector('.notification-badge');
+                const bellIcon = document.querySelector('.bell-icon');
+                if (data.unread_count > 0) {
+                    badge.textContent = data.unread_count;
+                    badge.style.display = 'flex';
+                    bellIcon.style.stroke = 'var(--primary)';
+                    bellIcon.classList.add('shake');
+                    
+                    // Si hay notificaciones nuevas (el número subió), lanzar notificación push local
+                    if (data.unread_count > lastUnreadCount && 'Notification' in window && Notification.permission === 'granted') {
+                        const latestNotif = data.notifications[0];
+                        new Notification("ObraYa: " + latestNotif.title, {
+                            body: latestNotif.message,
+                            icon: '/static/img/icon-192.png',
+                            vibrate: [200, 100, 200]
+                        });
+                    }
+                } else {
+                    badge.style.display = 'none';
+                    bellIcon.style.stroke = 'currentColor';
+                    bellIcon.classList.remove('shake');
+                }
+                lastUnreadCount = data.unread_count;
+            });
+    }
+
     const hero = document.querySelector('.profile-hero');
     const stats = document.querySelector('.reputation-grid');
     const navLinks = document.querySelectorAll('.bottom-nav a');

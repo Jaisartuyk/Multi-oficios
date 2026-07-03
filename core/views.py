@@ -26,7 +26,8 @@ def dashboard_redirect(request):
 @role_required('CLIENT')
 def home(request):
     categories = Category.objects.all()
-    professionals = Professional.objects.all()
+    # Filter out professionals who are not available
+    professionals = Professional.objects.exclude(available='No disponible temporalmente')
     services = Service.objects.all()
 
     q = request.GET.get('q', '').strip()
@@ -109,6 +110,46 @@ def admin_panel(request):
 def admin_users(request):
     users = User.objects.all().select_related('profile', 'professional_profile').order_by('-id')
     return render(request, 'core/admin_users.html', {'users_list': users})
+
+@role_required('ADMIN')
+def admin_recharges(request):
+    if request.method == 'POST':
+        pro_id = request.POST.get('professional_id')
+        amount = request.POST.get('amount')
+        credits = request.POST.get('credits')
+        method = request.POST.get('method')
+        
+        pro = get_object_or_404(Professional, id=pro_id)
+        pro.credits += int(credits)
+        pro.save()
+        
+        Recharge.objects.create(
+            professional=pro,
+            amount_paid=amount,
+            credits_added=credits,
+            payment_method=method
+        )
+        
+        Notification.objects.create(
+            recipient=pro.user,
+            notif_type='CREDITS',
+            title='¡Recarga Exitosa!',
+            message=f'Se han añadido {credits} créditos a tu cuenta por tu pago de ${amount}.',
+            link='/dashboard/profesional/'
+        )
+        messages.success(request, f'Se han recargado {credits} créditos a {pro.name}.')
+        return redirect('admin_recharges')
+        
+    recharges = Recharge.objects.all().select_related('professional').order_by('-created_at')
+    professionals = Professional.objects.all().order_by('name')
+    
+    total_ingresos = sum(r.amount_paid for r in recharges)
+    
+    return render(request, 'core/admin_recharges.html', {
+        'recharges': recharges,
+        'professionals': professionals,
+        'total_ingresos': total_ingresos
+    })
 
 @role_required('ADMIN')
 def admin_add_professional(request):

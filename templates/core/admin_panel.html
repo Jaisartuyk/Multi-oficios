@@ -10,14 +10,14 @@
 </section>
 
 <!-- Accesos directos rápidos -->
-<div class="hero-actions" style="grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 24px;">
-    <a class="primary-button" href="{% url 'admin_users' %}">
-        <i data-lucide="users"></i>
-        Gestionar Usuarios
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
+    <a href="{% url 'admin_users' %}" class="detail-card" style="text-decoration: none; text-align: center; border: 1px solid var(--line);">
+        <i data-lucide="users" style="color: var(--primary); margin-bottom: 8px;"></i>
+        <h3 style="color: var(--text); margin: 0; font-size: 16px;">Gestión de Usuarios</h3>
     </a>
-    <a class="secondary-button" href="{% url 'admin_add_professional' %}" style="background: var(--surface-strong); color: var(--text);">
-        <i data-lucide="user-plus"></i>
-        Nuevo Profesional
+    <a href="{% url 'admin_recharges' %}" class="detail-card" style="text-decoration: none; text-align: center; border: 1px solid var(--green); background: var(--green-soft);">
+        <i data-lucide="dollar-sign" style="color: var(--green); margin-bottom: 8px;"></i>
+        <h3 style="color: var(--green); margin: 0; font-size: 16px;">Finanzas y Recargas</h3>
     </a>
 </div>
 

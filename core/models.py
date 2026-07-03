@@ -136,3 +136,18 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"[{self.get_notif_type_display()}] {self.title} → {self.recipient.username}"
+
+class Recharge(models.Model):
+    professional = models.ForeignKey(Professional, on_delete=models.CASCADE, related_name='recharges', verbose_name="Profesional")
+    amount_paid = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Monto Pagado ($)")
+    credits_added = models.IntegerField(verbose_name="Créditos Añadidos")
+    payment_method = models.CharField(max_length=50, choices=[('EFECTIVO', 'Efectivo'), ('TRANSFERENCIA', 'Transferencia'), ('DEUNA', 'DeUna')], default='TRANSFERENCIA', verbose_name="Método de Pago")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de Recarga")
+
+    class Meta:
+        verbose_name = "Recarga de Créditos"
+        verbose_name_plural = "Historial de Recargas"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.professional.name} - +{self.credits_added} créditos (${self.amount_paid})"

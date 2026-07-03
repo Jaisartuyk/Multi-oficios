@@ -153,6 +153,11 @@
         const list = document.getElementById('notif-list');
         const markAll = document.getElementById('notif-mark-all');
         let panelOpen = false;
+        let lastUnreadCount = 0;
+
+        if ('Notification' in window && Notification.permission !== 'granted' && Notification.permission !== 'denied') {
+            Notification.requestPermission();
+        }
 
         function fetchNotifs() {
             fetch('/api/notifications/')
@@ -160,9 +165,22 @@
                 .then(data => {
                     if (data.unread_count > 0) {
                         badge.style.display = 'block';
+                        
+                        // Si hay nuevas notificaciones que antes no estaban, hacer push nativo
+                        if (data.unread_count > lastUnreadCount && 'Notification' in window && Notification.permission === 'granted') {
+                            const latest = data.notifications[0];
+                            new Notification("ObraYa: " + latest.title, {
+                                body: latest.message,
+                                icon: '/static/img/icon-192.png',
+                                vibrate: [200, 100, 200]
+                            });
+                        }
                     } else {
                         badge.style.display = 'none';
                     }
+                    
+                    lastUnreadCount = data.unread_count;
+                    
                     if (data.notifications.length === 0) {
                         list.innerHTML = '<p style="color: var(--muted); font-size: 13px; text-align: center; padding: 20px 0;">Sin notificaciones nuevas</p>';
                         return;
