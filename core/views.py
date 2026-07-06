@@ -170,7 +170,7 @@ def admin_add_professional(request):
             email = form.cleaned_data['email']
             first_name = form.cleaned_data['first_name']
             last_name = form.cleaned_data['last_name']
-            password = form.cleaned_data['password'] or '12345'
+            password = form.cleaned_data['password']
             
             # Crear User
             user = User.objects.create_user(username=username, email=email, password=password, first_name=first_name, last_name=last_name)
@@ -246,7 +246,7 @@ def admin_add_client(request):
             email = form.cleaned_data['email']
             first_name = form.cleaned_data['first_name']
             last_name = form.cleaned_data['last_name']
-            password = form.cleaned_data['password'] or '12345'
+            password = form.cleaned_data['password']
             
             user = User.objects.create_user(username=username, email=email, password=password, first_name=first_name, last_name=last_name)
             
@@ -479,7 +479,6 @@ def professional_dashboard(request):
                 return redirect('/dashboard/profesional/#my-jobs')
         return redirect('professional_dashboard')
 
-    print(f"DEBUG: API KEY in settings is -> '{settings.GOOGLE_MAPS_API_KEY}'")
     return render(request, 'core/professional_dashboard.html', {
         'professional': professional,
         'jobs': jobs,

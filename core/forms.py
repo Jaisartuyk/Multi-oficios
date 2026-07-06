@@ -66,6 +66,9 @@ class AdminProfessionalForm(forms.Form):
         self.user_instance = kwargs.pop('user_instance', None)
         self.pro_instance = kwargs.pop('pro_instance', None)
         super().__init__(*args, **kwargs)
+        self.fields['password'].required = self.user_instance is None
+        if self.user_instance is None:
+            self.fields['password'].help_text = "Obligatoria para crear el profesional."
         if self.user_instance and self.pro_instance:
             self.fields['username'].initial = self.user_instance.username
             self.fields['email'].initial = self.user_instance.email
@@ -93,6 +96,9 @@ class AdminClientForm(forms.Form):
     def __init__(self, *args, **kwargs):
         self.user_instance = kwargs.pop('user_instance', None)
         super().__init__(*args, **kwargs)
+        self.fields['password'].required = self.user_instance is None
+        if self.user_instance is None:
+            self.fields['password'].help_text = "Obligatoria para crear el cliente."
         if self.user_instance:
             self.fields['username'].initial = self.user_instance.username
             self.fields['email'].initial = self.user_instance.email

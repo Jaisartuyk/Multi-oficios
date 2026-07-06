@@ -480,7 +480,9 @@
     {% endif %}
 </section>
 
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAtEPZgbPBwnJGrvIuwplRJDFbr0tmbnyQ&libraries=places"></script>
+{% if google_maps_api_key %}
+<script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key|urlencode }}&libraries=places"></script>
+{% endif %}
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         const locationInput = document.getElementById("location_input");

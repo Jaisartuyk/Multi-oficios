@@ -6,13 +6,15 @@ django.setup()
 
 from django.contrib.auth.models import User
 
-# Puedes cambiar estos valores creando variables en Railway:
-# DJANGO_SUPERUSER_USERNAME y DJANGO_SUPERUSER_PASSWORD
-username = os.environ.get('DJANGO_SUPERUSER_USERNAME', 'admin')
-email = os.environ.get('DJANGO_SUPERUSER_EMAIL', 'admin@obraya.com')
-password = os.environ.get('DJANGO_SUPERUSER_PASSWORD', 'admin123')
+# Railway must provide these values. Never create a production administrator
+# with credentials embedded in source code.
+username = os.environ.get('DJANGO_SUPERUSER_USERNAME')
+email = os.environ.get('DJANGO_SUPERUSER_EMAIL', '')
+password = os.environ.get('DJANGO_SUPERUSER_PASSWORD')
 
-if not User.objects.filter(username=username).exists():
+if not username or not password:
+    print('Superuser creation skipped: configure DJANGO_SUPERUSER_USERNAME and DJANGO_SUPERUSER_PASSWORD.')
+elif not User.objects.filter(username=username).exists():
     print(f"Creando superusuario: {username}...")
     User.objects.create_superuser(username, email, password)
     print(f"¡Superusuario '{username}' creado exitosamente!")
