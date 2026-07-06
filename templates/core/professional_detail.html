@@ -15,7 +15,7 @@
     <div class="profile-actions">
         {% if professional.user.profile.phone %}
             <a class="primary-button" href="tel:{{ professional.user.profile.phone }}" style="text-decoration: none;"><i data-lucide="phone"></i>Llamar</a>
-            <a class="whatsapp-button" href="https://wa.me/{{ professional.user.profile.phone|cut:'+'|cut:' ' }}" target="_blank" style="text-decoration: none;"><i data-lucide="message-circle"></i>WhatsApp</a>
+            <a class="whatsapp-button" href="https://wa.me/{{ professional.user.profile.whatsapp_number }}" target="_blank" style="text-decoration: none;"><i data-lucide="message-circle"></i>WhatsApp</a>
         {% else %}
             <span style="color: var(--muted); font-size: 13px; font-weight: 600;">Teléfono no disponible</span>
         {% endif %}

@@ -172,7 +172,7 @@
                 <div class="avatar">{{ job.client.username|slice:":2"|upper }}</div>
                 <div><small>Cliente</small><strong>{{ job.client.username }}</strong></div>
                 {% if job.client.profile.phone %}
-                <a class="icon-button" href="https://wa.me/{{ job.client.profile.phone|cut:'+'|cut:' '|urlencode }}" target="_blank" rel="noopener" aria-label="Contactar por WhatsApp">
+                <a class="icon-button" href="https://wa.me/{{ job.client.profile.whatsapp_number }}" target="_blank" rel="noopener" aria-label="Contactar por WhatsApp">
                     <i data-lucide="message-circle"></i>
                 </a>
                 {% endif %}

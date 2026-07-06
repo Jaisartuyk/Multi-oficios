@@ -24,6 +24,27 @@ class UserProfile(models.Model):
     def __str__(self):
         return f"{self.user.username} - {self.get_role_display()}"
 
+    @property
+    def whatsapp_number(self):
+        if not self.phone:
+            return ""
+        # Filtrar solo dígitos
+        num = "".join(c for c in self.phone if c.isdigit())
+        if not num:
+            return ""
+        
+        # Si empieza con 09... (móvil de Ecuador de 10 dígitos)
+        if num.startswith("0") and len(num) == 10:
+            return "593" + num[1:]
+        # Si empieza con 9... (móvil de Ecuador sin el 0 inicial)
+        elif num.startswith("9") and len(num) == 9:
+            return "593" + num
+        # Si ya tiene el código de Ecuador 593
+        elif num.startswith("593"):
+            return num
+        return num
+
+
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
