@@ -845,3 +845,608 @@ svg {
         transform: none;
     }
 }
+
+/* Operational dashboards */
+.dashboard-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    margin: 22px 0;
+}
+
+.dashboard-heading h1 {
+    margin: 4px 0;
+    font-size: 28px;
+}
+
+.dashboard-heading p {
+    margin: 0;
+    color: var(--muted);
+    line-height: 1.5;
+}
+
+.dashboard-primary-action {
+    width: 100%;
+    margin-bottom: 22px;
+}
+
+.dashboard-section {
+    margin: 22px 0;
+    scroll-margin-top: 90px;
+}
+
+.metric-strip {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 22px;
+}
+
+.metric-strip article {
+    padding: 14px 10px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--surface);
+    text-align: center;
+}
+
+.metric-strip strong,
+.metric-strip span {
+    display: block;
+}
+
+.metric-strip strong {
+    color: var(--green);
+    font-size: 20px;
+}
+
+.metric-strip span {
+    margin-top: 4px;
+    color: var(--muted);
+    font-size: 11px;
+}
+
+.workflow-list {
+    display: grid;
+    gap: 12px;
+}
+
+.workflow-card {
+    padding: 16px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--surface);
+    box-shadow: 0 8px 24px rgba(11, 47, 79, 0.08);
+}
+
+.workflow-card__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.workflow-card__header h3 {
+    margin: 8px 0 0;
+    font-size: 17px;
+}
+
+.workflow-card__header time {
+    color: var(--muted);
+    font-size: 11px;
+}
+
+.workflow-description {
+    margin: 12px 0;
+    color: var(--muted);
+    line-height: 1.5;
+}
+
+.workflow-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.workflow-meta span {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    background: var(--surface-strong);
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.workflow-meta svg {
+    width: 14px;
+    height: 14px;
+}
+
+.status-pill {
+    display: inline-flex;
+    padding: 5px 8px;
+    border-radius: 999px;
+    background: var(--surface-strong);
+    color: var(--muted);
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.status-quoted,
+.status-accepted {
+    background: rgba(19, 93, 159, 0.12);
+    color: var(--blue);
+}
+
+.status-in_progress,
+.status-awaiting_confirmation {
+    background: rgba(245, 158, 11, 0.14);
+    color: #a35f00;
+}
+
+.status-completed {
+    background: var(--green-soft);
+    color: var(--green);
+}
+
+.status-cancelled {
+    background: rgba(209, 67, 67, 0.12);
+    color: #d14343;
+}
+
+.workflow-panel,
+.assigned-professional,
+.payment-status {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--line);
+}
+
+.workflow-panel__title,
+.assigned-professional {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.workflow-panel__title {
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.quote-row {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 10px;
+    padding: 10px 0;
+    border-top: 1px dashed var(--line);
+}
+
+.quote-row__body strong,
+.quote-row__body span,
+.quote-row__price strong,
+.quote-row__price span {
+    display: block;
+}
+
+.quote-row__body span,
+.quote-row__body p,
+.quote-row__price span {
+    color: var(--muted);
+    font-size: 11px;
+}
+
+.quote-row__body p {
+    margin: 5px 0 0;
+}
+
+.quote-row__price {
+    text-align: right;
+}
+
+.compact-button {
+    margin-top: 6px;
+    padding: 7px 10px;
+    border: 0;
+    border-radius: 6px;
+    background: var(--green);
+    color: #fff;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.assigned-professional > div:nth-child(2) {
+    min-width: 0;
+    flex: 1;
+}
+
+.assigned-professional small,
+.assigned-professional strong,
+.assigned-professional span {
+    display: block;
+}
+
+.assigned-professional small,
+.assigned-professional span {
+    color: var(--muted);
+    font-size: 11px;
+}
+
+.workflow-details {
+    margin-top: 14px;
+    border-top: 1px solid var(--line);
+    padding-top: 12px;
+}
+
+.workflow-details summary {
+    color: var(--blue);
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.surface-form,
+.compact-form {
+    display: grid;
+    gap: 12px;
+}
+
+.surface-form {
+    padding: 16px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--surface);
+}
+
+.compact-form {
+    margin-top: 12px;
+}
+
+.surface-form label,
+.compact-form label {
+    display: grid;
+    gap: 6px;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.surface-form input,
+.surface-form select,
+.surface-form textarea,
+.compact-form input,
+.compact-form select,
+.compact-form textarea,
+.form-control,
+.inline-form select {
+    width: 100%;
+    min-height: 44px;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    outline: 0;
+    background: var(--surface-strong);
+    color: var(--text);
+}
+
+.surface-form textarea,
+.compact-form textarea {
+    min-height: 88px;
+    resize: vertical;
+}
+
+.surface-form input:focus,
+.surface-form select:focus,
+.surface-form textarea:focus,
+.compact-form input:focus,
+.compact-form select:focus,
+.compact-form textarea:focus {
+    border-color: var(--blue);
+    box-shadow: 0 0 0 3px rgba(19, 93, 159, 0.12);
+}
+
+.form-grid-2,
+.form-grid-3 {
+    display: grid;
+    gap: 10px;
+}
+
+.form-grid-2 {
+    grid-template-columns: 1fr 1fr;
+}
+
+.form-grid-3 {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+.input-with-action {
+    position: relative;
+}
+
+.input-with-action input {
+    padding-right: 52px;
+}
+
+.input-with-action .icon-button {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 36px;
+    height: 36px;
+}
+
+.range-field {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 10px;
+    align-items: center;
+    min-height: 44px;
+}
+
+.range-field output {
+    color: var(--green);
+    font-weight: 800;
+}
+
+.check-row {
+    display: flex !important;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+}
+
+.check-row input {
+    width: 18px;
+    min-height: 18px;
+}
+
+.workflow-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 14px;
+}
+
+.workflow-actions form {
+    flex: 1;
+}
+
+.workflow-actions button {
+    width: 100%;
+}
+
+.danger-text-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+    gap: 5px;
+    padding: 8px 10px;
+    border: 1px solid rgba(209, 67, 67, 0.25);
+    border-radius: 6px;
+    background: transparent;
+    color: #d14343;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.payment-status,
+.empty-inline {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.payment-status svg {
+    color: var(--green);
+}
+
+.empty-state {
+    display: grid;
+    min-height: 220px;
+    place-items: center;
+    align-content: center;
+    gap: 10px;
+    padding: 28px;
+    text-align: center;
+    border: 1px dashed var(--line);
+    border-radius: 8px;
+    background: var(--surface);
+}
+
+.empty-state svg {
+    width: 42px;
+    height: 42px;
+    color: var(--green);
+}
+
+.empty-state h1,
+.empty-state h3,
+.empty-state p {
+    margin: 0;
+}
+
+.empty-state p {
+    color: var(--muted);
+}
+
+.offline-state {
+    min-height: 70vh;
+}
+
+.portfolio-item {
+    position: relative;
+    overflow: hidden;
+    margin: 0;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--surface);
+}
+
+.portfolio-item img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+}
+
+.portfolio-item figcaption {
+    padding: 10px;
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.portfolio-item form {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+}
+
+.subsection-title {
+    margin-top: 24px;
+}
+
+.review-list {
+    display: grid;
+    gap: 10px;
+    margin: 12px 0;
+}
+
+.review-item {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--line);
+}
+
+.review-item p,
+.review-item small {
+    color: var(--muted);
+}
+
+.safety-note {
+    display: flex;
+    gap: 10px;
+    margin-top: 12px;
+    padding: 12px;
+    border-radius: 8px;
+    background: rgba(245, 158, 11, 0.12);
+    color: #8b5600;
+}
+
+.safety-note p {
+    margin: 0 0 4px;
+}
+
+.responsive-table {
+    overflow-x: auto;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+}
+
+.responsive-table table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 720px;
+}
+
+.responsive-table th,
+.responsive-table td {
+    padding: 12px;
+    border-bottom: 1px solid var(--line);
+    text-align: left;
+    font-size: 12px;
+}
+
+.responsive-table th {
+    color: var(--muted);
+    background: var(--surface-strong);
+}
+
+.inline-form {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.admin-shortcuts {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.admin-shortcut {
+    text-decoration: none;
+    text-align: center;
+}
+
+.admin-shortcut h3 {
+    margin: 8px 0 0;
+    color: var(--text);
+    font-size: 15px;
+}
+
+.notification-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 6px;
+    padding: 10px;
+    border-radius: 8px;
+    background: var(--green-soft);
+    color: var(--text);
+    text-decoration: none;
+}
+
+.notification-item > svg {
+    min-width: 20px;
+    color: var(--green);
+}
+
+.notification-item__body {
+    min-width: 0;
+    flex: 1;
+}
+
+.notification-item__body strong,
+.notification-item__body span,
+.notification-item__body small {
+    display: block;
+}
+
+.notification-item__body span,
+.notification-item__body small {
+    color: var(--muted);
+    font-size: 11px;
+}
+
+.field-error,
+.form-error {
+    color: #d14343;
+}
+
+@media (max-width: 520px) {
+    .dashboard-heading {
+        align-items: flex-start;
+    }
+
+    .form-grid-2,
+    .form-grid-3,
+    .admin-shortcuts {
+        grid-template-columns: 1fr;
+    }
+
+    .quote-row {
+        grid-template-columns: auto minmax(0, 1fr);
+    }
+
+    .quote-row__price {
+        grid-column: 2;
+        text-align: left;
+    }
+}

@@ -205,17 +205,19 @@
     <span class="eyebrow"><i data-lucide="sparkles"></i> Cotizador Inteligente</span>
     <h1 style="margin: 12px 0 8px 0; font-size: 26px; font-weight: 800; line-height: 1.1;">Describe tu trabajo</h1>
     <p style="margin: 0 0 20px 0; font-size: 14px; color: var(--muted); line-height: 1.4;">
-        Nuestra IA analizará tu problema y calculará materiales, tiempo y un presupuesto estimado de referencia.
+        Nuestra IA analizará tu problem y calculará materiales, tiempo y un presupuesto estimado de referencia.
     </p>
     <form method="post" class="estimate-form">
         {% csrf_token %}
         <textarea name="brief" rows="5" placeholder="Ej: Pintar la sala de estar (4x3m) color blanco mate, reparar grieta en panel de yeso y cambiar 2 tomacorrientes que no funcionan..." required></textarea>
-        <label class="upload-box">
-            <i data-lucide="upload-cloud" style="width: 24px; height: 24px;"></i>
-            <span>Sube fotos del trabajo</span>
-            <span style="font-size: 11px; font-weight: 400; opacity: 0.7; margin-top: 2px;">(Próximamente disponible)</span>
-            <input type="file" style="display:none;" disabled>
+        <label>Sector del trabajo
+            <div class="input-with-action">
+                <input id="job-address" name="address" maxlength="250" placeholder="Ej: Urdesa, Guayaquil">
+                <button class="icon-button" type="button" data-job-location aria-label="Usar ubicación actual"><i data-lucide="locate-fixed"></i></button>
+            </div>
         </label>
+        <input id="job-lat" type="hidden" name="lat">
+        <input id="job-lng" type="hidden" name="lng">
         <button class="primary-button" type="submit" style="width: 100%;">
             <i data-lucide="wand-2"></i> Generar cotización con IA
         </button>
@@ -224,7 +226,10 @@
 
 {% if result %}
 <section class="result-card">
-    <h2>Cotización Referencial de IA</h2>
+    <div class="section-title">
+        <h2>Cotización referencial</h2>
+        <span>{% if result.source == 'gemini' %}Gemini{% else %}Estimador de respaldo{% endif %}</span>
+    </div>
     <div class="result-brief">
         <strong>Detalle del Trabajo:</strong> {{ result.brief }}
     </div>
@@ -265,8 +270,28 @@
             </div>
         </div>
     </div>
+    {% if result.safety_notes %}
+    <div class="safety-note">
+        <i data-lucide="triangle-alert"></i>
+        <div>{% for note in result.safety_notes %}<p>{{ note }}</p>{% endfor %}</div>
+    </div>
+    {% endif %}
 </section>
 {% endif %}
+
+<script>
+document.querySelector('[data-job-location]')?.addEventListener('click', function () {
+    if (!navigator.geolocation) return;
+    const button = this;
+    button.disabled = true;
+    navigator.geolocation.getCurrentPosition(function (position) {
+        document.getElementById('job-lat').value = position.coords.latitude;
+        document.getElementById('job-lng').value = position.coords.longitude;
+        document.getElementById('job-address').value = 'Ubicación GPS confirmada';
+        button.disabled = false;
+    }, function () { button.disabled = false; }, { enableHighAccuracy: true, timeout: 10000 });
+});
+</script>
 
 <section class="assistant-card" style="margin-bottom: 24px;">
     <h2>Asistente de Contratación</h2>

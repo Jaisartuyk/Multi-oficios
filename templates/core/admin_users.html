@@ -67,9 +67,12 @@
                         {% endif %}
                         
                         {% if u.id != user.id %}
-                            <a href="{% url 'admin_delete_user' u.id %}" onclick="return confirm('¿Estás seguro de que deseas eliminar este usuario? Se borrarán todos sus datos asociados.')" class="verified-review" style="background: #f8d7da; color: #721c24; padding: 4px 8px; text-decoration: none;">
-                                <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i> Eliminar
-                            </a>
+                            <form method="post" action="{% url 'admin_delete_user' u.id %}" class="inline-form" onsubmit="return confirm('¿Eliminar este usuario y sus datos asociados?');">
+                                {% csrf_token %}
+                                <button type="submit" class="danger-text-button">
+                                    <i data-lucide="trash-2"></i>Eliminar
+                                </button>
+                            </form>
                         {% endif %}
                     </div>
                 </div>

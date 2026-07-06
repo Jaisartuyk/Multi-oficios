@@ -50,18 +50,34 @@
         <span>Trabajos verificados</span>
     </div>
     <div class="portfolio-grid">
+        {% for item in professional.portfolio_items.all %}
+        <figure class="portfolio-item">
+            <img src="{{ item.image_url }}" alt="{{ item.caption|default:'Trabajo realizado' }}" loading="lazy">
+            <figcaption>{{ item.caption|default:"Trabajo realizado" }}</figcaption>
+        </figure>
+        {% empty %}
         {% for item in professional.portfolio %}
-        <article>
-            <i data-lucide="image"></i>
-            <strong>{{ item }}</strong>
-        </article>
+        <article><i data-lucide="image"></i><strong>{{ item }}</strong></article>
+        {% empty %}
+        <div class="empty-inline">Este profesional aún no añadió imágenes.</div>
+        {% endfor %}
         {% endfor %}
     </div>
 </section>
 
 <section class="detail-card">
     <h2>Opiniones verificadas</h2>
-    <blockquote>"Trabajo limpio, llego a tiempo y explico cada gasto antes de comprar materiales."</blockquote>
-    <span class="verified-review"><i data-lucide="check-circle"></i> Pago y servicio confirmados por ObraYa</span>
+    <div class="review-list">
+        {% for review in professional.verified_reviews.all %}
+        <article class="review-item">
+            <strong>{{ review.rating }}/5 ★</strong>
+            <p>{{ review.comment|default:"Servicio calificado sin comentario." }}</p>
+            <small>Puntualidad {{ review.punctuality }}/5 · Calidad {{ review.quality }}/5 · {{ review.created_at|date:"d/m/Y" }}</small>
+        </article>
+        {% empty %}
+        <div class="empty-inline">Aún no tiene reseñas verificadas.</div>
+        {% endfor %}
+    </div>
+    <span class="verified-review"><i data-lucide="check-circle"></i>Solo trabajos completados pueden calificarse</span>
 </section>
 {% endblock %}

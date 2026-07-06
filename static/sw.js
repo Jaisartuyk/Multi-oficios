@@ -1,12 +1,12 @@
-const CACHE_NAME = 'obraya-v1';
+const CACHE_NAME = 'obraya-v2';
 const OFFLINE_URL = '/offline/';
 
 // Assets to pre-cache for offline shell
 const PRECACHE_ASSETS = [
-    '/',
+    '/offline/',
     '/static/css/styles.css',
     '/static/js/app.js',
-    'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap',
+    '/static/img/icon-192.png',
 ];
 
 // Install: cache the app shell
@@ -40,16 +40,11 @@ self.addEventListener('fetch', (event) => {
     // Skip non-GET requests (POST forms, etc.)
     if (request.method !== 'GET') return;
 
-    // For navigation requests (HTML pages): network first, fallback to cache
+    // Never persist authenticated HTML. Offline mode uses a public static page.
     if (request.mode === 'navigate') {
         event.respondWith(
             fetch(request)
-                .then((response) => {
-                    const clone = response.clone();
-                    caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
-                    return response;
-                })
-                .catch(() => caches.match(request).then((cached) => cached || caches.match(OFFLINE_URL)))
+                .catch(() => caches.match(OFFLINE_URL))
         );
         return;
     }

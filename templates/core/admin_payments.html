@@ -1,0 +1,51 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Pagos y garantías | ObraYa{% endblock %}
+
+{% block content %}
+<section class="dashboard-heading">
+    <div>
+        <span class="eyebrow">Control financiero</span>
+        <h1>Pagos y garantías</h1>
+        <p>Verifica comprobantes y libera fondos cuando el trabajo sea confirmado.</p>
+    </div>
+    <a class="secondary-button" href="{% url 'admin_panel' %}"><i data-lucide="arrow-left"></i>Volver</a>
+</section>
+
+<section class="dashboard-section">
+    <div class="responsive-table">
+        <table>
+            <thead><tr><th>Trabajo</th><th>Cliente</th><th>Profesional</th><th>Monto</th><th>Comprobante</th><th>Estado</th><th>Acción</th></tr></thead>
+            <tbody>
+                {% for payment in payments %}
+                <tr>
+                    <td>{{ payment.job.title }}</td>
+                    <td>{{ payment.client.username }}</td>
+                    <td>{{ payment.professional.name }}</td>
+                    <td>${{ payment.amount }}</td>
+                    <td>
+                        {{ payment.receipt_reference }}
+                        {% if payment.receipt_url %}<br><a href="{{ payment.receipt_url }}" target="_blank" rel="noopener">Ver comprobante</a>{% endif %}
+                    </td>
+                    <td>{{ payment.get_status_display }}<br><small>{{ payment.get_guarantee_status_display }}</small></td>
+                    <td>
+                        <form method="post" class="inline-form">
+                            {% csrf_token %}
+                            <input type="hidden" name="payment_id" value="{{ payment.id }}">
+                            <select name="status" aria-label="Nuevo estado">
+                                <option value="VERIFIED">Verificar</option>
+                                <option value="RELEASED">Liberar</option>
+                                <option value="REFUNDED">Reembolsar</option>
+                            </select>
+                            <button class="compact-button" type="submit">Aplicar</button>
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="7">No hay pagos registrados.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

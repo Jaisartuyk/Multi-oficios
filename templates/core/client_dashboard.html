@@ -1,101 +1,201 @@
 {% extends 'core/base.html' %}
 
-{% block title %}Panel de Cliente | ObraYa{% endblock %}
+{% block title %}Mis trabajos | ObraYa{% endblock %}
 
 {% block content %}
-<section class="profile-hero">
-    <div class="profile-head">
-        <div class="avatar big">{{ user.username|slice:":2"|upper }}</div>
-        <div>
-            <h1>Hola, {{ user.first_name|default:user.username }}</h1>
-            <p>Panel de Control - Cliente</p>
-        </div>
+<section class="dashboard-heading">
+    <div class="avatar big">{{ user.username|slice:":2"|upper }}</div>
+    <div>
+        <span class="eyebrow">Panel del cliente</span>
+        <h1>Hola, {{ user.first_name|default:user.username }}</h1>
+        <p>Compara propuestas, sigue el trabajo y confirma el resultado.</p>
     </div>
 </section>
 
-<div class="hero-actions" style="grid-template-columns: 1fr; margin-bottom: 24px;">
-    <a class="primary-button" href="{% url 'estimator' %}">
-        <i data-lucide="sparkles"></i>
-        Solicitar Nueva Cotización IA
-    </a>
-</div>
+<a class="primary-button dashboard-primary-action" href="{% url 'estimator' %}">
+    <i data-lucide="plus"></i>
+    Solicitar un servicio
+</a>
 
 <section class="section-block">
     <div class="section-title">
-        <h2>Mis Solicitudes y Cotizaciones</h2>
-        <span>Historial</span>
+        <h2>Mis solicitudes</h2>
+        <span>{{ requests|length }} registradas</span>
     </div>
 
     {% if requests %}
-        <div class="pro-list">
-            {% for request_obj in requests %}
-                <div class="pro-card" style="grid-template-columns: 1fr auto; cursor: default;">
-                    <div>
-                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
-                            <strong style="font-size: 16px;">{{ request_obj.title }}</strong>
-                            <span class="verified-review" style="background: 
-                                {% if request_obj.status == 'PENDING' %}var(--green-soft)
-                                {% elif request_obj.status == 'ACCEPTED' %}#d9e2ec
-                                {% elif request_obj.status == 'COMPLETED' %}#def8ec
-                                {% else %}#f8d7da{% endif %};
-                                color:
-                                {% if request_obj.status == 'PENDING' %}var(--green)
-                                {% elif request_obj.status == 'ACCEPTED' %}var(--blue)
-                                {% elif request_obj.status == 'COMPLETED' %}var(--green)
-                                {% else %}#721c24{% endif %};">
-                                {{ request_obj.get_status_display }}
-                            </span>
-                        </div>
-                        <p style="color: var(--muted); font-size: 13px; margin: 4px 0;">{{ request_obj.description }}</p>
-                        <div class="trust-row" style="margin-top: 6px;">
-                            <span><i data-lucide="calendar"></i> {{ request_obj.created_at|date:"d/m/Y H:i" }}</span>
-                            {% if request_obj.estimated_price %}
-                                <span><i data-lucide="dollar-sign"></i> {{ request_obj.estimated_price }}</span>
-                            {% endif %}
-                            {% if request_obj.estimated_time %}
-                                <span><i data-lucide="clock"></i> {{ request_obj.estimated_time }}</span>
-                            {% endif %}
-                        </div>
-                        
-                        {% if request_obj.professional %}
-                            <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); font-size: 12px; display: flex; flex-direction: column; gap: 8px;">
-                                <div style="display: flex; align-items: center; gap: 8px;">
-                                    <i data-lucide="user-check" style="color: var(--green); width: 16px; height: 16px;"></i>
-                                    <span>Asignado a: <a href="{% url 'professional_detail' request_obj.professional.id %}" style="color: var(--blue); text-decoration: underline; font-weight: 700;" title="Ver perfil y contacto">{{ request_obj.professional.name }}</a> ({{ request_obj.professional.specialty }})</span>
-                                </div>
-                                {% if request_obj.status == 'ACCEPTED' %}
-                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 6px; width: 100%;">
-                                        <form method="post" style="margin: 0; width: 100%;">
-                                            {% csrf_token %}
-                                            <input type="hidden" name="action" value="complete_job">
-                                            <input type="hidden" name="job_id" value="{{ request_obj.id }}">
-                                            <button type="submit" class="secondary-button" style="width: 100%; min-height: 36px; padding: 0 12px; font-size: 12px; border-radius: 12px; background: var(--green-soft); color: var(--green); display: flex; align-items: center; justify-content: center; gap: 6px; border: none; cursor: pointer; font-weight: 700;">
-                                                <i data-lucide="check-circle" style="width: 14px; height: 14px;"></i> Completado
-                                            </button>
-                                        </form>
-                                        <form method="post" style="margin: 0; width: 100%;">
-                                            {% csrf_token %}
-                                            <input type="hidden" name="action" value="reopen_job">
-                                            <input type="hidden" name="job_id" value="{{ request_obj.id }}">
-                                            <button type="submit" class="secondary-button" style="width: 100%; min-height: 36px; padding: 0 12px; font-size: 12px; border-radius: 12px; background: rgba(220, 53, 69, 0.08); color: #dc3545; display: flex; align-items: center; justify-content: center; gap: 6px; border: none; cursor: pointer; font-weight: 700;">
-                                                <i data-lucide="rotate-ccw" style="width: 14px; height: 14px;"></i> Reabrir Bolsa
-                                            </button>
-                                        </form>
-                                    </div>
-                                {% endif %}
-                            </div>
-                        {% endif %}
-                    </div>
+    <div class="workflow-list">
+        {% for request_obj in requests %}
+        <article class="workflow-card">
+            <header class="workflow-card__header">
+                <div>
+                    <span class="status-pill status-{{ request_obj.status|lower }}">
+                        {{ request_obj.get_status_display }}
+                    </span>
+                    <h3>{{ request_obj.title }}</h3>
                 </div>
-            {% endfor %}
-        </div>
+                <time>{{ request_obj.created_at|date:"d/m/Y" }}</time>
+            </header>
+
+            <p class="workflow-description">{{ request_obj.description }}</p>
+
+            <div class="workflow-meta">
+                <span><i data-lucide="wallet"></i>{{ request_obj.estimated_price|default:"Por cotizar" }}</span>
+                <span><i data-lucide="clock"></i>{{ request_obj.estimated_time|default:"Por definir" }}</span>
+                {% if request_obj.address %}
+                <span><i data-lucide="map-pin"></i>{{ request_obj.address }}</span>
+                {% endif %}
+            </div>
+
+            {% if request_obj.status == 'PENDING' or request_obj.status == 'QUOTED' %}
+            <div class="workflow-panel">
+                <div class="workflow-panel__title">
+                    <strong>Cotizaciones recibidas</strong>
+                    <span>{{ request_obj.quotes.count }}</span>
+                </div>
+                {% for quote in request_obj.quotes.all %}
+                    {% if quote.status == 'SUBMITTED' %}
+                    <div class="quote-row">
+                        <div class="avatar">{{ quote.professional.initials }}</div>
+                        <div class="quote-row__body">
+                            <strong>{{ quote.professional.name }}</strong>
+                            <span>{{ quote.professional.specialty }} · {{ quote.professional.rating }} ★</span>
+                            <p>{{ quote.message|default:"Sin observaciones adicionales." }}</p>
+                        </div>
+                        <div class="quote-row__price">
+                            <strong>${{ quote.amount }}</strong>
+                            <span>{{ quote.estimated_days }} días</span>
+                            <form method="post">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="select_quote">
+                                <input type="hidden" name="quote_id" value="{{ quote.id }}">
+                                <button class="compact-button" type="submit">Elegir</button>
+                            </form>
+                        </div>
+                    </div>
+                    {% endif %}
+                {% empty %}
+                    <div class="empty-inline">
+                        <i data-lucide="hourglass"></i>
+                        Esperando propuestas de profesionales cercanos.
+                    </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% if request_obj.professional %}
+            <div class="assigned-professional">
+                <div class="avatar">{{ request_obj.professional.initials }}</div>
+                <div>
+                    <small>Profesional seleccionado</small>
+                    <strong>{{ request_obj.professional.name }}</strong>
+                    <span>{{ request_obj.professional.specialty }}</span>
+                </div>
+                <a class="icon-button" href="{% url 'professional_detail' request_obj.professional.id %}" aria-label="Ver perfil">
+                    <i data-lucide="arrow-up-right"></i>
+                </a>
+            </div>
+            {% endif %}
+
+            {% if request_obj.selected_quote and not request_obj.payment and request_obj.status != 'COMPLETED' %}
+            <details class="workflow-details">
+                <summary>Registrar pago de ${{ request_obj.selected_quote.amount }}</summary>
+                <form method="post" class="compact-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="record_payment">
+                    <input type="hidden" name="job_id" value="{{ request_obj.id }}">
+                    <label>Método
+                        <select name="method" required>
+                            <option value="TRANSFER">Transferencia</option>
+                            <option value="DEUNA">DeUna</option>
+                            <option value="CASH">Efectivo</option>
+                        </select>
+                    </label>
+                    <label>Referencia
+                        <input name="receipt_reference" maxlength="200" required placeholder="Número de comprobante">
+                    </label>
+                    <label>Enlace del comprobante (opcional)
+                        <input type="url" name="receipt_url" maxlength="500" placeholder="https://...">
+                    </label>
+                    <label class="check-row">
+                        <input type="checkbox" name="request_guarantee">
+                        Solicitar garantía ObraYa
+                    </label>
+                    <button class="secondary-button" type="submit">Enviar comprobante</button>
+                </form>
+            </details>
+            {% elif request_obj.payment %}
+            <div class="payment-status">
+                <i data-lucide="shield-check"></i>
+                <span>
+                    Pago: <strong>{{ request_obj.payment.get_status_display }}</strong>
+                    · Garantía: {{ request_obj.payment.get_guarantee_status_display }}
+                </span>
+            </div>
+            {% endif %}
+
+            <div class="workflow-actions">
+                {% if request_obj.status == 'AWAITING_CONFIRMATION' %}
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="confirm_completion">
+                    <input type="hidden" name="job_id" value="{{ request_obj.id }}">
+                    <button class="primary-button" type="submit">
+                        <i data-lucide="badge-check"></i>Confirmar trabajo
+                    </button>
+                </form>
+                {% endif %}
+
+                {% if request_obj.status == 'ACCEPTED' or request_obj.status == 'IN_PROGRESS' or request_obj.status == 'AWAITING_CONFIRMATION' %}
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="reopen_job">
+                    <input type="hidden" name="job_id" value="{{ request_obj.id }}">
+                    <button class="danger-text-button" type="submit">Reabrir solicitud</button>
+                </form>
+                {% endif %}
+            </div>
+
+            {% if request_obj.status == 'COMPLETED' and not request_obj.review %}
+            <details class="workflow-details review-box">
+                <summary>Calificar servicio verificado</summary>
+                <form method="post" class="compact-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="submit_review">
+                    <input type="hidden" name="job_id" value="{{ request_obj.id }}">
+                    <div class="form-grid-3">
+                        <label>General
+                            <select name="rating" required>{% for value in "54321" %}<option value="{{ value }}">{{ value }} ★</option>{% endfor %}</select>
+                        </label>
+                        <label>Puntualidad
+                            <select name="punctuality" required>{% for value in "54321" %}<option value="{{ value }}">{{ value }}</option>{% endfor %}</select>
+                        </label>
+                        <label>Calidad
+                            <select name="quality" required>{% for value in "54321" %}<option value="{{ value }}">{{ value }}</option>{% endfor %}</select>
+                        </label>
+                    </div>
+                    <label>Comentario
+                        <textarea name="comment" maxlength="1500" rows="3" placeholder="¿Cómo fue tu experiencia?"></textarea>
+                    </label>
+                    <button class="secondary-button" type="submit">Publicar reseña</button>
+                </form>
+            </details>
+            {% elif request_obj.review %}
+            <div class="payment-status">
+                <i data-lucide="star"></i>
+                Reseña verificada: {{ request_obj.review.rating }}/5
+            </div>
+            {% endif %}
+        </article>
+        {% endfor %}
+    </div>
     {% else %}
-        <div class="result-card" style="text-align: center; padding: 40px 20px;">
-            <i data-lucide="inbox" style="width: 48px; height: 48px; color: var(--muted); margin-bottom: 12px;"></i>
-            <h3 style="margin: 0 0 8px;">Aún no tienes solicitudes</h3>
-            <p style="color: var(--muted); margin: 0 0 20px; font-size: 14px;">Utiliza nuestro cotizador inteligente para solicitar tu primer servicio.</p>
-            <a class="primary-button" href="{% url 'estimator' %}" style="display: inline-flex;">Empezar</a>
-        </div>
+    <div class="empty-state">
+        <i data-lucide="clipboard-list"></i>
+        <h3>Aún no tienes solicitudes</h3>
+        <p>Describe el trabajo y recibe propuestas de profesionales.</p>
+        <a class="primary-button" href="{% url 'estimator' %}">Crear solicitud</a>
+    </div>
     {% endif %}
 </section>
 {% endblock %}

@@ -1,5 +1,18 @@
 from django.contrib import admin
-from .models import Category, Professional, Service, UserProfile, JobRequest, Notification, Recharge
+from .models import (
+    AiUsage,
+    Category,
+    JobRequest,
+    Notification,
+    Payment,
+    PortfolioItem,
+    Professional,
+    Quote,
+    Recharge,
+    Review,
+    Service,
+    UserProfile,
+)
 
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
@@ -46,3 +59,27 @@ class RechargeAdmin(admin.ModelAdmin):
     list_filter = ('payment_method', 'created_at')
     search_fields = ('professional__name', 'professional__user__username')
     date_hierarchy = 'created_at'
+
+
+@admin.register(Quote)
+class QuoteAdmin(admin.ModelAdmin):
+    list_display = ('job', 'professional', 'amount', 'estimated_days', 'status', 'created_at')
+    list_filter = ('status', 'created_at')
+    search_fields = ('job__title', 'professional__name')
+
+
+@admin.register(Review)
+class ReviewAdmin(admin.ModelAdmin):
+    list_display = ('job', 'professional', 'rating', 'punctuality', 'quality', 'created_at')
+    list_filter = ('rating', 'created_at')
+
+
+@admin.register(Payment)
+class PaymentAdmin(admin.ModelAdmin):
+    list_display = ('job', 'client', 'professional', 'amount', 'status', 'guarantee_status')
+    list_filter = ('status', 'guarantee_status', 'method')
+    search_fields = ('job__title', 'receipt_reference', 'client__username')
+
+
+admin.site.register(PortfolioItem)
+admin.site.register(AiUsage)

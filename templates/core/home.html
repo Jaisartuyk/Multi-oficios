@@ -8,15 +8,15 @@
     <div class="hero-copy">
         <span class="eyebrow"><i data-lucide="shield-check"></i> Profesionales verificados cerca de ti</span>
         <h1>Contrata oficios de confianza sin vueltas.</h1>
-        <p>Publica tu trabajo, recibe cotizaciones inteligentes y elige por reputacion, disponibilidad y precio.</p>
+        <p>Publica tu trabajo, recibe cotizaciones inteligentes y elige por reputacion, disponibilidad and precio.</p>
         <div class="hero-actions">
             <a class="primary-button" href="{% url 'estimator' %}">
                 <i data-lucide="camera"></i>
                 Solicitar Servicio
             </a>
-            <button class="secondary-button" type="button" data-scroll-target="map-section">
-                <i data-lucide="map-pin"></i>
-                Ver cercanos
+            <button class="secondary-button" type="button" data-client-location>
+                <i data-lucide="locate-fixed"></i>
+                {% if has_client_location %}Actualizar cercanos{% else %}Usar mi ubicación{% endif %}
             </button>
         </div>
     </div>
@@ -81,9 +81,15 @@
             </div>
             <div class="eta">
                 <strong>{{ professional.eta }}</strong>
-                <small>{{ professional.distance }}</small>
+                <small>{{ professional.display_distance|default:professional.distance }}</small>
             </div>
         </a>
+        {% empty %}
+        <div class="empty-state">
+            <i data-lucide="map-pinned"></i>
+            <h3>No encontramos profesionales en ese radio</h3>
+            <p>Actualiza tu ubicación o amplía la búsqueda.</p>
+        </div>
         {% endfor %}
     </div>
 </section>
@@ -99,13 +105,13 @@
             class="google-map"
             data-has-key="{% if google_maps_api_key %}true{% else %}false{% endif %}"
             data-professionals='[
-                {% for professional in professionals %}
+                {% for professional in map_professionals %}
                 {
+                    "id": "{{ professional.id }}",
                     "name": "{{ professional.name|escapejs }}",
                     "specialty": "{{ professional.specialty|escapejs }}",
-                    "level": "{{ professional.level|escapejs }}",
                     "rating": "{{ professional.rating }}",
-                    "eta": "{{ professional.eta|escapejs }}",
+                    "location": "{{ professional.location|escapejs }}",
                     "lat": {{ professional.lat|stringformat:"f" }},
                     "lng": {{ professional.lng|stringformat:"f" }}
                 }{% if not forloop.last %},{% endif %}

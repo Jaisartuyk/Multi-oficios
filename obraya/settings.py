@@ -52,6 +52,12 @@ if not SECRET_KEY:
 
 DEBUG = get_env('DEBUG', 'False').lower() == 'true'
 
+if not DEBUG and 'test' not in sys.argv:
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+
 ALLOWED_HOSTS = get_env_list(
     'ALLOWED_HOSTS',
     'localhost,127.0.0.1,multi-oficios-production.up.railway.app',
@@ -62,6 +68,9 @@ CSRF_TRUSTED_ORIGINS = get_env_list(
 )
 
 GOOGLE_MAPS_API_KEY = get_env('GOOGLE_MAPS_API_KEY', '')
+GEMINI_API_KEY = get_env('GEMINI_API_KEY', '')
+GEMINI_MODEL = get_env('GEMINI_MODEL', 'gemini-3.5-flash')
+GEMINI_DAILY_LIMIT = int(get_env('GEMINI_DAILY_LIMIT', '5'))
 
 INSTALLED_APPS = [
     'core',

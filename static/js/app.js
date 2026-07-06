@@ -94,13 +94,16 @@ window.renderObraYaMap = function renderObraYaMap() {
         });
 
         marker.addListener('click', () => {
-            infoWindow.setContent(`
-                <div class="map-info">
-                    <strong>${professional.name}</strong>
-                    <span>${professional.specialty}</span>
-                    <small>${professional.level} - ${professional.rating} estrellas - ${professional.eta}</small>
-                </div>
-            `);
+            const content = document.createElement('div');
+            content.className = 'map-info';
+            const name = document.createElement('strong');
+            const specialty = document.createElement('span');
+            const details = document.createElement('small');
+            name.textContent = professional.name;
+            specialty.textContent = professional.specialty;
+            details.textContent = `${professional.location} · ${professional.rating} estrellas`;
+            content.append(name, specialty, details);
+            infoWindow.setContent(content);
             infoWindow.open(map, marker);
         });
     });
@@ -178,6 +181,29 @@ document.addEventListener('DOMContentLoaded', () => {
             target?.classList.add('map-highlight');
             window.setTimeout(() => target?.classList.remove('map-highlight'), 1600);
         });
+    });
+
+    document.querySelector('[data-client-location]')?.addEventListener('click', (event) => {
+        const button = event.currentTarget;
+        if (!navigator.geolocation) {
+            button.textContent = 'Ubicación no disponible';
+            return;
+        }
+        button.disabled = true;
+        button.textContent = 'Localizando...';
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const url = new URL(window.location.href);
+                url.searchParams.set('lat', position.coords.latitude.toFixed(6));
+                url.searchParams.set('lng', position.coords.longitude.toFixed(6));
+                window.location.href = url.toString();
+            },
+            () => {
+                button.disabled = false;
+                button.textContent = 'Intentar nuevamente';
+            },
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 },
+        );
     });
 
     const mapElement = document.getElementById('obraya-map');

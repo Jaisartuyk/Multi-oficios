@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
@@ -12,6 +13,9 @@ class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='CLIENT')
     phone = models.CharField(max_length=20, blank=True, null=True)
+    location = models.CharField(max_length=200, blank=True, default='')
+    lat = models.FloatField(blank=True, null=True)
+    lng = models.FloatField(blank=True, null=True)
 
     class Meta:
         verbose_name = "Perfil de Usuario"
@@ -68,6 +72,11 @@ class Professional(models.Model):
     lng = models.FloatField(verbose_name="Longitud", default=-79.8891)
     about = models.TextField(verbose_name="Acerca de")
     portfolio = models.JSONField(verbose_name="Portafolio (Lista de strings)", default=list)
+    coverage_radius_km = models.PositiveSmallIntegerField(
+        default=10,
+        validators=[MinValueValidator(1), MaxValueValidator(100)],
+        verbose_name="Radio de cobertura (km)",
+    )
 
     class Meta:
         verbose_name = "Profesional"
@@ -92,7 +101,9 @@ class JobRequest(models.Model):
     STATUS_CHOICES = (
         ('PENDING', 'Pendiente de Cotización'),
         ('QUOTED', 'Cotizado'),
-        ('ACCEPTED', 'Aceptado / En Progreso'),
+        ('ACCEPTED', 'Profesional seleccionado'),
+        ('IN_PROGRESS', 'En ejecucion'),
+        ('AWAITING_CONFIRMATION', 'Esperando confirmacion del cliente'),
         ('COMPLETED', 'Completado'),
         ('CANCELLED', 'Cancelado'),
     )
@@ -100,7 +111,19 @@ class JobRequest(models.Model):
     professional = models.ForeignKey(Professional, on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_jobs', verbose_name="Profesional")
     title = models.CharField(max_length=200, verbose_name="Título del Trabajo")
     description = models.TextField(verbose_name="Descripción o Problema")
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING', verbose_name="Estado")
+    status = models.CharField(max_length=30, choices=STATUS_CHOICES, default='PENDING', verbose_name="Estado")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Ultima actualizacion")
+    address = models.CharField(max_length=250, blank=True, default='', verbose_name="Sector del trabajo")
+    lat = models.FloatField(blank=True, null=True, verbose_name="Latitud del trabajo")
+    lng = models.FloatField(blank=True, null=True, verbose_name="Longitud del trabajo")
+    selected_quote = models.ForeignKey(
+        'Quote',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='selected_for_jobs',
+        verbose_name="Cotizacion seleccionada",
+    )
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de Creación")
     estimated_price = models.CharField(max_length=100, blank=True, null=True, verbose_name="Precio Estimado")
     estimated_time = models.CharField(max_length=100, blank=True, null=True, verbose_name="Tiempo Estimado")
@@ -111,6 +134,123 @@ class JobRequest(models.Model):
 
     def __str__(self):
         return f"{self.title} - {self.client.username} ({self.get_status_display()})"
+
+
+class Quote(models.Model):
+    STATUS_CHOICES = (
+        ('SUBMITTED', 'Enviada'),
+        ('ACCEPTED', 'Aceptada'),
+        ('REJECTED', 'No seleccionada'),
+        ('WITHDRAWN', 'Retirada'),
+    )
+    job = models.ForeignKey(JobRequest, on_delete=models.CASCADE, related_name='quotes')
+    professional = models.ForeignKey(Professional, on_delete=models.CASCADE, related_name='quotes')
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    estimated_days = models.PositiveSmallIntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(365)]
+    )
+    message = models.TextField(max_length=1000, blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='SUBMITTED')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['job', 'professional'],
+                name='unique_quote_per_professional_job',
+            ),
+        ]
+        ordering = ['amount', 'created_at']
+
+    def __str__(self):
+        return f"{self.professional.name}: ${self.amount} - {self.job.title}"
+
+
+class Review(models.Model):
+    job = models.OneToOneField(JobRequest, on_delete=models.CASCADE, related_name='review')
+    client = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reviews_written')
+    professional = models.ForeignKey(Professional, on_delete=models.CASCADE, related_name='verified_reviews')
+    rating = models.PositiveSmallIntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(5)]
+    )
+    punctuality = models.PositiveSmallIntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(5)]
+    )
+    quality = models.PositiveSmallIntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(5)]
+    )
+    comment = models.TextField(max_length=1500, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.rating}/5 - {self.professional.name}"
+
+
+class Payment(models.Model):
+    STATUS_CHOICES = (
+        ('PENDING', 'Pendiente de verificacion'),
+        ('VERIFIED', 'Verificado'),
+        ('RELEASED', 'Liberado al profesional'),
+        ('REFUNDED', 'Reembolsado'),
+    )
+    GUARANTEE_CHOICES = (
+        ('NOT_REQUESTED', 'No solicitada'),
+        ('PENDING', 'Pendiente'),
+        ('ACTIVE', 'Activa'),
+        ('RESOLVED', 'Resuelta'),
+    )
+    METHOD_CHOICES = (
+        ('TRANSFER', 'Transferencia'),
+        ('DEUNA', 'DeUna'),
+        ('CASH', 'Efectivo'),
+    )
+    job = models.OneToOneField(JobRequest, on_delete=models.CASCADE, related_name='payment')
+    client = models.ForeignKey(User, on_delete=models.CASCADE, related_name='payments_made')
+    professional = models.ForeignKey(Professional, on_delete=models.PROTECT, related_name='payments_received')
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    method = models.CharField(max_length=20, choices=METHOD_CHOICES)
+    receipt_reference = models.CharField(max_length=200)
+    receipt_url = models.URLField(max_length=500, blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
+    guarantee_status = models.CharField(
+        max_length=20,
+        choices=GUARANTEE_CHOICES,
+        default='NOT_REQUESTED',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    verified_at = models.DateTimeField(blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.job.title} - ${self.amount} ({self.get_status_display()})"
+
+
+class PortfolioItem(models.Model):
+    professional = models.ForeignKey(
+        Professional,
+        on_delete=models.CASCADE,
+        related_name='portfolio_items',
+    )
+    image_url = models.URLField(max_length=500)
+    caption = models.CharField(max_length=180, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+
+class AiUsage(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='ai_usage')
+    date = models.DateField()
+    requests = models.PositiveSmallIntegerField(default=0)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['user', 'date'], name='unique_ai_usage_per_day'),
+        ]
 
 
 class Notification(models.Model):

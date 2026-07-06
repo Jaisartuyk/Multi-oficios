@@ -10,7 +10,7 @@
 </section>
 
 <!-- Accesos directos rápidos -->
-<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
+<div class="admin-shortcuts">
     <a href="{% url 'admin_users' %}" class="detail-card" style="text-decoration: none; text-align: center; border: 1px solid var(--line);">
         <i data-lucide="users" style="color: var(--primary); margin-bottom: 8px;"></i>
         <h3 style="color: var(--text); margin: 0; font-size: 16px;">Gestión de Usuarios</h3>
@@ -19,19 +19,20 @@
         <i data-lucide="dollar-sign" style="color: var(--green); margin-bottom: 8px;"></i>
         <h3 style="color: var(--green); margin: 0; font-size: 16px;">Finanzas y Recargas</h3>
     </a>
+    <a href="{% url 'admin_payments' %}" class="detail-card admin-shortcut">
+        <i data-lucide="shield-check"></i>
+        <h3>Pagos y garantías</h3>
+    </a>
 </div>
 
 <section class="metric-grid">
+    {% for metric in metrics %}
     <article>
-        <span>Clientes Registrados</span>
-        <strong>{{ clients_count }}</strong>
-        <small style="color: var(--blue);">Activos</small>
+        <span>{{ metric.label }}</span>
+        <strong>{{ metric.value }}</strong>
+        <small>{{ metric.trend }}</small>
     </article>
-    <article>
-        <span>Profesionales</span>
-        <strong>{{ pros_count }}</strong>
-        <small style="color: var(--green);">Verificados</small>
-    </article>
+    {% endfor %}
 </section>
 
 <section class="dashboard-panel">
@@ -66,6 +67,6 @@
     <h2>Moderación inteligente</h2>
     <article><i data-lucide="user-check"></i><span>Validación de identidad pendiente: {{ pros_count }} perfiles</span></article>
     <article><i data-lucide="message-square-warning"></i><span>Reseñas marcadas para revisión: 0 casos</span></article>
-    <article><i data-lucide="credit-card"></i><span>Pagos retenidos por garantía: 0 trabajos</span></article>
+    <article><i data-lucide="credit-card"></i><span>Pagos con garantía en seguimiento: {{ active_guarantees }}</span></article>
 </section>
 {% endblock %}
