@@ -238,7 +238,7 @@ def cancel_assignment(professional_id, job_id):
 
 
 @transaction.atomic
-def create_payment(client, job_id, cleaned_data):
+def create_payment(client, job_id, cleaned_data, receipt_file=None):
     job = JobRequest.objects.select_for_update().select_related(
         'professional',
         'selected_quote',
@@ -250,6 +250,62 @@ def create_payment(client, job_id, cleaned_data):
     if Payment.objects.filter(job=job).exists():
         raise WorkflowError('Este trabajo ya tiene un pago registrado.')
 
+    receipt_url = ''
+    if receipt_file:
+        from django.conf import settings
+        
+        # Verificar si R2 está configurado
+        use_r2 = all([
+            settings.R2_ACCESS_KEY_ID,
+            settings.R2_SECRET_ACCESS_KEY,
+            settings.R2_ENDPOINT_URL,
+            settings.R2_BUCKET_NAME,
+            settings.R2_PUBLIC_URL
+        ])
+        
+        filename = f'receipts/{timezone.now().strftime("%Y%m%d%H%M%S")}_{receipt_file.name}'
+        
+        if use_r2:
+            try:
+                import boto3
+                from botocore.config import Config
+                
+                s3_client = boto3.client(
+                    's3',
+                    endpoint_url=settings.R2_ENDPOINT_URL,
+                    aws_access_key_id=settings.R2_ACCESS_KEY_ID,
+                    aws_secret_access_key=settings.R2_SECRET_ACCESS_KEY,
+                    config=Config(signature_version='s3v4')
+                )
+                
+                # Subir archivo a R2
+                s3_client.upload_fileobj(
+                    receipt_file,
+                    settings.R2_BUCKET_NAME,
+                    filename,
+                    ExtraArgs={'ContentType': receipt_file.content_type}
+                )
+                
+                # Obtener URL pública
+                base_url = settings.R2_PUBLIC_URL.rstrip('/')
+                receipt_url = f"{base_url}/{filename}"
+            except Exception as e:
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.error(f"Error al subir a Cloudflare R2: {str(e)}")
+                # Forzar fallback local
+                use_r2 = False
+                
+        if not use_r2:
+            import os
+            from django.core.files.storage import default_storage
+            # Crear directorio de recibos si no existe
+            os.makedirs(os.path.join(settings.BASE_DIR, 'media', 'receipts'), exist_ok=True)
+            # Guardar el archivo usando default_storage
+            file_path = default_storage.save(filename, receipt_file)
+            receipt_url = '/' + settings.MEDIA_URL + file_path
+
+
     return Payment.objects.create(
         job=job,
         client=client,
@@ -257,9 +313,10 @@ def create_payment(client, job_id, cleaned_data):
         amount=job.selected_quote.amount,
         method=cleaned_data['method'],
         receipt_reference=cleaned_data['receipt_reference'],
-        receipt_url=cleaned_data.get('receipt_url', ''),
+        receipt_url=receipt_url,
         guarantee_status='PENDING' if cleaned_data.get('request_guarantee') else 'NOT_REQUESTED',
     )
+
 
 
 @transaction.atomic

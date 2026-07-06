@@ -179,22 +179,37 @@ class ReviewForm(StyledFormMixin, forms.ModelForm):
 
 class PaymentForm(StyledFormMixin, forms.ModelForm):
     request_guarantee = forms.BooleanField(required=False, label='Solicitar garantia ObraYa')
+    receipt_file = forms.FileField(required=False, label='Subir foto o captura del comprobante')
 
     class Meta:
         model = Payment
-        fields = ('method', 'receipt_reference', 'receipt_url')
+        fields = ('method', 'receipt_reference')
         widgets = {
             'receipt_reference': forms.TextInput(
-                attrs={'placeholder': 'Numero de comprobante o referencia'}
-            ),
-            'receipt_url': forms.URLInput(
-                attrs={'placeholder': 'https://... (opcional)'}
+                attrs={'placeholder': 'Número de comprobante o referencia'}
             ),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.apply_styles()
+        # Hacer que la referencia no sea requerida a nivel HTML5 para permitir la lógica condicional en limpio
+        self.fields['receipt_reference'].required = False
+
+    def clean(self):
+        cleaned_data = super().clean()
+        method = cleaned_data.get('method')
+        receipt_reference = cleaned_data.get('receipt_reference')
+
+        if method == 'CASH':
+            # Si es efectivo, completamos la referencia automáticamente
+            if not receipt_reference:
+                cleaned_data['receipt_reference'] = 'EFECTIVO'
+        else:
+            if not receipt_reference:
+                self.add_error('receipt_reference', 'El número de comprobante es obligatorio para este método de pago.')
+        return cleaned_data
+
 
 
 class PortfolioItemForm(StyledFormMixin, forms.ModelForm):

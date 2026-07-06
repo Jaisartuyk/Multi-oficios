@@ -72,6 +72,14 @@ GEMINI_API_KEY = get_env('GEMINI_API_KEY', '')
 GEMINI_MODEL = get_env('GEMINI_MODEL', 'gemini-3.5-flash')
 GEMINI_DAILY_LIMIT = int(get_env('GEMINI_DAILY_LIMIT', '5'))
 
+# Configuración de Cloudflare R2
+R2_ACCESS_KEY_ID = get_env('R2_ACCESS_KEY_ID', '')
+R2_SECRET_ACCESS_KEY = get_env('R2_SECRET_ACCESS_KEY', '')
+R2_ENDPOINT_URL = get_env('R2_ENDPOINT_URL', '')
+R2_BUCKET_NAME = get_env('R2_BUCKET_NAME', '')
+R2_PUBLIC_URL = get_env('R2_PUBLIC_URL', '')
+
+
 INSTALLED_APPS = [
     'core',
     'django.contrib.admin',
@@ -139,6 +147,10 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+MEDIA_URL = 'media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
 
 if 'test' in sys.argv:
     STORAGES = {

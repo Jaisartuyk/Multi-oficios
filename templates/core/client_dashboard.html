@@ -100,22 +100,22 @@
             {% if request_obj.selected_quote and not request_obj.payment and request_obj.status != 'COMPLETED' %}
             <details class="workflow-details">
                 <summary>Registrar pago de ${{ request_obj.selected_quote.amount }}</summary>
-                <form method="post" class="compact-form">
+                <form method="post" class="compact-form" enctype="multipart/form-data">
                     {% csrf_token %}
                     <input type="hidden" name="action" value="record_payment">
                     <input type="hidden" name="job_id" value="{{ request_obj.id }}">
                     <label>Método
-                        <select name="method" required>
+                        <select name="method" class="payment-method-select" required onchange="handlePaymentMethodChange(this)">
                             <option value="TRANSFER">Transferencia</option>
                             <option value="DEUNA">DeUna</option>
                             <option value="CASH">Efectivo</option>
                         </select>
                     </label>
-                    <label>Referencia
-                        <input name="receipt_reference" maxlength="200" required placeholder="Número de comprobante">
+                    <label class="reference-label">Referencia
+                        <input name="receipt_reference" class="payment-reference-input" maxlength="200" required placeholder="Número de comprobante o referencia">
                     </label>
-                    <label>Enlace del comprobante (opcional)
-                        <input type="url" name="receipt_url" maxlength="500" placeholder="https://...">
+                    <label class="file-label">Foto del comprobante
+                        <input type="file" name="receipt_file" accept="image/*" style="width: 100%; padding: 8px 12px; border: 1.5px solid var(--line); border-radius: 12px; background: var(--surface-strong); color: var(--text);">
                     </label>
                     <label class="check-row">
                         <input type="checkbox" name="request_guarantee">
@@ -198,4 +198,38 @@
     </div>
     {% endif %}
 </section>
+
+<script>
+    function handlePaymentMethodChange(selectElement) {
+        const form = selectElement.closest('form');
+        const referenceLabel = form.querySelector('.reference-label');
+        const referenceInput = form.querySelector('.payment-reference-input');
+        const fileLabel = form.querySelector('.file-label');
+        const fileInput = form.querySelector('input[type="file"]');
+
+        if (selectElement.value === 'CASH') {
+            if (referenceLabel) referenceLabel.style.display = 'none';
+            if (referenceInput) {
+                referenceInput.removeAttribute('required');
+                referenceInput.value = '';
+            }
+            if (fileLabel) fileLabel.style.display = 'none';
+            if (fileInput) {
+                fileInput.value = ''; // limpiar archivo cargado
+            }
+        } else {
+            if (referenceLabel) referenceLabel.style.display = 'block';
+            if (referenceInput) referenceInput.setAttribute('required', 'required');
+            if (fileLabel) fileLabel.style.display = 'block';
+        }
+    }
+
+    // Inicializar el estado de los inputs al cargar la página
+    document.addEventListener("DOMContentLoaded", function() {
+        document.querySelectorAll('.payment-method-select').forEach(select => {
+            handlePaymentMethodChange(select);
+        });
+    });
+</script>
 {% endblock %}
+

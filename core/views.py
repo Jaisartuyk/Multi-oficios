@@ -448,13 +448,14 @@ def client_dashboard(request):
                 )
                 messages.success(request, 'Gracias. Tu reseña verificada fue publicada.')
             elif action == 'record_payment':
-                form = PaymentForm(request.POST)
+                form = PaymentForm(request.POST, request.FILES)
                 if not form.is_valid():
                     raise WorkflowError('Revisa el comprobante de pago.')
                 create_payment(
                     request.user,
                     request.POST.get('job_id'),
                     form.cleaned_data,
+                    request.FILES.get('receipt_file')
                 )
                 messages.success(request, 'Comprobante registrado para verificación.')
         except (
