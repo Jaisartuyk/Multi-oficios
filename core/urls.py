@@ -7,6 +7,7 @@ urlpatterns = [
     path('', views.home, name='home'),
     path('profesional/<int:professional_id>/', views.professional_detail, name='professional_detail'),
     path('cotizador/', views.estimator, name='estimator'),
+    path('comunidad/', views.feed, name='feed'),
     path('admin-panel/', views.admin_panel, name='admin_panel'),
     path('admin-panel/usuarios/', views.admin_users, name='admin_users'),
     path('admin-panel/recargas/', views.admin_recharges, name='admin_recharges'),

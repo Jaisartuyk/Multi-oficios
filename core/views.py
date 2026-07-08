@@ -160,6 +160,44 @@ def professional_detail(request, professional_id):
         raise Http404('Profesional no encontrado')
     return render(request, 'core/professional_detail.html', {'professional': professional})
 
+
+@role_required('CLIENT', 'PROFESSIONAL', 'ADMIN')
+def feed(request):
+    """Feed social público – muestra publicaciones de portafolio de todos los profesionales."""
+    from django.core.paginator import Paginator
+
+    # Filtro por categoría/especialidad
+    specialty_filter = request.GET.get('especialidad', '').strip()
+
+    items = (
+        PortfolioItem.objects
+        .select_related('professional__user__profile')
+        .order_by('-created_at')
+    )
+
+    if specialty_filter:
+        items = items.filter(professional__specialty__icontains=specialty_filter)
+
+    # Obtener lista única de especialidades para el filtro
+    specialties = (
+        Professional.objects
+        .exclude(available='No disponible temporalmente')
+        .values_list('specialty', flat=True)
+        .distinct()
+        .order_by('specialty')
+    )
+
+    paginator = Paginator(items, 12)
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page_number)
+
+    return render(request, 'core/feed.html', {
+        'page_obj': page_obj,
+        'specialties': specialties,
+        'current_filter': specialty_filter,
+    })
+
+
 @role_required('CLIENT')
 def estimator(request):
     result = None
