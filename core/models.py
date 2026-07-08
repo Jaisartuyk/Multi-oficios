@@ -262,6 +262,15 @@ class PortfolioItem(models.Model):
     class Meta:
         ordering = ['-created_at']
 
+    @property
+    def is_video(self):
+        if not self.image_url:
+            return False
+        url = self.image_url.lower()
+        extensions = ('.mp4', '.webm', '.ogg', '.mov', '.avi', '.mkv', '/video/')
+        return any(ext in url for ext in extensions)
+
+
 
 class AiUsage(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='ai_usage')

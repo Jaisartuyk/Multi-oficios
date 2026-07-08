@@ -44,6 +44,7 @@ from .services import (
     start_job,
     submit_quote,
     update_payment_status,
+    upload_file_to_r2_or_local,
 )
 from django.contrib.auth.forms import AuthenticationForm
 
@@ -531,13 +532,19 @@ def professional_dashboard(request):
                 cancel_assignment(professional.id, request.POST.get('job_id'))
                 messages.success(request, 'Asignación cancelada y crédito devuelto.')
             elif action == 'add_portfolio':
-                form = PortfolioItemForm(request.POST)
+                form = PortfolioItemForm(request.POST, request.FILES)
                 if not form.is_valid():
-                    raise WorkflowError('Revisa la URL y descripción del portafolio.')
+                    raise WorkflowError('Revisa el archivo y la descripción del portafolio.')
                 item = form.save(commit=False)
                 item.professional = professional
+                portfolio_file = request.FILES.get('portfolio_file')
+                if portfolio_file:
+                    item.image_url = upload_file_to_r2_or_local(portfolio_file, 'portfolio')
+                else:
+                    raise WorkflowError('Debes subir una foto o video para el portafolio.')
                 item.save()
-                messages.success(request, 'Imagen añadida al portafolio.')
+                messages.success(request, 'Archivo añadido al portafolio de manera pública.')
+
             elif action == 'remove_portfolio':
                 PortfolioItem.objects.filter(
                     pk=request.POST.get('item_id'),

@@ -69,27 +69,31 @@
         <h2>Portafolio</h2>
         <span>Imágenes públicas</span>
     </div>
-    <form method="post" class="surface-form compact-form">
+    <form method="post" class="surface-form compact-form" enctype="multipart/form-data">
         {% csrf_token %}
         <input type="hidden" name="action" value="add_portfolio">
-        <label>URL de la imagen
-            <input type="url" name="image_url" maxlength="500" required placeholder="https://...">
+        <label>Foto o Video del Trabajo
+            <input type="file" name="portfolio_file" accept="image/*,video/*" required style="width: 100%; padding: 8px 12px; border: 1.5px solid var(--line); border-radius: 12px; background: var(--surface-strong); color: var(--text);">
         </label>
-        <label>Descripción
-            <input name="caption" maxlength="180" placeholder="Ej: Remodelación de cocina">
+        <label>Descripción / Comentario
+            <input name="caption" maxlength="180" placeholder="Ej: Remodelación de cocina, instalación eléctrica...">
         </label>
-        <button class="secondary-button" type="submit">Añadir imagen</button>
+        <button class="secondary-button" type="submit">Añadir al portafolio</button>
     </form>
     <div class="portfolio-grid">
         {% for item in professional.portfolio_items.all %}
-        <figure class="portfolio-item">
-            <img src="{{ item.image_url }}" alt="{{ item.caption|default:'Trabajo realizado' }}" loading="lazy">
-            <figcaption>{{ item.caption|default:"Trabajo realizado" }}</figcaption>
-            <form method="post">
+        <figure class="portfolio-item" style="position: relative; overflow: hidden; border-radius: 12px; border: 1px solid var(--line); padding: 8px; background: var(--surface);">
+            {% if item.is_video %}
+            <video src="{{ item.image_url }}" controls style="width: 100%; height: 180px; object-fit: cover; border-radius: 8px; background: #000;" preload="metadata"></video>
+            {% else %}
+            <img src="{{ item.image_url }}" alt="{{ item.caption|default:'Trabajo realizado' }}" loading="lazy" style="width: 100%; height: 180px; object-fit: cover; border-radius: 8px;">
+            {% endif %}
+            <figcaption style="margin-top: 8px; font-size: 13px; color: var(--text-muted); font-weight: 500;">{{ item.caption|default:"Trabajo realizado" }}</figcaption>
+            <form method="post" style="position: absolute; top: 12px; right: 12px;">
                 {% csrf_token %}
                 <input type="hidden" name="action" value="remove_portfolio">
                 <input type="hidden" name="item_id" value="{{ item.id }}">
-                <button class="icon-button" type="submit" aria-label="Eliminar imagen"><i data-lucide="trash-2"></i></button>
+                <button class="icon-button" type="submit" aria-label="Eliminar imagen" style="background: rgba(0,0,0,0.6); color: white; border: none; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer;"><i data-lucide="trash-2" style="width: 16px; height: 16px;"></i></button>
             </form>
         </figure>
         {% empty %}

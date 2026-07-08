@@ -213,14 +213,20 @@ class PaymentForm(StyledFormMixin, forms.ModelForm):
 
 
 class PortfolioItemForm(StyledFormMixin, forms.ModelForm):
+    portfolio_file = forms.FileField(
+        required=True,
+        label="Subir foto o video",
+        widget=forms.ClearableFileInput(attrs={'accept': 'image/*,video/*'})
+    )
+
     class Meta:
         model = PortfolioItem
-        fields = ('image_url', 'caption')
+        fields = ('caption',)
         widgets = {
-            'image_url': forms.URLInput(attrs={'placeholder': 'https://...'}),
-            'caption': forms.TextInput(attrs={'placeholder': 'Describe el trabajo realizado'}),
+            'caption': forms.TextInput(attrs={'placeholder': 'Describe el trabajo realizado o añade un comentario...'}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.apply_styles()
+
