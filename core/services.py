@@ -296,10 +296,7 @@ def upload_file_to_r2_or_local(file_obj, subfolder='receipts'):
 
 @transaction.atomic
 def create_payment(client, job_id, cleaned_data, receipt_file=None):
-    job = JobRequest.objects.select_for_update().select_related(
-        'professional',
-        'selected_quote',
-    ).get(pk=job_id)
+    job = JobRequest.objects.select_for_update().get(pk=job_id)
     if job.client_id != client.id or not job.professional_id or not job.selected_quote_id:
         raise WorkflowError('El trabajo todavía no tiene una cotización seleccionada.')
     if job.status not in {'ACCEPTED', 'IN_PROGRESS', 'AWAITING_CONFIRMATION'}:
