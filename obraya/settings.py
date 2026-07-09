@@ -60,11 +60,11 @@ if not DEBUG and 'test' not in sys.argv:
 
 ALLOWED_HOSTS = get_env_list(
     'ALLOWED_HOSTS',
-    'localhost,127.0.0.1,multi-oficios-production.up.railway.app',
+    'localhost,127.0.0.1,multi-oficios-production.up.railway.app,obrayajob.com,www.obrayajob.com',
 )
 CSRF_TRUSTED_ORIGINS = get_env_list(
     'CSRF_TRUSTED_ORIGINS',
-    'https://multi-oficios-production.up.railway.app',
+    'https://multi-oficios-production.up.railway.app,https://obrayajob.com,https://www.obrayajob.com',
 )
 
 GOOGLE_MAPS_API_KEY = get_env('GOOGLE_MAPS_API_KEY', '')
