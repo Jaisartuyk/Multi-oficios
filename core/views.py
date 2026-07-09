@@ -497,13 +497,10 @@ def client_dashboard(request):
                     request.FILES.get('receipt_file')
                 )
                 messages.success(request, 'Comprobante registrado para verificación.')
-        except (
-            JobRequest.DoesNotExist,
-            Payment.DoesNotExist,
-            Quote.DoesNotExist,
-            WorkflowError,
-        ) as error:
-            messages.error(request, str(error) or 'No se pudo completar la acción.')
+        except Exception as error:
+            import traceback
+            traceback.print_exc()
+            messages.error(request, f"Error de servidor: {str(error)}")
         return redirect('client_dashboard')
 
     requests = (
