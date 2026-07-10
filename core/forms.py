@@ -67,7 +67,9 @@ class AdminProfessionalForm(forms.Form):
     experience = forms.CharField(max_length=50, label="Experiencia (Años)")
     level = forms.CharField(max_length=100, label="Nivel/Categoría", initial="Experto")
     available = forms.CharField(max_length=100, label="Disponibilidad", initial="Disponible hoy")
-    location = forms.CharField(max_length=200, label="Ciudad/Ubicación", initial="Guayaquil")
+    location = forms.CharField(max_length=200, label="Ciudad/Ubicación", initial="Guayaquil", widget=forms.TextInput(attrs={'id': 'id_location'}))
+    lat = forms.FloatField(label="Latitud", required=False, initial=-2.1894, widget=forms.TextInput(attrs={'id': 'id_lat'}))
+    lng = forms.FloatField(label="Longitud", required=False, initial=-79.8891, widget=forms.TextInput(attrs={'id': 'id_lng'}))
     about = forms.CharField(widget=forms.Textarea, label="Acerca de / Descripción", required=False)
     phone = forms.CharField(max_length=20, label="WhatsApp / Teléfono", required=False)
 
@@ -88,6 +90,8 @@ class AdminProfessionalForm(forms.Form):
             self.fields['level'].initial = self.pro_instance.level
             self.fields['available'].initial = self.pro_instance.available
             self.fields['location'].initial = self.pro_instance.location
+            self.fields['lat'].initial = self.pro_instance.lat
+            self.fields['lng'].initial = self.pro_instance.lng
             self.fields['about'].initial = self.pro_instance.about
             if hasattr(self.user_instance, 'profile'):
                 self.fields['phone'].initial = self.user_instance.profile.phone

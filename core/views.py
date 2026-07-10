@@ -353,6 +353,8 @@ def admin_add_professional(request):
                 level=form.cleaned_data['level'],
                 available=form.cleaned_data['available'],
                 location=form.cleaned_data['location'],
+                lat=form.cleaned_data.get('lat') if form.cleaned_data.get('lat') is not None else -2.1894,
+                lng=form.cleaned_data.get('lng') if form.cleaned_data.get('lng') is not None else -79.8891,
                 about=form.cleaned_data['about'],
                 initials=username[:2].upper()
             )
@@ -362,7 +364,11 @@ def admin_add_professional(request):
     else:
         form = AdminProfessionalForm()
         
-    return render(request, 'core/admin_pro_form.html', {'form': form, 'title': 'Agregar Profesional'})
+    return render(request, 'core/admin_pro_form.html', {
+        'form': form,
+        'title': 'Agregar Profesional',
+        'google_maps_api_key': settings.GOOGLE_MAPS_API_KEY
+    })
 
 @role_required('ADMIN')
 def admin_edit_professional(request, user_id):
@@ -390,6 +396,10 @@ def admin_edit_professional(request, user_id):
             pro.level = form.cleaned_data['level']
             pro.available = form.cleaned_data['available']
             pro.location = form.cleaned_data['location']
+            if form.cleaned_data.get('lat') is not None:
+                pro.lat = form.cleaned_data.get('lat')
+            if form.cleaned_data.get('lng') is not None:
+                pro.lng = form.cleaned_data.get('lng')
             pro.about = form.cleaned_data['about']
             pro.save()
             
@@ -398,7 +408,11 @@ def admin_edit_professional(request, user_id):
     else:
         form = AdminProfessionalForm(user_instance=user, pro_instance=pro)
         
-    return render(request, 'core/admin_pro_form.html', {'form': form, 'title': f'Editar Profesional: {user.username}'})
+    return render(request, 'core/admin_pro_form.html', {
+        'form': form,
+        'title': f'Editar Profesional: {user.username}',
+        'google_maps_api_key': settings.GOOGLE_MAPS_API_KEY
+    })
 
 @role_required('ADMIN')
 def admin_add_client(request):
