@@ -168,12 +168,13 @@ class QuoteForm(StyledFormMixin, forms.ModelForm):
 class ReviewForm(StyledFormMixin, forms.ModelForm):
     class Meta:
         model = Review
-        fields = ('rating', 'punctuality', 'quality', 'comment')
+        fields = ('rating', 'punctuality', 'quality', 'comment', 'admin_observation')
         widgets = {
             'rating': forms.Select(choices=[(value, f'{value} estrellas') for value in range(5, 0, -1)]),
             'punctuality': forms.Select(choices=[(value, str(value)) for value in range(5, 0, -1)]),
             'quality': forms.Select(choices=[(value, str(value)) for value in range(5, 0, -1)]),
-            'comment': forms.Textarea(attrs={'rows': 3, 'placeholder': 'Cuenta como fue el servicio.'}),
+            'comment': forms.Textarea(attrs={'rows': 3, 'placeholder': 'Cuenta cómo fue tu experiencia (comentario público).'}),
+            'admin_observation': forms.Textarea(attrs={'rows': 2, 'placeholder': 'Observaciones o reporte privado para el administrador (opcional).'}),
         }
 
     def __init__(self, *args, **kwargs):

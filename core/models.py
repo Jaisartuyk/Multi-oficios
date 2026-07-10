@@ -202,6 +202,7 @@ class Review(models.Model):
         validators=[MinValueValidator(1), MaxValueValidator(5)]
     )
     comment = models.TextField(max_length=1500, blank=True)
+    admin_observation = models.TextField(verbose_name="Observación para el administrador", blank=True, max_length=2000)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

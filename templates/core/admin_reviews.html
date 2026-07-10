@@ -1,0 +1,96 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Valoraciones y Reportes | ObraYa Admin{% endblock %}
+
+{% block content %}
+<section class="dashboard-heading">
+    <div>
+        <span class="eyebrow"><i data-lucide="star"></i> Feedback del Cliente</span>
+        <h1>Valoraciones y Reportes</h1>
+        <p>Monitorea la calidad de los servicios y las observaciones privadas enviadas al administrador.</p>
+    </div>
+    <a class="secondary-button" href="{% url 'admin_panel' %}">
+        <i data-lucide="arrow-left"></i> Volver al Panel
+    </a>
+</section>
+
+<section class="dashboard-section">
+    <div class="pro-list" style="margin-top: 15px; display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));">
+        {% for review in reviews %}
+            <article class="detail-card" style="margin: 0; background: var(--surface); border: 1px solid var(--line); padding: 20px; border-radius: 20px; display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <!-- Header: Job and Ratings -->
+                    <div style="border-bottom: 1px solid var(--line); padding-bottom: 10px; margin-bottom: 12px;">
+                        <span style="font-size: 11px; color: var(--muted); font-weight: 800; text-transform: uppercase;">Trabajo Relacionado</span>
+                        <h3 style="margin: 2px 0 6px 0; font-size: 16px; color: var(--text);">{{ review.job.title }}</h3>
+                        
+                        <div style="display: flex; gap: 8px; font-size: 12px; margin-top: 8px; flex-wrap: wrap;">
+                            <span class="status-pill status-completed" style="text-transform: none; font-size: 11px;">
+                                General: {{ review.rating }}/5 ★
+                            </span>
+                            <span class="status-pill" style="text-transform: none; font-size: 11px; background: rgba(59, 130, 246, 0.1); color: var(--blue);">
+                                Calidad: {{ review.quality }}/5
+                            </span>
+                            <span class="status-pill" style="text-transform: none; font-size: 11px; background: rgba(245, 158, 11, 0.1); color: #a35f00;">
+                                Puntualidad: {{ review.punctuality }}/5
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Actors -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; font-size: 12px; border-bottom: 1px dashed var(--line); padding-bottom: 10px;">
+                        <div>
+                            <span style="color: var(--muted); display: block;">Cliente</span>
+                            <strong style="color: var(--text);">{{ review.client.username }}</strong>
+                        </div>
+                        <div>
+                            <span style="color: var(--muted); display: block;">Profesional</span>
+                            <strong style="color: var(--text);">{{ review.professional.name }}</strong>
+                        </div>
+                    </div>
+
+                    <!-- Public Comment -->
+                    <div style="margin-bottom: 16px;">
+                        <span style="font-size: 11px; color: var(--muted); font-weight: 700; display: block; margin-bottom: 4px;">Comentario Público</span>
+                        {% if review.comment %}
+                            <blockquote style="margin: 0; padding: 10px 14px; background: var(--surface-strong); border-radius: 12px; font-size: 13px; color: var(--text); border-left: 4px solid var(--green);">
+                                "{{ review.comment }}"
+                            </blockquote>
+                        {% else %}
+                            <span style="color: var(--muted); font-size: 13px; font-style: italic;">Sin comentario público.</span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Private Observation (Admin Only) -->
+                    <div style="margin-top: 14px; padding: 12px; border-radius: 14px; background: rgba(209, 67, 67, 0.08); border: 1px solid rgba(209, 67, 67, 0.2);">
+                        <div style="display: flex; align-items: center; gap: 6px; color: #d14343; font-size: 11px; font-weight: 800; text-transform: uppercase; margin-bottom: 6px;">
+                            <i data-lucide="shield-alert" style="width: 14px; height: 14px;"></i>
+                            <span>Observación Privada (Solo Admin)</span>
+                        </div>
+                        {% if review.admin_observation %}
+                            <p style="margin: 0; font-size: 13px; color: var(--text); font-weight: 500;">
+                                {{ review.admin_observation }}
+                            </p>
+                        {% else %}
+                            <span style="color: var(--muted); font-size: 12px; font-style: italic;">El cliente no dejó comentarios privados.</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div style="margin-top: 16px; display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-size: 11px; color: var(--muted);">{{ review.created_at|date:"d/m/Y H:i" }}</span>
+                    <a href="{% url 'admin_edit_professional' review.professional.user.id %}" class="secondary-button" style="padding: 6px 12px; font-size: 11px; min-height: auto;">
+                        Ver Ficha
+                    </a>
+                </div>
+            </article>
+        {% empty %}
+            <div class="empty-state" style="grid-column: 1 / -1; width: 100%;">
+                <i data-lucide="star-off"></i>
+                <h3>No hay valoraciones registradas</h3>
+                <p>Las valoraciones enviadas por los clientes se mostrarán en esta sección.</p>
+            </div>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

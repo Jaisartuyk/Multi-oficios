@@ -174,8 +174,11 @@
                             <select name="quality" required>{% for value in "54321" %}<option value="{{ value }}">{{ value }}</option>{% endfor %}</select>
                         </label>
                     </div>
-                    <label>Comentario
-                        <textarea name="comment" maxlength="1500" rows="3" placeholder="¿Cómo fue tu experiencia?"></textarea>
+                    <label>Comentario Público
+                        <textarea name="comment" maxlength="1500" rows="3" placeholder="¿Cómo fue tu experiencia pública con el profesional?"></textarea>
+                    </label>
+                    <label>Observaciones privadas para el Administrador (opcional - NO se muestran en público)
+                        <textarea name="admin_observation" maxlength="2000" rows="2" placeholder="Cuéntanos en privado cualquier sugerencia, reporte o detalle sobre el trabajador..."></textarea>
                     </label>
                     <button class="secondary-button" type="submit">Publicar reseña</button>
                 </form>

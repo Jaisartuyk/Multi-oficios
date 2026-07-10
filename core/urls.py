@@ -12,6 +12,7 @@ urlpatterns = [
     path('admin-panel/usuarios/', views.admin_users, name='admin_users'),
     path('admin-panel/recargas/', views.admin_recharges, name='admin_recharges'),
     path('admin-panel/pagos/', views.admin_payments, name='admin_payments'),
+    path('admin-panel/valoraciones/', views.admin_reviews, name='admin_reviews'),
     path('admin-panel/profesionales/crear/', views.admin_add_professional, name='admin_add_professional'),
     path('admin-panel/profesionales/editar/<int:user_id>/', views.admin_edit_professional, name='admin_edit_professional'),
     path('admin-panel/clientes/crear/', views.admin_add_client, name='admin_add_client'),

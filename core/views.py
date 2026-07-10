@@ -18,6 +18,7 @@ from .models import (
     Professional,
     Quote,
     Recharge,
+    Review,
     Service,
     UserProfile,
 )
@@ -322,6 +323,16 @@ def admin_payments(request):
         'professional',
     ).order_by('-created_at')
     return render(request, 'core/admin_payments.html', {'payments': payments})
+
+
+@role_required('ADMIN')
+def admin_reviews(request):
+    reviews = Review.objects.select_related(
+        'job',
+        'client__profile',
+        'professional'
+    ).order_by('-created_at')
+    return render(request, 'core/admin_reviews.html', {'reviews': reviews})
 
 
 @role_required('ADMIN')
