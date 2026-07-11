@@ -48,6 +48,7 @@ from .services import (
     submit_quote,
     update_payment_status,
     upload_file_to_r2_or_local,
+    notify,
 )
 from django.contrib.auth.forms import AuthenticationForm
 
@@ -786,6 +787,23 @@ def chat_room_view(request, room_id):
                 file_url=file_url,
                 file_type=file_type
             )
+            
+            # Notificar al otro participante
+            recipient = None
+            if user == room.job.client:
+                recipient = room.job.professional.user if room.job.professional else None
+            elif room.job.professional and user == room.job.professional.user:
+                recipient = room.job.client
+                
+            if recipient:
+                notify(
+                    recipient=recipient,
+                    notif_type='SYSTEM',
+                    title=f"Nuevo mensaje de {user.username}",
+                    message=content[:100] or "Te envió un archivo.",
+                    link=f"/chat/{room.id}/"
+                )
+                
             return redirect('chat_room_view', room_id=room.id)
             
     messages_list = room.messages.all().select_related('sender')
@@ -801,6 +819,103 @@ def chat_room_view(request, room_id):
         'is_client': is_client,
         'is_pro': is_pro,
     })
+
+
+@login_required
+def chat_api_view(request, room_id):
+    room = get_object_or_404(
+        ChatRoom.objects.select_related('job__client', 'job__professional__user'),
+        pk=room_id
+    )
+    user = request.user
+    
+    is_client = (user == room.job.client)
+    is_pro = (room.job.professional and user == room.job.professional.user)
+    is_admin = getattr(getattr(user, 'profile', None), 'role', None) == 'ADMIN' or user.is_superuser
+    
+    if not (is_client or is_pro or is_admin):
+        return JsonResponse({'error': 'No tienes acceso a este chat.'}, status=403)
+        
+    if request.method == 'GET':
+        last_id = request.GET.get('last_id')
+        msgs = room.messages.all().select_related('sender')
+        if last_id:
+            try:
+                msgs = msgs.filter(id__gt=int(last_id))
+            except ValueError:
+                pass
+                
+        data = []
+        for m in msgs:
+            data.append({
+                'id': m.id,
+                'sender_username': m.sender.username,
+                'is_me': m.sender == user,
+                'content': m.content,
+                'file_url': m.file_url,
+                'file_type': m.file_type,
+                'created_at': m.created_at.strftime('%H:%M'),
+            })
+        return JsonResponse({'messages': data, 'is_active': room.is_active})
+        
+    elif request.method == 'POST':
+        if not room.is_active:
+            return JsonResponse({'error': 'Este chat está cerrado porque el trabajo ha sido completado.'}, status=400)
+            
+        content = request.POST.get('content', '').strip()
+        file_obj = request.FILES.get('file')
+        
+        if not (content or file_obj):
+            return JsonResponse({'error': 'Mensaje vacío.'}, status=400)
+            
+        file_url = None
+        file_type = None
+        if file_obj:
+            content_type = file_obj.content_type
+            if content_type.startswith('image/'):
+                file_type = 'image'
+            elif content_type.startswith('audio/'):
+                file_type = 'audio'
+            elif content_type.startswith('video/'):
+                file_type = 'video'
+            else:
+                file_type = 'document'
+            file_url = upload_file_to_r2_or_local(file_obj, 'chat')
+            
+        msg = ChatMessage.objects.create(
+            room=room,
+            sender=user,
+            content=content,
+            file_url=file_url,
+            file_type=file_type
+        )
+        
+        recipient = None
+        if user == room.job.client:
+            recipient = room.job.professional.user if room.job.professional else None
+        elif room.job.professional and user == room.job.professional.user:
+            recipient = room.job.client
+            
+        if recipient:
+            notify(
+                recipient=recipient,
+                notif_type='SYSTEM',
+                title=f"Nuevo mensaje de {user.username}",
+                message=content[:100] or "Te envió un archivo.",
+                link=f"/chat/{room.id}/"
+            )
+            
+        return JsonResponse({
+            'message': {
+                'id': msg.id,
+                'sender_username': msg.sender.username,
+                'is_me': True,
+                'content': msg.content,
+                'file_url': msg.file_url,
+                'file_type': msg.file_type,
+                'created_at': msg.created_at.strftime('%H:%M'),
+            }
+        })
 
 
 def offline(request):

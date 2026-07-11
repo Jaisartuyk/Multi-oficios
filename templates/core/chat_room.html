@@ -19,62 +19,36 @@
     <!-- Messages Container -->
     <div id="chat-messages-container" style="flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; background: var(--surface-strong);">
         {% for msg in chat_messages %}
-            {% if msg.sender == request.user %}
-                <!-- Current user message (Right side) -->
-                <div style="align-self: flex-end; max-width: 80%; display: flex; flex-direction: column; align-items: flex-end;">
-                    <div style="background: var(--green); color: white; padding: 10px 14px; border-radius: 18px 18px 2px 18px; font-size: 14px; box-shadow: 0 2px 6px rgba(0,0,0,0.06);">
-                        {% if msg.content %}
-                            <p style="margin: 0; white-space: pre-wrap; line-height: 1.4;">{{ msg.content }}</p>
-                        {% endif %}
-                        
-                        {% if msg.file_url %}
-                            <div style="margin-top: 6px; border-radius: 8px; overflow: hidden;">
-                                {% if msg.file_type == 'image' %}
-                                    <a href="{{ msg.file_url }}" target="_blank"><img src="{{ msg.file_url }}" style="max-width: 100%; max-height: 220px; object-fit: cover; display: block; border-radius: 8px;" alt="Imagen enviada"></a>
-                                {% elif msg.file_type == 'audio' %}
-                                    <audio src="{{ msg.file_url }}" controls style="max-width: 100%; display: block;"></audio>
-                                {% elif msg.file_type == 'video' %}
-                                    <video src="{{ msg.file_url }}" controls style="max-width: 100%; max-height: 220px; display: block; border-radius: 8px;" preload="metadata"></video>
-                                {% else %}
-                                    <a href="{{ msg.file_url }}" target="_blank" style="color: white; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; text-decoration: underline; font-size: 13px;">
-                                        <i data-lucide="file"></i> Ver archivo adjunto
-                                    </a>
-                                {% endif %}
-                            </div>
-                        {% endif %}
-                    </div>
-                    <small style="color: var(--muted); font-size: 10px; margin-top: 4px; margin-right: 4px;">{{ msg.created_at|date:"H:i" }}</small>
-                </div>
-            {% else %}
-                <!-- Other user message (Left side) -->
-                <div style="align-self: flex-start; max-width: 80%; display: flex; flex-direction: column; align-items: flex-start;">
-                    <div style="background: var(--surface); color: var(--text); border: 1px solid var(--line); padding: 10px 14px; border-radius: 18px 18px 18px 2px; font-size: 14px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+            <div class="message-wrapper" data-msg-id="{{ msg.id }}" style="align-self: {% if msg.sender == request.user %}flex-end{% else %}flex-start{% endif %}; max-width: 80%; display: flex; flex-direction: column; align-items: {% if msg.sender == request.user %}flex-end{% else %}flex-start{% endif %};">
+                <div style="background: {% if msg.sender == request.user %}var(--green){% else %}var(--surface){% endif %}; color: {% if msg.sender == request.user %}white{% else %}var(--text){% endif %}; {% if msg.sender != request.user %}border: 1px solid var(--line);{% endif %} padding: 10px 14px; border-radius: {% if msg.sender == request.user %}18px 18px 2px 18px{% else %}18px 18px 18px 2px{% endif %}; font-size: 14px; box-shadow: 0 2px 6px rgba(0,0,0,0.04);">
+                    {% if msg.sender != request.user %}
                         <strong style="display: block; font-size: 11px; color: var(--green); margin-bottom: 2px;">{{ msg.sender.username }}</strong>
-                        {% if msg.content %}
-                            <p style="margin: 0; white-space: pre-wrap; line-height: 1.4;">{{ msg.content }}</p>
-                        {% endif %}
-                        
-                        {% if msg.file_url %}
-                            <div style="margin-top: 6px; border-radius: 8px; overflow: hidden;">
-                                {% if msg.file_type == 'image' %}
-                                    <a href="{{ msg.file_url }}" target="_blank"><img src="{{ msg.file_url }}" style="max-width: 100%; max-height: 220px; object-fit: cover; display: block; border-radius: 8px;" alt="Imagen recibida"></a>
-                                {% elif msg.file_type == 'audio' %}
-                                    <audio src="{{ msg.file_url }}" controls style="max-width: 100%; display: block;"></audio>
-                                {% elif msg.file_type == 'video' %}
-                                    <video src="{{ msg.file_url }}" controls style="max-width: 100%; max-height: 220px; display: block; border-radius: 8px;" preload="metadata"></video>
-                                {% else %}
-                                    <a href="{{ msg.file_url }}" target="_blank" style="color: var(--green); font-weight: 700; display: inline-flex; align-items: center; gap: 6px; text-decoration: underline; font-size: 13px;">
-                                        <i data-lucide="file"></i> Ver archivo adjunto
-                                    </a>
-                                {% endif %}
-                            </div>
-                        {% endif %}
-                    </div>
-                    <small style="color: var(--muted); font-size: 10px; margin-top: 4px; margin-left: 4px;">{{ msg.created_at|date:"H:i" }}</small>
+                    {% endif %}
+                    
+                    {% if msg.content %}
+                        <p style="margin: 0; white-space: pre-wrap; line-height: 1.4;">{{ msg.content }}</p>
+                    {% endif %}
+                    
+                    {% if msg.file_url %}
+                        <div style="margin-top: 6px; border-radius: 8px; overflow: hidden;">
+                            {% if msg.file_type == 'image' %}
+                                <a href="{{ msg.file_url }}" target="_blank"><img src="{{ msg.file_url }}" style="max-width: 100%; max-height: 220px; object-fit: cover; display: block; border-radius: 8px;" alt="Imagen"></a>
+                            {% elif msg.file_type == 'audio' %}
+                                <audio src="{{ msg.file_url }}" controls style="max-width: 100%; display: block;"></audio>
+                            {% elif msg.file_type == 'video' %}
+                                <video src="{{ msg.file_url }}" controls style="max-width: 100%; max-height: 220px; display: block; border-radius: 8px;" preload="metadata"></video>
+                            {% else %}
+                                <a href="{{ msg.file_url }}" target="_blank" style="color: {% if msg.sender == request.user %}white{% else %}var(--green){% endif %}; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; text-decoration: underline; font-size: 13px;">
+                                    <i data-lucide="file"></i> Ver archivo adjunto
+                                </a>
+                            {% endif %}
+                        </div>
+                    {% endif %}
                 </div>
-            {% endif %}
+                <small style="color: var(--muted); font-size: 10px; margin-top: 4px; {% if msg.sender == request.user %}margin-right: 4px;{% else %}margin-left: 4px;{% endif %}">{{ msg.created_at|date:"H:i" }}</small>
+            </div>
         {% empty %}
-            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--muted); text-align: center; padding: 20px;">
+            <div id="no-messages-placeholder" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--muted); text-align: center; padding: 20px;">
                 <i data-lucide="message-square" style="width: 48px; height: 48px; margin-bottom: 8px; color: var(--green); opacity: 0.5;"></i>
                 <p style="margin: 0; font-weight: 500;">¡El chat está listo!</p>
                 <p style="margin: 4px 0 0 0; font-size: 12px;">Comienza a escribir y coordinar los detalles del servicio.</p>
@@ -85,24 +59,42 @@
     <!-- Input Form -->
     <div style="padding: 16px; background: var(--surface); border-top: 1px solid var(--line);">
         {% if room.is_active %}
-            <form method="post" enctype="multipart/form-data" id="chat-form" style="display: flex; flex-direction: column; gap: 10px;">
+            <form id="chat-form" style="display: flex; flex-direction: column; gap: 10px;">
                 {% csrf_token %}
                 <div style="display: flex; gap: 8px; align-items: center; position: relative;">
-                    <!-- File upload wrapper -->
-                    <label style="cursor: pointer; display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 50%; background: var(--surface-strong); border: 1.5px solid var(--line); color: var(--muted); transition: all 0.2s;" class="file-btn-hover" title="Subir imagen, audio o video">
+                    
+                    <!-- Paperclip / Attach File -->
+                    <label id="attach-file-btn" style="cursor: pointer; display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 50%; background: var(--surface-strong); border: 1.5px solid var(--line); color: var(--muted); transition: all 0.2s; flex-shrink: 0;" class="file-btn-hover" title="Adjuntar archivo (Imagen, Video, Doc)">
                         <input type="file" name="file" id="chat-file-input" style="display: none;" accept="image/*,audio/*,video/*,application/pdf">
-                        <i data-lucide="paperclip" id="clip-icon" style="width: 20px; height: 20px;"></i>
+                        <i data-lucide="paperclip" style="width: 20px; height: 20px;"></i>
                     </label>
                     
-                    <!-- Text content -->
-                    <textarea name="content" id="chat-textarea" placeholder="Escribe un mensaje..." rows="1" required style="flex: 1; min-height: 44px; max-height: 120px; padding: 12px 16px; border: 1.5px solid var(--line); border-radius: 22px; background: var(--surface-strong); color: var(--text); outline: none; font-size: 14px; resize: none; line-height: 1.3;" oninput="adjustTextareaHeight(this)"></textarea>
+                    <!-- Microphone / Record Audio -->
+                    <button type="button" id="mic-btn" style="cursor: pointer; display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 50%; background: var(--surface-strong); border: 1.5px solid var(--line); color: var(--muted); transition: all 0.2s; flex-shrink: 0;" title="Grabar nota de voz">
+                        <i data-lucide="mic" id="mic-icon" style="width: 20px; height: 20px;"></i>
+                    </button>
                     
-                    <button type="submit" class="primary-button" style="width: 44px; height: 44px; min-height: auto; border-radius: 50%; padding: 0; display: flex; align-items: center; justify-content: center;" aria-label="Enviar mensaje">
+                    <!-- Voice Recording Status Box -->
+                    <div id="recording-status-box" style="display: none; align-items: center; gap: 10px; flex: 1; min-height: 44px; padding: 0 16px; background: rgba(239, 68, 68, 0.08); border: 1.5px solid rgba(239, 68, 68, 0.25); border-radius: 22px; color: #ef4444; font-size: 14px; font-weight: 600;">
+                        <span class="blinking-dot" style="width: 10px; height: 10px; background: #ef4444; border-radius: 50%; display: inline-block;"></span>
+                        <span>Grabando: <span id="recording-timer">00:00</span></span>
+                        
+                        <!-- Cancel Voice Record -->
+                        <button type="button" id="cancel-record-btn" style="margin-left: auto; background: none; border: none; color: var(--muted); cursor: pointer; font-size: 12px; display: flex; align-items: center; gap: 4px; font-weight: 700;">
+                            <i data-lucide="trash-2" style="width: 16px; height: 16px; color: #ef4444;"></i> Descartar
+                        </button>
+                    </div>
+
+                    <!-- Text input textarea -->
+                    <textarea name="content" id="chat-textarea" placeholder="Escribe un mensaje..." rows="1" style="flex: 1; min-height: 44px; max-height: 120px; padding: 12px 16px; border: 1.5px solid var(--line); border-radius: 22px; background: var(--surface-strong); color: var(--text); outline: none; font-size: 14px; resize: none; line-height: 1.3;" oninput="adjustTextareaHeight(this)"></textarea>
+                    
+                    <!-- Send Button -->
+                    <button type="submit" id="send-btn" class="primary-button" style="width: 44px; height: 44px; min-height: auto; border-radius: 50%; padding: 0; display: flex; align-items: center; justify-content: center; flex-shrink: 0;" aria-label="Enviar mensaje">
                         <i data-lucide="send" style="width: 18px; height: 18px; margin-left: 2px;"></i>
                     </button>
                 </div>
                 
-                <!-- Selected file preview panel -->
+                <!-- Selected file preview panel (Images/Docs) -->
                 <div id="file-preview-panel" style="display: none; align-items: center; justify-content: space-between; background: var(--surface-strong); border: 1px dashed var(--line); padding: 8px 12px; border-radius: 12px;">
                     <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text);">
                         <i data-lucide="file-check" style="color: var(--green); width: 18px; height: 18px;"></i>
@@ -125,33 +117,59 @@
 </section>
 
 <script>
-    // Auto scroll to bottom
-    const container = document.getElementById('chat-messages-container');
-    if (container) {
-        container.scrollTop = container.scrollHeight;
+    const roomId = {{ room.id }};
+    const currentUserId = {{ request.user.id }};
+    const chatContainer = document.getElementById('chat-messages-container');
+    const chatForm = document.getElementById('chat-form');
+    const chatTextarea = document.getElementById('chat-textarea');
+    const fileInput = document.getElementById('chat-file-input');
+    const filePanel = document.getElementById('file-preview-panel');
+    const fileNameLabel = document.getElementById('file-name-label');
+    const noMessagesPlaceholder = document.getElementById('no-messages-placeholder');
+    
+    // Audio Recorder variables
+    const micBtn = document.getElementById('mic-btn');
+    const micIcon = document.getElementById('mic-icon');
+    const recordingStatusBox = document.getElementById('recording-status-box');
+    const recordingTimer = document.getElementById('recording-timer');
+    const cancelRecordBtn = document.getElementById('cancel-record-btn');
+    const attachFileBtn = document.getElementById('attach-file-btn');
+    const sendBtn = document.getElementById('send-btn');
+    
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let isRecording = false;
+    let recordStartTime = null;
+    let timerInterval = null;
+
+    // Track the last message ID to poll only new ones
+    let lastMessageId = 0;
+    const messageWrappers = document.querySelectorAll('.message-wrapper');
+    if (messageWrappers.length > 0) {
+        lastMessageId = parseInt(messageWrappers[messageWrappers.length - 1].getAttribute('data-msg-id'));
     }
 
-    // Dynamic adjustment of textarea height
+    // Auto scroll to bottom
+    function scrollToBottom() {
+        if (chatContainer) {
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+    }
+    scrollToBottom();
+
+    // Dynamic textarea height
     function adjustTextareaHeight(el) {
         el.style.height = 'auto';
         el.style.height = (el.scrollHeight) + 'px';
     }
 
-    // Handle file selection
-    const fileInput = document.getElementById('chat-file-input');
-    const filePanel = document.getElementById('file-preview-panel');
-    const fileNameLabel = document.getElementById('file-name-label');
-    const clipIcon = document.getElementById('clip-icon');
-    const chatTextarea = document.getElementById('chat-textarea');
-
+    // Handle normal file selection preview
     if (fileInput) {
         fileInput.addEventListener('change', function() {
             if (fileInput.files && fileInput.files.length > 0) {
                 const name = fileInput.files[0].name;
                 fileNameLabel.textContent = name;
                 filePanel.style.display = 'flex';
-                // Make textarea optional since we are sending a file
-                chatTextarea.required = false;
             } else {
                 clearSelectedFile();
             }
@@ -162,9 +180,248 @@
         if (fileInput) {
             fileInput.value = '';
             filePanel.style.display = 'none';
-            chatTextarea.required = true;
         }
     }
+
+    // AUDIO RECORDER LOGIC
+    if (micBtn) {
+        micBtn.addEventListener('click', async function() {
+            if (!isRecording) {
+                // Start Recording
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+                    
+                    mediaRecorder.addEventListener("dataavailable", event => {
+                        audioChunks.push(event.data);
+                    });
+
+                    mediaRecorder.addEventListener("stop", () => {
+                        if (audioChunks.length > 0 && isRecording === false) {
+                            // User did not discard: compile and send
+                            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                            sendAudioMessage(audioBlob);
+                        }
+                        // Stop all audio tracks to release microphone
+                        stream.getTracks().forEach(track => track.stop());
+                    });
+
+                    mediaRecorder.start();
+                    isRecording = true;
+                    recordStartTime = Date.now();
+                    
+                    // Update UI
+                    micBtn.style.background = '#ef4444';
+                    micBtn.style.color = 'white';
+                    micBtn.style.borderColor = '#ef4444';
+                    chatTextarea.style.display = 'none';
+                    attachFileBtn.style.display = 'none';
+                    recordingStatusBox.style.display = 'flex';
+                    
+                    // Replace mic icon with stop/check icon
+                    micBtn.innerHTML = '<i data-lucide="check" style="width: 20px; height: 20px;"></i>';
+                    lucide.createIcons();
+
+                    // Start timer
+                    clearInterval(timerInterval);
+                    timerInterval = setInterval(updateTimer, 500);
+                } catch (err) {
+                    alert("No se pudo acceder al micrófono. Por favor permite los permisos.");
+                }
+            } else {
+                // Stop and Send Recording
+                stopRecording(false);
+            }
+        });
+    }
+
+    if (cancelRecordBtn) {
+        cancelRecordBtn.addEventListener('click', function() {
+            // Discard Recording
+            stopRecording(true);
+        });
+    }
+
+    function stopRecording(discard) {
+        if (isRecording) {
+            isRecording = false;
+            clearInterval(timerInterval);
+            
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                if (discard) {
+                    audioChunks = []; // Clear chunks so stop listener doesn't send it
+                }
+                mediaRecorder.stop();
+            }
+
+            // Restore UI
+            micBtn.style.background = 'var(--surface-strong)';
+            micBtn.style.color = 'var(--muted)';
+            micBtn.style.borderColor = 'var(--line)';
+            chatTextarea.style.display = 'block';
+            attachFileBtn.style.display = 'flex';
+            recordingStatusBox.style.display = 'none';
+            micBtn.innerHTML = '<i data-lucide="mic" id="mic-icon" style="width: 20px; height: 20px;"></i>';
+            lucide.createIcons();
+        }
+    }
+
+    function updateTimer() {
+        const elapsedMs = Date.now() - recordStartTime;
+        const totalSecs = Math.floor(elapsedMs / 1000);
+        const mins = Math.floor(totalSecs / 60).toString().padStart(2, '0');
+        const secs = (totalSecs % 60).toString().padStart(2, '0');
+        recordingTimer.textContent = `${mins}:${secs}`;
+    }
+
+    async function sendAudioMessage(audioBlob) {
+        const formData = new FormData();
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        formData.append('csrfmiddlewaretoken', csrfToken);
+        
+        // Append voice note file
+        const audioFile = new File([audioBlob], "voicenote.webm", { type: "audio/webm" });
+        formData.append('file', audioFile);
+
+        try {
+            const response = await fetch(`/chat/${roomId}/api/`, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': csrfToken
+                }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                appendMessage(data.message);
+                if (noMessagesPlaceholder) noMessagesPlaceholder.style.display = 'none';
+            } else {
+                console.error("Error enviando nota de voz");
+            }
+        } catch (error) {
+            console.error("Error de conexión:", error);
+        }
+    }
+
+
+    // AJAX SEND NORMAL MESSAGES (TEXT/FILES)
+    if (chatForm) {
+        chatForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const content = chatTextarea.value.strip ? chatTextarea.value.strip() : chatTextarea.value.trim();
+            const hasFile = fileInput.files && fileInput.files.length > 0;
+            
+            if (!content && !hasFile) return;
+
+            const formData = new FormData(chatForm);
+            
+            // Clear inputs immediately for better UX responsiveness
+            chatTextarea.value = '';
+            chatTextarea.style.height = 'auto';
+            clearSelectedFile();
+
+            try {
+                const response = await fetch(`/chat/${roomId}/api/`, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    appendMessage(data.message);
+                    if (noMessagesPlaceholder) noMessagesPlaceholder.style.display = 'none';
+                } else {
+                    const errData = await response.json();
+                    alert(errData.error || "No se pudo enviar el mensaje.");
+                }
+            } catch (error) {
+                console.error("Error enviando mensaje:", error);
+            }
+        });
+    }
+
+    // APPEND MESSAGE TO DOM
+    function appendMessage(msg) {
+        // Prevent duplicate appending
+        if (document.querySelector(`[data-msg-id="${msg.id}"]`)) return;
+
+        const isMe = msg.is_me;
+        const msgDiv = document.createElement('div');
+        msgDiv.className = 'message-wrapper';
+        msgDiv.setAttribute('data-msg-id', msg.id);
+        msgDiv.style.alignSelf = isMe ? 'flex-end' : 'flex-start';
+        msgDiv.style.maxWidth = '80%';
+        msgDiv.style.display = 'flex';
+        msgDiv.style.flexDirection = 'column';
+        msgDiv.style.alignItems = isMe ? 'flex-end' : 'flex-start';
+
+        let fileHtml = '';
+        if (msg.file_url) {
+            fileHtml = `<div style="margin-top: 6px; border-radius: 8px; overflow: hidden;">`;
+            if (msg.file_type === 'image') {
+                fileHtml += `<a href="${msg.file_url}" target="_blank"><img src="${msg.file_url}" style="max-width: 100%; max-height: 220px; object-fit: cover; display: block; border-radius: 8px;" alt="Imagen"></a>`;
+            } else if (msg.file_type === 'audio') {
+                fileHtml += `<audio src="${msg.file_url}" controls style="max-width: 100%; display: block;"></audio>`;
+            } else if (msg.file_type === 'video') {
+                fileHtml += `<video src="${msg.file_url}" controls style="max-width: 100%; max-height: 220px; display: block; border-radius: 8px;" preload="metadata"></video>`;
+            } else {
+                fileHtml += `<a href="${msg.file_url}" target="_blank" style="color: ${isMe ? 'white' : 'var(--green)'}; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; text-decoration: underline; font-size: 13px;"><i data-lucide="file"></i> Ver archivo adjunto</a>`;
+            }
+            fileHtml += `</div>`;
+        }
+
+        const senderHtml = isMe ? '' : `<strong style="display: block; font-size: 11px; color: var(--green); margin-bottom: 2px;">${msg.sender_username}</strong>`;
+        const contentHtml = msg.content ? `<p style="margin: 0; white-space: pre-wrap; line-height: 1.4;">${msg.content}</p>` : '';
+
+        msgDiv.innerHTML = `
+            <div style="background: ${isMe ? 'var(--green)' : 'var(--surface)'}; color: ${isMe ? 'white' : 'var(--text)'}; ${!isMe ? 'border: 1px solid var(--line);' : ''} padding: 10px 14px; border-radius: ${isMe ? '18px 18px 2px 18px' : '18px 18px 18px 2px'}; font-size: 14px; box-shadow: 0 2px 6px rgba(0,0,0,0.04);">
+                ${senderHtml}
+                ${contentHtml}
+                ${fileHtml}
+            </div>
+            <small style="color: var(--muted); font-size: 10px; margin-top: 4px; ${isMe ? 'margin-right: 4px;' : 'margin-left: 4px;'}">${msg.created_at}</small>
+        `;
+
+        chatContainer.appendChild(msgDiv);
+        lucide.createIcons();
+        scrollToBottom();
+        
+        if (msg.id > lastMessageId) {
+            lastMessageId = msg.id;
+        }
+    }
+
+
+    // REAL-TIME LONG POLLING
+    async function pollNewMessages() {
+        try {
+            const response = await fetch(`/chat/${roomId}/api/?last_id=${lastMessageId}`);
+            if (response.ok) {
+                const data = await response.json();
+                
+                // If the chat is closed in backend, show warning/refresh
+                if (!data.is_active && chatForm) {
+                    location.reload();
+                }
+
+                if (data.messages && data.messages.length > 0) {
+                    if (noMessagesPlaceholder) noMessagesPlaceholder.style.display = 'none';
+                    data.messages.forEach(msg => {
+                        appendMessage(msg);
+                    });
+                }
+            }
+        } catch (error) {
+            console.error("Error polling messages:", error);
+        }
+    }
+
+    // Poll every 3 seconds
+    setInterval(pollNewMessages, 3000);
 </script>
 
 <style>
@@ -172,6 +429,13 @@
         background: var(--surface) !important;
         color: var(--green) !important;
         border-color: var(--green) !important;
+    }
+    .blinking-dot {
+        animation: blink-animation 1s infinite alternate;
+    }
+    @keyframes blink-animation {
+        from { opacity: 1; }
+        to { opacity: 0.3; }
     }
 </style>
 {% endblock %}
