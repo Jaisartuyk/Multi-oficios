@@ -322,3 +322,27 @@ class Recharge(models.Model):
 
     def __str__(self):
         return f"{self.professional.name} - +{self.credits_added} créditos (${self.amount_paid})"
+
+
+class ChatRoom(models.Model):
+    job = models.OneToOneField(JobRequest, on_delete=models.CASCADE, related_name='chat_room')
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Chat: {self.job.title} (Activo: {self.is_active})"
+
+
+class ChatMessage(models.Model):
+    room = models.ForeignKey(ChatRoom, on_delete=models.CASCADE, related_name='messages')
+    sender = models.ForeignKey(User, on_delete=models.CASCADE)
+    content = models.TextField(blank=True)
+    file_url = models.URLField(blank=True, null=True, max_length=500)
+    file_type = models.CharField(max_length=50, blank=True, null=True) # 'image', 'audio', 'video', 'document'
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['created_at']
+
+    def __str__(self):
+        return f"{self.sender.username}: {self.content or '[Archivo]'}"

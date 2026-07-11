@@ -2,7 +2,7 @@ from django.db import transaction
 from django.db.models import Avg, F
 from django.utils import timezone
 
-from .models import JobRequest, Notification, Payment, Professional, Quote, Recharge, Review
+from .models import JobRequest, Notification, Payment, Professional, Quote, Recharge, Review, ChatRoom, ChatMessage
 
 
 class WorkflowError(Exception):
@@ -107,6 +107,9 @@ def select_quote(client, quote_id):
         status='REJECTED'
     )
 
+    # Crear sala de chat
+    ChatRoom.objects.get_or_create(job=job, defaults={'is_active': True})
+
     notify(
         quote.professional.user,
         'JOB_ACCEPTED',
@@ -159,6 +162,9 @@ def confirm_job_completion(client, job_id):
     job.status = 'COMPLETED'
     job.save(update_fields=['status', 'updated_at'])
     Professional.objects.filter(pk=job.professional_id).update(jobs=F('jobs') + 1)
+
+    # Desactivar sala de chat al completar el trabajo
+    ChatRoom.objects.filter(job=job).update(is_active=False)
 
     payment = Payment.objects.select_for_update().filter(job=job).first()
     if payment and payment.status == 'VERIFIED':

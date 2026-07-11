@@ -21,6 +21,8 @@ from .models import (
     Review,
     Service,
     UserProfile,
+    ChatRoom,
+    ChatMessage,
 )
 from .forms import (
     AdminClientForm,
@@ -530,7 +532,7 @@ def client_dashboard(request):
 
     requests = (
         JobRequest.objects.filter(client=request.user)
-        .select_related('professional', 'selected_quote', 'payment', 'review')
+        .select_related('professional', 'selected_quote', 'payment', 'review', 'chat_room')
         .prefetch_related('quotes__professional')
         .order_by('-created_at')
     )
@@ -617,7 +619,7 @@ def professional_dashboard(request):
 
     jobs = (
         JobRequest.objects.filter(professional=professional)
-        .select_related('client__profile', 'selected_quote')
+        .select_related('client__profile', 'selected_quote', 'chat_room')
         .order_by('-created_at')
     )
     pending_jobs = list(
@@ -733,6 +735,72 @@ def notifications_mark_read(request):
         Notification.objects.filter(recipient=request.user, is_read=False).update(is_read=True)
     
     return JsonResponse({'ok': True})
+
+
+from django.contrib.auth.decorators import login_required
+
+@login_required
+def chat_room_view(request, room_id):
+    room = get_object_or_404(
+        ChatRoom.objects.select_related('job__client', 'job__professional__user'),
+        pk=room_id
+    )
+    user = request.user
+    
+    # Verificar permisos de acceso
+    is_client = (user == room.job.client)
+    is_pro = (room.job.professional and user == room.job.professional.user)
+    is_admin = getattr(getattr(user, 'profile', None), 'role', None) == 'ADMIN' or user.is_superuser
+    
+    if not (is_client or is_pro or is_admin):
+        raise Http404("No tienes acceso a este chat.")
+        
+    if request.method == 'POST':
+        if not room.is_active:
+            messages.error(request, "Este chat está cerrado porque el trabajo ha sido completado.")
+            return redirect('chat_room_view', room_id=room.id)
+            
+        content = request.POST.get('content', '').strip()
+        file_obj = request.FILES.get('file')
+        
+        if content or file_obj:
+            file_url = None
+            file_type = None
+            if file_obj:
+                content_type = file_obj.content_type
+                if content_type.startswith('image/'):
+                    file_type = 'image'
+                elif content_type.startswith('audio/'):
+                    file_type = 'audio'
+                elif content_type.startswith('video/'):
+                    file_type = 'video'
+                else:
+                    file_type = 'document'
+                
+                file_url = upload_file_to_r2_or_local(file_obj, 'chat')
+                
+            ChatMessage.objects.create(
+                room=room,
+                sender=user,
+                content=content,
+                file_url=file_url,
+                file_type=file_type
+            )
+            return redirect('chat_room_view', room_id=room.id)
+            
+    messages_list = room.messages.all().select_related('sender')
+    
+    opponent_name = room.job.professional.name if is_client else room.job.client.username
+    if is_admin:
+        opponent_name = f"{room.job.client.username} y {room.job.professional.name if room.job.professional else 'Sin Profesional'}"
+        
+    return render(request, 'core/chat_room.html', {
+        'room': room,
+        'chat_messages': messages_list,
+        'opponent_name': opponent_name,
+        'is_client': is_client,
+        'is_pro': is_pro,
+    })
 
 
 def offline(request):

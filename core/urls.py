@@ -20,6 +20,7 @@ urlpatterns = [
     path('admin-panel/usuarios/eliminar/<int:user_id>/', views.admin_delete_user, name='admin_delete_user'),
     path('dashboard/cliente/', views.client_dashboard, name='client_dashboard'),
     path('dashboard/profesional/', views.professional_dashboard, name='professional_dashboard'),
+    path('chat/<int:room_id>/', views.chat_room_view, name='chat_room_view'),
     path('login/', views.login_view, name='login'),
     path('registro/', views.register_view, name='register'),
     path('logout/', views.logout_view, name='logout'),

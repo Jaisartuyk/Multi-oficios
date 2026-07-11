@@ -181,6 +181,18 @@
                 </a>
                 {% endif %}
             </div>
+            {% if job.chat_room %}
+            <div style="margin: 10px 0; width: 100%;">
+                <a href="{% url 'chat_room_view' job.chat_room.id %}" class="secondary-button" style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%;">
+                    <i data-lucide="message-square"></i>
+                    {% if job.chat_room.is_active %}
+                        Chat con el Cliente
+                    &nbsp;{% else %}
+                        Ver Historial de Chat (Cerrado)
+                    {% endif %}
+                </a>
+            </div>
+            {% endif %}
             <div class="workflow-actions">
                 {% if job.status == 'ACCEPTED' %}
                 <form method="post">

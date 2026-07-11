@@ -95,6 +95,18 @@
                     <i data-lucide="arrow-up-right"></i>
                 </a>
             </div>
+            {% if request_obj.chat_room %}
+            <div style="margin: 10px 0;">
+                <a href="{% url 'chat_room_view' request_obj.chat_room.id %}" class="secondary-button" style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%;">
+                    <i data-lucide="message-square"></i>
+                    {% if request_obj.chat_room.is_active %}
+                        Chat con el Profesional
+                    {% else %}
+                        Ver Historial de Chat (Cerrado)
+                    {% endif %}
+                </a>
+            </div>
+            {% endif %}
             {% endif %}
 
             {% if request_obj.selected_quote and not request_obj.payment and request_obj.status != 'COMPLETED' %}
