@@ -19,6 +19,66 @@
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" defer></script>
     <script src="{% static 'js/app.js' %}?v=20260706-1" defer></script>
     {% block extra_css %}{% endblock %}
+    <style>
+        .user-dropdown-menu {
+            display: none;
+            position: absolute;
+            top: 48px;
+            right: 0;
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            z-index: 1000;
+            width: 220px;
+            padding: 8px 0;
+            overflow: hidden;
+            animation: slideDown 0.2s ease-out;
+        }
+        .user-dropdown-menu.active {
+            display: block;
+        }
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 16px;
+            color: var(--text);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+        .dropdown-item:hover {
+            background: var(--surface-strong);
+            color: var(--green);
+        }
+        .dropdown-item i {
+            width: 18px;
+            height: 18px;
+            color: var(--muted);
+        }
+        .dropdown-item:hover i {
+            color: var(--green);
+        }
+        .dropdown-item.text-danger:hover {
+            background: rgba(220, 53, 69, 0.08);
+            color: #dc3545;
+        }
+        .dropdown-item.text-danger:hover i {
+            color: #dc3545;
+        }
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="app-shell">
@@ -30,16 +90,56 @@
                     <small style="font-size: 11px; color: var(--muted); display: block;">Confianza para construir</small>
                 </span>
             </a>
-            <div style="display: flex; gap: 8px; align-items: center;">
+            <div style="display: flex; gap: 8px; align-items: center; position: relative;">
                 {% if user.is_authenticated %}
                     <!-- Notification Bell -->
                     <button class="icon-button" type="button" id="notif-bell" aria-label="Notificaciones" title="Notificaciones" style="position: relative;">
                         <i data-lucide="bell"></i>
                         <span id="notif-badge" style="display: none; position: absolute; top: 4px; right: 4px; width: 10px; height: 10px; background: #dc3545; border-radius: 50%; border: 2px solid var(--surface);"></span>
                     </button>
-                    <a href="{% url 'logout' %}" class="icon-button" style="text-decoration: none;" aria-label="Cerrar sesión" title="Cerrar sesión">
-                        <i data-lucide="log-out"></i>
-                    </a>
+                    
+                    <!-- Profile Dropdown Container -->
+                    <div style="position: relative; display: inline-block;">
+                        <button type="button" id="profile-dropdown-btn" style="background: var(--green); color: white; border: 2.5px solid var(--line); width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; cursor: pointer; transition: transform 0.2s;" aria-label="Menú de usuario" title="{{ user.username }}">
+                            {{ user.username|slice:":2"|upper }}
+                        </button>
+                        <div id="profile-dropdown-menu" class="user-dropdown-menu">
+                            <div style="padding: 10px 16px; border-bottom: 1px solid var(--line); background: var(--surface-strong);">
+                                <strong style="display: block; font-size: 13px; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ user.username }}</strong>
+                                <span style="font-size: 10px; color: var(--muted); font-weight: 600;">
+                                    {% if user.is_superuser or user.profile.role == 'ADMIN' %}
+                                        Administrador
+                                    {% elif user.profile.role == 'PROFESSIONAL' %}
+                                        Trabajador
+                                    {% else %}
+                                        Cliente
+                                    {% endif %}
+                                </span>
+                            </div>
+                            
+                            <!-- Role-based Links -->
+                            {% if user.is_superuser or user.profile.role == 'ADMIN' %}
+                                <a class="dropdown-item" href="{% url 'admin_panel' %}"><i data-lucide="bar-chart-3"></i> Panel de Admin</a>
+                                <a class="dropdown-item" href="{% url 'admin_users' %}"><i data-lucide="users"></i> Usuarios</a>
+                                <a class="dropdown-item" href="{% url 'admin_reviews' %}"><i data-lucide="star"></i> Valoraciones</a>
+                            {% elif user.profile.role == 'PROFESSIONAL' %}
+                                <a class="dropdown-item" href="{% url 'professional_dashboard' %}"><i data-lucide="layout-dashboard"></i> Mi Panel</a>
+                                <a class="dropdown-item" href="{% url 'professional_dashboard' %}#job-market"><i data-lucide="briefcase-business"></i> Bolsa de Empleo</a>
+                                {% if user.professional_profile %}
+                                <a class="dropdown-item" href="{% url 'professional_detail' user.professional_profile.id %}"><i data-lucide="user"></i> Ver mi perfil</a>
+                                {% endif %}
+                            {% else %}
+                                <a class="dropdown-item" href="{% url 'client_dashboard' %}"><i data-lucide="layout-dashboard"></i> Mi Panel</a>
+                                <a class="dropdown-item" href="{% url 'estimator' %}"><i data-lucide="sparkles"></i> Calculadora IA</a>
+                            {% endif %}
+                            
+                            <a class="dropdown-item" href="{% url 'feed' %}"><i data-lucide="rss"></i> Comunidad</a>
+                            
+                            <div style="border-top: 1px solid var(--line); margin-top: 4px; padding-top: 4px;">
+                                <a class="dropdown-item text-danger" href="{% url 'logout' %}"><i data-lucide="log-out"></i> Cerrar sesión</a>
+                            </div>
+                        </div>
+                    </div>
                 {% else %}
                     <a href="{% url 'login' %}" class="icon-button" style="text-decoration: none;" aria-label="Iniciar sesión" title="Iniciar sesión">
                         <i data-lucide="user"></i>
@@ -297,11 +397,29 @@
             });
         }
 
-        // Close panel on outside click
+        // Profile dropdown logic
+        const dropdownBtn = document.getElementById('profile-dropdown-btn');
+        const dropdownMenu = document.getElementById('profile-dropdown-menu');
+        
+        if (dropdownBtn && dropdownMenu) {
+            dropdownBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                if (panelOpen) {
+                    panelOpen = false;
+                    panel.style.display = 'none';
+                }
+                dropdownMenu.classList.toggle('active');
+            });
+        }
+
+        // Close panel and dropdown on outside click
         document.addEventListener('click', function(e) {
             if (panel && panelOpen && !panel.contains(e.target) && e.target !== bell && !bell.contains(e.target)) {
                 panelOpen = false;
                 panel.style.display = 'none';
+            }
+            if (dropdownMenu && dropdownMenu.classList.contains('active') && !dropdownMenu.contains(e.target) && e.target !== dropdownBtn) {
+                dropdownMenu.classList.remove('active');
             }
         });
 

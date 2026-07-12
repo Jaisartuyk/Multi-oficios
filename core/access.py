@@ -26,7 +26,7 @@ def dashboard_name_for(user):
 
 
 def redirect_to_role_dashboard(user):
-    return redirect(dashboard_name_for(user))
+    return redirect('feed')
 
 
 def role_required(*allowed_roles):
