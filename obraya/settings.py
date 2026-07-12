@@ -194,10 +194,24 @@ LOGOUT_REDIRECT_URL = 'login'
 
 SOCIALACCOUNT_PROVIDERS = {
     'google': {
+        'APPS': [
+            {
+                'client_id': get_env('GOOGLE_CLIENT_ID', 'placeholder-google-client-id'),
+                'secret': get_env('GOOGLE_CLIENT_SECRET', 'placeholder-google-client-secret'),
+                'key': ''
+            }
+        ],
         'SCOPE': ['profile', 'email'],
         'AUTH_PARAMS': {'access_type': 'online'},
     },
     'facebook': {
+        'APPS': [
+            {
+                'client_id': get_env('FACEBOOK_CLIENT_ID', 'placeholder-facebook-client-id'),
+                'secret': get_env('FACEBOOK_CLIENT_SECRET', 'placeholder-facebook-client-secret'),
+                'key': ''
+            }
+        ],
         'METHOD': 'oauth2',
         'SDK_URL': '//connect.facebook.net/es_LA/sdk.js',
         'SCOPE': ['email', 'public_profile'],
