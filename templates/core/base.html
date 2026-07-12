@@ -136,6 +136,18 @@
                             <a class="dropdown-item" href="{% url 'feed' %}"><i data-lucide="rss"></i> Comunidad</a>
                             
                             <div style="border-top: 1px solid var(--line); margin-top: 4px; padding-top: 4px;">
+                                {% if user.profile.role == 'PROFESSIONAL' %}
+                                    <a class="dropdown-item" href="{% url 'switch_role' 'CLIENT' %}" style="color: var(--blue); font-weight: 600;">
+                                        <i data-lucide="arrow-left-right" style="color: var(--blue);"></i> Cambiar a Cliente
+                                    </a>
+                                {% else %}
+                                    <a class="dropdown-item" href="{% url 'switch_role' 'PROFESSIONAL' %}" style="color: var(--green); font-weight: 600;">
+                                        <i data-lucide="arrow-left-right" style="color: var(--green);"></i> Cambiar a Trabajador
+                                    </a>
+                                {% endif %}
+                            </div>
+                            
+                            <div style="border-top: 1px solid var(--line); margin-top: 4px; padding-top: 4px;">
                                 <a class="dropdown-item text-danger" href="{% url 'logout' %}"><i data-lucide="log-out"></i> Cerrar sesión</a>
                             </div>
                         </div>

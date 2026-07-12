@@ -1,0 +1,268 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Activar Perfil de Trabajador | ObraYa{% endblock %}
+
+{% block content %}
+<style>
+    .activation-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 16px;
+        animation: fadeIn 0.5s ease-out;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(15px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .activation-card {
+        width: 100%;
+        max-width: 500px;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        box-shadow: var(--shadow);
+        border-radius: 24px;
+        padding: 32px 24px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .activation-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 6px;
+        background: linear-gradient(135deg, var(--green), var(--blue));
+    }
+
+    .activation-header {
+        text-align: center;
+        margin-bottom: 24px;
+    }
+
+    .activation-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 56px;
+        height: 56px;
+        border-radius: 16px;
+        background: rgba(40, 167, 69, 0.1);
+        color: var(--green);
+        margin-bottom: 16px;
+    }
+
+    .activation-header h2 {
+        font-size: 22px;
+        font-weight: 800;
+        margin: 0 0 8px 0;
+        color: var(--text);
+    }
+
+    .activation-header p {
+        color: var(--muted);
+        font-size: 14px;
+        margin: 0;
+        line-height: 1.5;
+    }
+
+    .input-group {
+        margin-bottom: 20px;
+    }
+
+    .input-group label {
+        display: block;
+        margin-bottom: 8px;
+        color: var(--text);
+        font-weight: 700;
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .input-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .input-wrapper i.input-icon {
+        position: absolute;
+        left: 16px;
+        color: var(--muted);
+        pointer-events: none;
+        transition: color 0.3s;
+    }
+
+    .input-wrapper select,
+    .input-wrapper input,
+    .input-wrapper textarea {
+        width: 100%;
+        padding: 14px 16px 14px 46px;
+        border: 1.5px solid var(--line);
+        border-radius: 16px;
+        background: var(--surface-strong);
+        color: var(--text);
+        outline: none;
+        font-size: 15px;
+        font-family: inherit;
+        transition: all 0.3s ease;
+    }
+
+    .input-wrapper textarea {
+        min-height: 100px;
+        resize: vertical;
+        padding-top: 14px;
+    }
+
+    .input-wrapper select:focus,
+    .input-wrapper input:focus,
+    .input-wrapper textarea:focus {
+        border-color: var(--green);
+        background: var(--surface);
+        box-shadow: 0 0 0 4px rgba(40, 167, 69, 0.12);
+    }
+
+    .input-wrapper select:focus ~ i.input-icon,
+    .input-wrapper input:focus ~ i.input-icon,
+    .input-wrapper textarea:focus ~ i.input-icon {
+        color: var(--green);
+    }
+
+    .submit-button {
+        width: 100%;
+        padding: 14px 20px;
+        border: none;
+        border-radius: 16px;
+        background: linear-gradient(135deg, var(--green), #218838);
+        color: white;
+        font-weight: 700;
+        font-size: 15px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        box-shadow: 0 4px 12px rgba(40, 167, 69, 0.2);
+        transition: all 0.2s;
+    }
+
+    .submit-button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 16px rgba(40, 167, 69, 0.3);
+    }
+
+    .submit-button:active {
+        transform: translateY(1px);
+    }
+
+    .back-link {
+        display: block;
+        text-align: center;
+        margin-top: 20px;
+        font-size: 14px;
+        color: var(--muted);
+        text-decoration: none;
+        font-weight: 600;
+        transition: color 0.2s;
+    }
+
+    .back-link:hover {
+        color: var(--text);
+    }
+
+    @media (max-width: 480px) {
+        .activation-container {
+            padding: 20px 8px;
+        }
+        .activation-card {
+            padding: 24px 16px;
+            border-radius: 20px;
+        }
+        .activation-header h2 {
+            font-size: 20px;
+        }
+        .activation-header p {
+            font-size: 13px;
+        }
+        .input-wrapper select,
+        .input-wrapper input,
+        .input-wrapper textarea {
+            font-size: 14px;
+            padding: 12px 14px 12px 42px;
+        }
+        .input-wrapper i.input-icon {
+            left: 14px;
+        }
+    }
+</style>
+
+<div class="activation-container">
+    <div class="activation-card">
+        <div class="activation-header">
+            <div class="activation-icon">
+                <i data-lucide="briefcase" style="width: 28px; height: 28px;"></i>
+            </div>
+            <h2>Activa tu Perfil de Trabajador</h2>
+            <p>Empieza a cotizar trabajos y ganar dinero ofreciendo tus servicios en ObraYa.</p>
+        </div>
+
+        <form method="post" action="{% url 'activate_professional' %}">
+            {% csrf_token %}
+
+            <div class="input-group">
+                <label for="specialty">Especialidad Principal</label>
+                <div class="input-wrapper">
+                    <i data-lucide="hammer" class="input-icon" style="width: 20px; height: 20px;"></i>
+                    <select name="specialty" id="specialty" required>
+                        <option value="" disabled selected>Selecciona tu especialidad</option>
+                        {% for cat in categories %}
+                            <option value="{{ cat.name }}">{{ cat.name }}</option>
+                        {% empty %}
+                            <option value="Servicios Generales">Servicios Generales</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label for="location">Ciudad / Ubicación</label>
+                <div class="input-wrapper">
+                    <i data-lucide="map-pin" class="input-icon" style="width: 20px; height: 20px;"></i>
+                    <input type="text" name="location" id="location" placeholder="Ej: Guayaquil, Samborondón" required>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label for="about">Sobre ti (Descripción corta)</label>
+                <div class="input-wrapper" style="align-items: flex-start;">
+                    <i data-lucide="align-left" class="input-icon" style="width: 20px; height: 20px; top: 14px;"></i>
+                    <textarea name="about" id="about" placeholder="Describe brevemente tu experiencia, herramientas o forma de trabajar..." required></textarea>
+                </div>
+            </div>
+
+            <button type="submit" class="submit-button">
+                Activar mi Perfil <i data-lucide="arrow-right" style="width: 18px; height: 18px;"></i>
+            </button>
+        </form>
+
+        <a href="{% url 'feed' %}" class="back-link">
+            Volver a la Comunidad
+        </a>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        if (window.lucide) {
+            window.lucide.createIcons();
+        }
+    });
+</script>
+{% endblock %}

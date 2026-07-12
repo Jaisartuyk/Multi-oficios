@@ -955,3 +955,59 @@ def professional_google_login(request):
     # Redirigimos al login de Google de allauth
     return redirect('/accounts/google/login/')
 
+
+def switch_role(request, target_role):
+    if not request.user.is_authenticated:
+        return redirect('login')
+        
+    if target_role not in ['CLIENT', 'PROFESSIONAL']:
+        return redirect('feed')
+        
+    profile = request.user.profile
+    if target_role == 'PROFESSIONAL':
+        if not Professional.objects.filter(user=request.user).exists():
+            return redirect('activate_professional')
+            
+    profile.role = target_role
+    profile.save()
+    
+    messages.success(request, f"Has cambiado al modo {profile.get_role_display()} correctamente.")
+    return redirect('feed')
+
+
+def activate_professional(request):
+    if not request.user.is_authenticated:
+        return redirect('login')
+        
+    if Professional.objects.filter(user=request.user).exists():
+        profile = request.user.profile
+        profile.role = 'PROFESSIONAL'
+        profile.save()
+        return redirect('feed')
+        
+    categories = Category.objects.all()
+    
+    if request.method == 'POST':
+        specialty = request.POST.get('specialty', 'General')
+        location = request.POST.get('location', 'Guayaquil')
+        about = request.POST.get('about', 'Profesional nuevo listo para trabajar.')
+        
+        Professional.objects.create(
+            user=request.user,
+            name=request.user.get_full_name() or request.user.username,
+            specialty=specialty,
+            initials=(request.user.get_full_name() or request.user.username)[:2].upper(),
+            location=location,
+            about=about
+        )
+        
+        profile = request.user.profile
+        profile.role = 'PROFESSIONAL'
+        profile.save()
+        
+        messages.success(request, "¡Tu perfil profesional ha sido activado! Ahora estás en modo Trabajador.")
+        return redirect('feed')
+        
+    return render(request, 'core/activate_professional.html', {'categories': categories})
+
+

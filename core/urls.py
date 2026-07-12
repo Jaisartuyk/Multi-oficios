@@ -24,6 +24,8 @@ urlpatterns = [
     path('chat/<int:room_id>/api/', views.chat_api_view, name='chat_api_view'),
     path('login/', views.login_view, name='login'),
     path('profesional-google/', views.professional_google_login, name='professional_google_login'),
+    path('cambiar-rol/<str:target_role>/', views.switch_role, name='switch_role'),
+    path('activar-profesional/', views.activate_professional, name='activate_professional'),
     path('registro/', views.register_view, name='register'),
     path('logout/', views.logout_view, name='logout'),
     # PWA
