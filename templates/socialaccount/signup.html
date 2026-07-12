@@ -1,0 +1,154 @@
+{% extends 'core/base.html' %}
+{% load i18n %}
+{% load socialaccount %}
+
+{% block title %}{% trans "Sign Up" %} | ObraYa{% endblock %}
+
+{% block content %}
+<style>
+    .signup-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 10px;
+        animation: fadeIn 0.6s ease-out;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .signup-card {
+        width: 100%;
+        max-width: 440px;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        box-shadow: var(--shadow);
+        border-radius: 24px;
+        padding: 32px 24px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .signup-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 6px;
+        background: linear-gradient(135deg, var(--navy), var(--green));
+    }
+
+    .signup-header {
+        text-align: center;
+        margin-bottom: 24px;
+    }
+
+    .signup-header h2 {
+        font-size: 22px;
+        font-weight: 800;
+        margin: 0 0 6px 0;
+        color: var(--text);
+    }
+
+    .signup-header p {
+        color: var(--muted);
+        font-size: 14px;
+        margin: 0;
+        line-height: 1.4;
+    }
+
+    .form-group {
+        margin-bottom: 18px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        color: var(--text);
+        font-weight: 700;
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .input-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .input-wrapper input {
+        width: 100%;
+        padding: 14px 16px;
+        border: 1.5px solid var(--line);
+        border-radius: 16px;
+        background: var(--surface-strong);
+        color: var(--text);
+        outline: none;
+        font-size: 15px;
+        transition: all 0.3s ease;
+    }
+
+    .input-wrapper input:focus {
+        border-color: var(--blue);
+        background: var(--surface);
+        box-shadow: 0 0 0 4px rgba(19, 93, 159, 0.12);
+    }
+</style>
+
+<div class="signup-container">
+    <div class="signup-card">
+        <div class="signup-header">
+            <h2>Crear Cuenta</h2>
+            <p>
+                {% blocktrans with provider_name=account.get_provider.name %}
+                Estás a un paso de registrarte usando tu cuenta de <strong>{{ provider_name }}</strong>. Por favor, confirma los siguientes datos:
+                {% endblocktrans %}
+            </p>
+        </div>
+
+        <form class="signup" id="signup_form" method="post" action="{% url 'socialaccount_signup' %}">
+            {% csrf_token %}
+            
+            {% for field in form %}
+                <div class="form-group">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    <div class="input-wrapper">
+                        {{ field }}
+                    </div>
+                    {% if field.errors %}
+                        <span style="color: #dc3545; font-size: 12px; display: block; margin-top: 6px;">{{ field.errors|striptags }}</span>
+                    {% endif %}
+                </div>
+            {% endfor %}
+
+            {% if redirect_field_value %}
+                <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+            {% endif %}
+
+            <button type="submit" class="primary-button" style="width: 100%; margin-top: 10px;">
+                <i data-lucide="user-plus"></i> Completar registro
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Estilizar los campos que Django autogenera
+        const inputs = document.querySelectorAll('form input');
+        inputs.forEach(input => {
+            if (input.type !== 'hidden') {
+                input.placeholder = `Ingresa tu ${input.name}`;
+            }
+        });
+        if (window.lucide) {
+            window.lucide.createIcons();
+        }
+    });
+</script>
+{% endblock %}
