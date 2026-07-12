@@ -152,7 +152,7 @@ def home(request):
         'has_client_location': client_lat is not None and client_lng is not None,
     })
 
-@role_required('CLIENT')
+@role_required('CLIENT', 'PROFESSIONAL', 'ADMIN')
 def professional_detail(request, professional_id):
     try:
         professional = (
