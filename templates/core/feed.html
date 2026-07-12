@@ -14,17 +14,20 @@
 </section>
 
 <!-- Filtro por especialidad -->
-<div style="padding: 0 16px 16px; display: flex; gap: 8px; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;">
-    <a href="{% url 'feed' %}"
-       style="flex-shrink: 0; padding: 6px 16px; border-radius: 100px; font-size: 12px; font-weight: 700; text-decoration: none; border: 1.5px solid {% if not current_filter %}var(--green){% else %}var(--line){% endif %}; color: {% if not current_filter %}var(--green){% else %}var(--muted){% endif %}; background: {% if not current_filter %}rgba(16,185,129,0.08){% else %}transparent{% endif %};">
-        Todos
-    </a>
-    {% for spec in specialties %}
-    <a href="{% url 'feed' %}?especialidad={{ spec|urlencode }}"
-       style="flex-shrink: 0; padding: 6px 16px; border-radius: 100px; font-size: 12px; font-weight: 700; text-decoration: none; border: 1.5px solid {% if current_filter == spec %}var(--green){% else %}var(--line){% endif %}; color: {% if current_filter == spec %}var(--green){% else %}var(--muted){% endif %}; background: {% if current_filter == spec %}rgba(16,185,129,0.08){% else %}transparent{% endif %};">
-        {{ spec }}
-    </a>
-    {% endfor %}
+<div style="padding: 0 16px 16px; max-width: 560px; margin: 0 auto; width: 100%;">
+    <div style="position: relative; width: 100%;">
+        <select onchange="location = this.value;" style="width: 100%; padding: 12px 16px; padding-right: 40px; border-radius: 12px; font-size: 14px; font-weight: 700; border: 1.5px solid var(--line); background: var(--surface); color: var(--text); appearance: none; -webkit-appearance: none; cursor: pointer; transition: border-color 0.2s, box-shadow 0.2s; outline: none; font-family: inherit;">
+            <option value="{% url 'feed' %}" {% if not current_filter %}selected{% endif %}>🔍 Todas las especialidades</option>
+            {% for spec in specialties %}
+                <option value="{% url 'feed' %}?especialidad={{ spec|urlencode }}" {% if current_filter == spec %}selected{% endif %}>
+                    🛠️ {{ spec }}
+                </option>
+            {% endfor %}
+        </select>
+        <div style="position: absolute; right: 16px; top: 50%; transform: translateY(-50%); pointer-events: none; color: var(--text-muted); display: flex; align-items: center;">
+            <i data-lucide="chevron-down" style="width: 18px; height: 18px;"></i>
+        </div>
+    </div>
 </div>
 
 <!-- Feed de publicaciones -->
