@@ -23,6 +23,7 @@ urlpatterns = [
     path('chat/<int:room_id>/', views.chat_room_view, name='chat_room_view'),
     path('chat/<int:room_id>/api/', views.chat_api_view, name='chat_api_view'),
     path('login/', views.login_view, name='login'),
+    path('profesional-google/', views.professional_google_login, name='professional_google_login'),
     path('registro/', views.register_view, name='register'),
     path('logout/', views.logout_view, name='logout'),
     # PWA

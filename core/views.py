@@ -653,6 +653,13 @@ def professional_dashboard(request):
         'google_maps_api_key': settings.GOOGLE_MAPS_API_KEY,
     })
 
+def professional_google_login(request):
+    # Guardamos en la sesión que este usuario quiere ser profesional
+    request.session['intended_role'] = 'PROFESSIONAL'
+    # Redirigimos al login de Google de allauth
+    return redirect('/accounts/google/login/')
+
+
 def register_view(request):
     if request.user.is_authenticated:
         return redirect_to_role_dashboard(request.user)
@@ -940,3 +947,11 @@ def serve_manifest(request):
         content = f.read()
     from django.http import HttpResponse
     return HttpResponse(content, content_type='application/manifest+json')
+
+
+def professional_google_login(request):
+    # Guardamos en la sesión que este usuario quiere ser profesional
+    request.session['intended_role'] = 'PROFESSIONAL'
+    # Redirigimos al login de Google de allauth
+    return redirect('/accounts/google/login/')
+

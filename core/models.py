@@ -346,3 +346,30 @@ class ChatMessage(models.Model):
 
     def __str__(self):
         return f"{self.sender.username}: {self.content or '[Archivo]'}"
+
+from allauth.account.signals import user_signed_up
+
+@receiver(user_signed_up)
+def update_role_after_signup(request, user, **kwargs):
+    # Revisamos si el usuario tenía la intención de ser profesional
+    intended_role = request.session.get('intended_role')
+    
+    if intended_role == 'PROFESSIONAL':
+        # El post_save de arriba ya le creó un perfil como CLIENTE. Lo actualizamos:
+        if hasattr(user, 'profile'):
+            user.profile.role = 'PROFESSIONAL'
+            user.profile.save()
+            
+        # Crear perfil de Profesional si no existe
+        if not Professional.objects.filter(user=user).exists():
+            Professional.objects.create(
+                user=user,
+                name=user.get_full_name() or user.username,
+                specialty="General",
+                initials=(user.get_full_name() or user.username)[:2].upper(),
+                location="Guayaquil",
+                about="Profesional nuevo registrado vía inicio de sesión social."
+            )
+            
+        # Limpiamos la variable de sesión para que no afecte a futuros inicios de sesión
+        request.session.pop('intended_role', None)
