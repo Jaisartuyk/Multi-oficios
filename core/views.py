@@ -210,6 +210,13 @@ def feed(request):
         .order_by('specialty')
     )
 
+    # Obtener profesionales recomendados para la barra lateral
+    recommended_pros = (
+        Professional.objects
+        .exclude(available='No disponible temporalmente')
+        .order_by('-rating', '-jobs')[:4]
+    )
+
     paginator = Paginator(items, 12)
     page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
@@ -218,6 +225,7 @@ def feed(request):
         'page_obj': page_obj,
         'specialties': specialties,
         'current_filter': specialty_filter,
+        'recommended_pros': recommended_pros,
     })
 
 
