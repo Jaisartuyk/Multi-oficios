@@ -17,13 +17,22 @@
         gap: 20px;
         align-items: start;
     }
+
+    /* Ocultar barras laterales por defecto en móvil */
+    .community-left {
+        display: none;
+    }
+
+    .community-right {
+        display: none;
+    }
     
     @media (min-width: 768px) {
         .community-grid {
             grid-template-columns: 240px 1fr;
         }
-        .community-right {
-            display: none;
+        .community-left {
+            display: block;
         }
     }
     
