@@ -277,6 +277,33 @@
         flex-shrink: 0;
         margin-top: 1px;
     }
+
+    /* Reglas para móviles (Estilo de feed de LinkedIn Edge-to-Edge) */
+    @media (max-width: 767px) {
+        .community-container {
+            padding: 0 0 40px !important;
+        }
+        .selector-wrapper {
+            padding: 0 16px !important;
+        }
+        .feed-card {
+            border-radius: 0 !important;
+            border-left: none !important;
+            border-right: none !important;
+            box-shadow: none !important;
+            margin-bottom: 8px !important;
+        }
+        .community-center {
+            gap: 8px !important;
+        }
+        /* Ajustar cabecera de feed en móvil */
+        .dashboard-heading {
+            padding: 12px 16px 8px !important;
+        }
+        .dashboard-heading h1 {
+            font-size: 20px !important;
+        }
+    }
 </style>
 {% endblock %}
 
@@ -402,7 +429,7 @@
         <main class="community-center">
             
             <!-- Selector de Especialidades -->
-            <div style="position: relative; width: 100%;">
+            <div class="selector-wrapper" style="position: relative; width: 100%;">
                 <select onchange="location = this.value;" style="width: 100%; padding: 12px 16px; padding-right: 40px; border-radius: 12px; font-size: 14px; font-weight: 700; border: 1.5px solid var(--line); background: var(--surface); color: var(--text); appearance: none; -webkit-appearance: none; cursor: pointer; transition: border-color 0.2s, box-shadow 0.2s; outline: none; font-family: inherit;">
                     <option value="{% url 'feed' %}" {% if not current_filter %}selected{% endif %}>🔍 Todas las especialidades</option>
                     {% for spec in specialties %}
