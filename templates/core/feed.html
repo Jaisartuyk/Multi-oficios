@@ -33,6 +33,35 @@
 <!-- Feed de publicaciones -->
 <div style="max-width: 560px; margin: 0 auto; padding: 0 12px 40px; display: flex; flex-direction: column; gap: 20px;">
 
+    {% if user.is_authenticated and user.profile.role == 'PROFESSIONAL' %}
+    <!-- Creador de Publicación -->
+    <div class="feed-card" style="background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.04);">
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <div class="avatar" style="width: 44px; height: 44px; font-size: 14px; background: linear-gradient(135deg, var(--green), #059669); color: white; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-weight: 800; flex-shrink: 0;">
+                {{ user.professional_profile.initials }}
+            </div>
+            <button onclick="openPublishModal()" style="flex: 1; text-align: left; background: var(--surface-strong); border: 1.5px solid var(--line); padding: 12px 20px; border-radius: 100px; color: var(--text-muted); font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.2s, border-color 0.2s; outline: none; font-family: inherit;">
+                Crear publicación...
+            </button>
+        </div>
+        <hr style="border: 0; border-top: 1px solid var(--line); margin: 12px 0;">
+        <div style="display: flex; justify-content: space-around; gap: 8px;">
+            <button onclick="openPublishModal('video')" style="display: flex; align-items: center; gap: 8px; background: transparent; border: none; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; color: var(--text); cursor: pointer; transition: background 0.2; font-family: inherit;">
+                <i data-lucide="video" style="color: #10B981; width: 18px; height: 18px;"></i>
+                <span>Vídeo</span>
+            </button>
+            <button onclick="openPublishModal('photo')" style="display: flex; align-items: center; gap: 8px; background: transparent; border: none; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; color: var(--text); cursor: pointer; transition: background 0.2; font-family: inherit;">
+                <i data-lucide="image" style="color: #3B82F6; width: 18px; height: 18px;"></i>
+                <span>Foto</span>
+            </button>
+            <button onclick="openPublishModal('article')" style="display: flex; align-items: center; gap: 8px; background: transparent; border: none; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; color: var(--text); cursor: pointer; transition: background 0.2; font-family: inherit;">
+                <i data-lucide="pen-square" style="color: #F59E0B; width: 18px; height: 18px;"></i>
+                <span>Escribir artículo</span>
+            </button>
+        </div>
+    </div>
+    {% endif %}
+
     {% for item in page_obj %}
     <article class="feed-card" style="background: var(--surface); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.06); transition: transform 0.2s ease, box-shadow 0.2s ease;">
 
@@ -144,4 +173,153 @@
         </div>
     </div>
 </section>
+
+{% if user.is_authenticated and user.profile.role == 'PROFESSIONAL' %}
+<!-- Modal de Publicación -->
+<div id="publishModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(8px); z-index: 9999; align-items: center; justify-content: center; padding: 16px; opacity: 0; transition: opacity 0.2s ease-in-out;">
+    <div style="background: var(--surface); border: 1.5px solid var(--line); border-radius: 20px; width: 100%; max-width: 500px; box-shadow: var(--shadow); overflow: hidden; transform: scale(0.95); transition: transform 0.2s ease-in-out;">
+        <!-- Cabecera -->
+        <div style="display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--line);">
+            <h3 style="margin: 0; font-size: 16px; font-weight: 800; color: var(--text);">Crear una publicación</h3>
+            <button onclick="closePublishModal()" style="background: transparent; border: none; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 4px; border-radius: 50%;" onmouseover="this.style.background='var(--surface-strong)';" onmouseout="this.style.background='transparent';">
+                <i data-lucide="x" style="width: 20px; height: 20px;"></i>
+            </button>
+        </div>
+        <!-- Formulario -->
+        <form method="post" enctype="multipart/form-data" style="padding: 20px; display: flex; flex-direction: column; gap: 16px;">
+            {% csrf_token %}
+            <!-- Info del Profesional -->
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div class="avatar" style="width: 40px; height: 40px; font-size: 12px; background: linear-gradient(135deg, var(--green), #059669); color: white; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-weight: 800;">
+                    {{ user.professional_profile.initials }}
+                </div>
+                <div>
+                    <strong style="display: block; font-size: 14px; color: var(--text);">{{ user.professional_profile.name }}</strong>
+                    <span style="font-size: 12px; color: var(--text-muted); background: var(--surface-strong); padding: 2px 8px; border-radius: 100px; font-weight: 600;">Público en la Comunidad</span>
+                </div>
+            </div>
+            <!-- Campo de Texto -->
+            <textarea name="caption" rows="4" placeholder="¿Qué trabajo realizaste hoy? Explica los detalles..." maxlength="180" required style="width: 100%; border: none; resize: none; background: transparent; color: var(--text); font-size: 15px; outline: none; font-family: inherit; line-height: 1.5;"></textarea>
+            
+            <!-- Selector de Archivo -->
+            <label style="border: 2px dashed var(--line); border-radius: 14px; padding: 24px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; cursor: pointer; background: var(--surface-strong); transition: border-color 0.2s;" onmouseover="this.style.borderColor='var(--green)';" onmouseout="this.style.borderColor='var(--line)';">
+                <input id="publishFileInput" type="file" name="portfolio_file" accept="image/*,video/*" required style="display: none;" onchange="handleFileSelected(this)">
+                <i id="uploadIcon" data-lucide="cloud-upload" style="width: 32px; height: 32px; color: var(--green);"></i>
+                <span id="uploadText" style="font-size: 13px; font-weight: 700; color: var(--text); text-align: center;">Subir foto o vídeo</span>
+                <span style="font-size: 11px; color: var(--text-muted);">Formatos admitidos: JPG, PNG, MP4, etc.</span>
+            </label>
+            <!-- Vista Previa del Archivo Seleccionado -->
+            <div id="filePreviewContainer" style="display: none; position: relative; border-radius: 12px; overflow: hidden; border: 1.5px solid var(--line); background: black; max-height: 200px;">
+                <img id="imagePreview" style="display: none; width: 100%; height: 200px; object-fit: cover;">
+                <video id="videoPreview" controls style="display: none; width: 100%; height: 200px; object-fit: cover;"></video>
+                <button type="button" onclick="clearSelectedFile(event)" style="position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.6); color: white; border: none; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                    <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
+                </button>
+            </div>
+
+            <!-- Botón de publicar -->
+            <button class="primary-button" type="submit" style="width: 100%; padding: 12px; border-radius: 12px; font-size: 14px; font-weight: 700;">
+                Publicar
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+function openPublishModal(type) {
+    const modal = document.getElementById('publishModal');
+    const fileInput = document.getElementById('publishFileInput');
+    if (type === 'video') {
+        fileInput.accept = 'video/*';
+    } else if (type === 'photo') {
+        fileInput.accept = 'image/*';
+    } else {
+        fileInput.accept = 'image/*,video/*';
+    }
+    
+    modal.style.display = 'flex';
+    setTimeout(() => {
+        modal.style.opacity = '1';
+        modal.querySelector('div').style.transform = 'scale(1)';
+    }, 10);
+}
+
+function closePublishModal() {
+    const modal = document.getElementById('publishModal');
+    modal.style.opacity = '0';
+    modal.querySelector('div').style.transform = 'scale(0.95)';
+    setTimeout(() => {
+        modal.style.display = 'none';
+        modal.querySelector('form').reset();
+        clearSelectedFile();
+    }, 200);
+}
+
+function handleFileSelected(input) {
+    const file = input.files[0];
+    const previewContainer = document.getElementById('filePreviewContainer');
+    const imagePreview = document.getElementById('imagePreview');
+    const videoPreview = document.getElementById('videoPreview');
+    const uploadText = document.getElementById('uploadText');
+    const uploadIcon = document.getElementById('uploadIcon');
+
+    if (!file) return;
+
+    previewContainer.style.display = 'block';
+    const reader = new FileReader();
+
+    if (file.type.startsWith('image/')) {
+        imagePreview.style.display = 'block';
+        videoPreview.style.display = 'none';
+        reader.onload = function(e) {
+            imagePreview.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    } else if (file.type.startsWith('video/')) {
+        videoPreview.style.display = 'block';
+        imagePreview.style.display = 'none';
+        reader.onload = function(e) {
+            videoPreview.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+    
+    uploadText.textContent = file.name;
+    uploadIcon.setAttribute('data-lucide', 'check-circle');
+    if (window.lucide) {
+        window.lucide.createIcons();
+    }
+}
+
+function clearSelectedFile(e) {
+    if (e) {
+        e.stopPropagation();
+        e.preventDefault();
+    }
+    const fileInput = document.getElementById('publishFileInput');
+    const previewContainer = document.getElementById('filePreviewContainer');
+    const imagePreview = document.getElementById('imagePreview');
+    const videoPreview = document.getElementById('videoPreview');
+    const uploadText = document.getElementById('uploadText');
+    const uploadIcon = document.getElementById('uploadIcon');
+
+    fileInput.value = '';
+    previewContainer.style.display = 'none';
+    imagePreview.src = '';
+    videoPreview.src = '';
+    uploadText.textContent = 'Subir foto o vídeo';
+    uploadIcon.setAttribute('data-lucide', 'cloud-upload');
+    if (window.lucide) {
+        window.lucide.createIcons();
+    }
+}
+
+// Cerrar si se hace clic fuera del modal
+document.getElementById('publishModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closePublishModal();
+    }
+});
+</script>
+{% endif %}
 {% endblock %}

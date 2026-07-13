@@ -170,6 +170,25 @@ def feed(request):
     """Feed social público – muestra publicaciones de portafolio de todos los profesionales."""
     from django.core.paginator import Paginator
 
+    if request.method == 'POST' and request.user.is_authenticated and request.user.profile.role == 'PROFESSIONAL':
+        try:
+            professional = request.user.professional_profile
+            caption = request.POST.get('caption', '').strip()
+            portfolio_file = request.FILES.get('portfolio_file')
+            if not portfolio_file:
+                raise ValueError('Debes seleccionar una foto o video.')
+            
+            image_url = upload_file_to_r2_or_local(portfolio_file, 'portfolio')
+            PortfolioItem.objects.create(
+                professional=professional,
+                image_url=image_url,
+                caption=caption
+            )
+            messages.success(request, '¡Publicación compartida con éxito!')
+        except Exception as error:
+            messages.error(request, f'Error al publicar: {str(error)}')
+        return redirect('feed')
+
     # Filtro por categoría/especialidad
     specialty_filter = request.GET.get('especialidad', '').strip()
 
