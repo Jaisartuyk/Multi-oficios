@@ -87,6 +87,7 @@ class Professional(models.Model):
     available = models.CharField(max_length=100, verbose_name="Disponibilidad", default="Disponible hoy")
     badge = models.CharField(max_length=100, verbose_name="Insignia", default="Identidad verificada")
     initials = models.CharField(max_length=5, verbose_name="Iniciales")
+    avatar_url = models.URLField(max_length=500, blank=True, default='', verbose_name="Foto de perfil")
     experience = models.CharField(max_length=50, verbose_name="Experiencia", default="1 año")
     location = models.CharField(max_length=200, verbose_name="Ubicación")
     lat = models.FloatField(verbose_name="Latitud", default=-2.1894)
@@ -148,6 +149,7 @@ class JobRequest(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de Creación")
     estimated_price = models.CharField(max_length=100, blank=True, null=True, verbose_name="Precio Estimado")
     estimated_time = models.CharField(max_length=100, blank=True, null=True, verbose_name="Tiempo Estimado")
+    image_url = models.URLField(max_length=500, blank=True, default='', verbose_name="Foto del problema")
 
     class Meta:
         verbose_name = "Solicitud de Trabajo"
@@ -309,10 +311,18 @@ class Notification(models.Model):
         return f"[{self.get_notif_type_display()}] {self.title} → {self.recipient.username}"
 
 class Recharge(models.Model):
+    STATUS_CHOICES = (
+        ('APPROVED', 'Aprobada'),
+        ('PENDING', 'Pendiente de revisión'),
+        ('REJECTED', 'Rechazada'),
+    )
     professional = models.ForeignKey(Professional, on_delete=models.CASCADE, related_name='recharges', verbose_name="Profesional")
     amount_paid = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Monto Pagado ($)")
     credits_added = models.IntegerField(verbose_name="Créditos Añadidos")
     payment_method = models.CharField(max_length=50, choices=[('EFECTIVO', 'Efectivo'), ('TRANSFERENCIA', 'Transferencia'), ('DEUNA', 'DeUna')], default='TRANSFERENCIA', verbose_name="Método de Pago")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='APPROVED', verbose_name="Estado")
+    receipt_reference = models.CharField(max_length=200, blank=True, default='', verbose_name="Referencia de pago")
+    receipt_url = models.URLField(max_length=500, blank=True, default='', verbose_name="Foto del comprobante")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de Recarga")
 
     class Meta:

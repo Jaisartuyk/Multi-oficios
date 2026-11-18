@@ -1460,3 +1460,177 @@ svg {
         text-align: left;
     }
 }
+
+/* ==========================================================================
+   MODERN UI ENHANCEMENTS: STEPPER, COMPARATIVE QUOTES & CREDIT PACKAGES
+   ========================================================================== */
+
+.avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    border-radius: inherit;
+}
+
+/* 5-Step Job Progress Stepper */
+.job-stepper {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+    margin: 14px 0;
+    padding: 12px 10px;
+    border-radius: 14px;
+    background: var(--surface-strong);
+    border: 1px solid var(--line);
+}
+
+.job-step {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    text-align: center;
+    opacity: 0.45;
+    transition: opacity 0.2s ease;
+}
+
+.job-step.completed {
+    opacity: 1;
+}
+
+.job-step__dot {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--surface);
+    border: 2px solid var(--muted);
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.job-step.completed .job-step__dot {
+    background: var(--green);
+    border-color: var(--green);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(24, 167, 106, 0.3);
+}
+
+.job-step small {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.15;
+}
+
+/* Comparative Quote Cards (Client Dashboard) */
+.quotes-compare-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    margin-top: 10px;
+}
+
+@media (min-width: 760px) {
+    .quotes-compare-grid {
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    }
+}
+
+.quote-compare-card {
+    padding: 14px;
+    border-radius: 14px;
+    background: var(--surface-strong);
+    border: 1.5px solid var(--line);
+    transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.quote-compare-card:hover {
+    border-color: var(--green);
+    transform: translateY(-2px);
+}
+
+/* Credit Recharge Packages (Professional Dashboard) */
+.credit-packages-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
+@media (max-width: 580px) {
+    .credit-packages-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.credit-package-card {
+    position: relative;
+    cursor: pointer;
+    display: block !important;
+}
+
+.credit-package-card input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.credit-package-card > div {
+    padding: 14px 12px;
+    border-radius: 14px;
+    border: 2px solid var(--line);
+    background: var(--surface-strong);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 4px;
+    transition: all 0.2s ease;
+}
+
+.credit-package-card.popular > div {
+    border-color: rgba(24, 167, 106, 0.45);
+}
+
+.credit-package-card input[type="radio"]:checked + div {
+    border-color: var(--green);
+    background: var(--green-soft);
+    box-shadow: 0 6px 18px rgba(24, 167, 106, 0.16);
+}
+
+.credit-package-badge {
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--blue);
+}
+
+.credit-package-card.popular .credit-package-badge {
+    background: var(--green);
+    color: #fff;
+}
+
+.credit-package-card strong {
+    font-size: 16px;
+    color: var(--text);
+    margin-top: 2px;
+}
+
+.credit-package-price {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--green);
+}
+
+.credit-package-card small {
+    font-size: 11px;
+    color: var(--muted);
+}

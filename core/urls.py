@@ -35,4 +35,6 @@ urlpatterns = [
     # Notifications API
     path('api/notifications/', views.notifications_api, name='notifications_api'),
     path('api/notifications/read/', views.notifications_mark_read, name='notifications_mark_read'),
+    # TikTok Ad Simulator
+    path('tiktok-ad/', views.tiktok_ad, name='tiktok_ad'),
 ]

@@ -7,18 +7,19 @@
     <div>
         <span class="eyebrow">Finanzas</span>
         <h1>Créditos profesionales</h1>
-        <p>Registra pagos confirmados y conserva un historial auditable.</p>
+        <p>Aprueba solicitudes de recarga con comprobante o aplica recargas directas.</p>
     </div>
-    <a class="secondary-button" href="{% url 'admin_panel' %}"><i data-lucide="arrow-left"></i>Volver</a>
+    <a class="secondary-button" href="{% url 'admin_panel' %}" style="padding: 0 16px; text-decoration: none;"><i data-lucide="arrow-left"></i>Volver</a>
 </section>
 
 <section class="metric-strip">
-    <article><strong>${{ total_ingresos }}</strong><span>Ingresos registrados</span></article>
-    <article><strong>{{ recharges|length }}</strong><span>Recargas</span></article>
+    <article><strong>${{ total_ingresos }}</strong><span>Ingresos aprobados</span></article>
+    <article><strong>{{ pending_count|default:0 }}</strong><span>Solicitudes pendientes</span></article>
+    <article><strong>{{ recharges|length }}</strong><span>Recargas totales</span></article>
 </section>
 
 <section class="dashboard-section">
-    <div class="section-title"><h2>Nueva recarga</h2><span>Validación en servidor</span></div>
+    <div class="section-title"><h2>Recarga directa manual</h2><span>Acreditación inmediata</span></div>
     <form method="post" class="surface-form">
         {% csrf_token %}
         {% if form.non_field_errors %}<div class="form-error">{{ form.non_field_errors }}</div>{% endif %}
@@ -30,26 +31,67 @@
             </label>
             {% endfor %}
         </div>
-        <button class="primary-button" type="submit"><i data-lucide="coins"></i>Aplicar recarga</button>
+        <button class="primary-button" type="submit"><i data-lucide="coins"></i>Aplicar recarga inmediata</button>
     </form>
 </section>
 
 <section class="dashboard-section">
-    <div class="section-title"><h2>Historial</h2><span>Más recientes primero</span></div>
+    <div class="section-title"><h2>Solicitudes e historial</h2><span>Más recientes primero</span></div>
     <div class="responsive-table">
         <table>
-            <thead><tr><th>Profesional</th><th>Monto</th><th>Créditos</th><th>Método</th><th>Fecha</th></tr></thead>
+            <thead>
+                <tr>
+                    <th>Profesional</th>
+                    <th>Monto</th>
+                    <th>Créditos</th>
+                    <th>Método / Referencia</th>
+                    <th>Estado</th>
+                    <th>Fecha</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
             <tbody>
                 {% for recharge in recharges %}
                 <tr>
-                    <td>{{ recharge.professional.name }}</td>
+                    <td><strong>{{ recharge.professional.name }}</strong></td>
                     <td>${{ recharge.amount_paid }}</td>
-                    <td>+{{ recharge.credits_added }}</td>
-                    <td>{{ recharge.get_payment_method_display }}</td>
+                    <td><strong>+{{ recharge.credits_added }}</strong></td>
+                    <td>
+                        {{ recharge.get_payment_method_display }}
+                        {% if recharge.receipt_reference %}<br><small style="color: var(--muted);">Ref: {{ recharge.receipt_reference }}</small>{% endif %}
+                        {% if recharge.receipt_url %}
+                            <br><a href="{{ recharge.receipt_url }}" target="_blank" rel="noopener" style="color: var(--blue); font-weight: 700;">Ver comprobante ↗</a>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="status-pill {% if recharge.status == 'APPROVED' %}status-completed{% elif recharge.status == 'REJECTED' %}status-cancelled{% else %}status-in_progress{% endif %}">
+                            {{ recharge.get_status_display }}
+                        </span>
+                    </td>
                     <td>{{ recharge.created_at|date:"d/m/Y H:i" }}</td>
+                    <td>
+                        {% if recharge.status == 'PENDING' %}
+                        <div style="display: flex; gap: 6px;">
+                            <form method="post" style="margin: 0;">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="approve_recharge">
+                                <input type="hidden" name="recharge_id" value="{{ recharge.id }}">
+                                <button type="submit" class="compact-button" style="margin: 0;">Aprobar</button>
+                            </form>
+                            <form method="post" style="margin: 0;">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="reject_recharge">
+                                <input type="hidden" name="recharge_id" value="{{ recharge.id }}">
+                                <button type="submit" class="danger-text-button" style="min-height: 28px; padding: 4px 8px; font-size: 11px;">Rechazar</button>
+                            </form>
+                        </div>
+                        {% else %}
+                        <span style="color: var(--muted); font-size: 11px;">Procesada</span>
+                        {% endif %}
+                    </td>
                 </tr>
                 {% empty %}
-                <tr><td colspan="5">Aún no hay recargas.</td></tr>
+                <tr><td colspan="7">Aún no hay recargas.</td></tr>
                 {% endfor %}
             </tbody>
         </table>

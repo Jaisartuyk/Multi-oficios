@@ -3,30 +3,59 @@
 {% block title %}Panel profesional | ObraYa{% endblock %}
 
 {% block content %}
-<section class="dashboard-heading profile-hero">
-    <div class="avatar big">{{ professional.initials }}</div>
-    <div>
-        <span class="eyebrow">{{ professional.level }}</span>
-        <h1>{{ professional.name }}</h1>
-        <p>{{ professional.specialty }} · {{ professional.location }}</p>
+<section class="dashboard-heading profile-hero" style="justify-content: space-between; flex-wrap: wrap;">
+    <div style="display: flex; align-items: center; gap: 14px;">
+        <div class="avatar big" style="overflow: hidden; position: relative;">
+            {% if professional.avatar_url %}
+                <img src="{{ professional.avatar_url }}" alt="{{ professional.name }}" style="width: 100%; height: 100%; object-fit: cover;">
+            {% else %}
+                {{ professional.initials }}
+            {% endif %}
+        </div>
+        <div>
+            <span class="eyebrow"><i data-lucide="badge-check"></i> {{ professional.level }}</span>
+            <h1>{{ professional.name }}</h1>
+            <p>{{ professional.specialty }} · {{ professional.location }}</p>
+        </div>
     </div>
+    <button type="button" class="secondary-button" style="padding: 0 18px; min-height: 42px; font-size: 13px;" onclick="document.getElementById('recharge-card')?.scrollIntoView({behavior:'smooth', block:'center'})">
+        <i data-lucide="coins"></i> Recargar créditos ({{ professional.credits }})
+    </button>
 </section>
 
 <section class="metric-strip reputation-grid">
-    <article><strong>{{ professional.rating }}</strong><span>Calificación</span></article>
+    <article><strong>★ {{ professional.rating }}</strong><span>Calificación</span></article>
     <article><strong>{{ professional.jobs }}</strong><span>Completados</span></article>
-    <article><strong>{{ professional.credits }}</strong><span>Créditos</span></article>
+    <article><strong>{{ professional.credits }}</strong><span>Créditos disponibles</span></article>
 </section>
 
 <section class="dashboard-section" id="professional-profile">
     <div class="section-title">
-        <h2>Perfil y cobertura</h2>
+        <h2>Perfil, foto y cobertura</h2>
         <span>Información pública</span>
     </div>
 
-    <form method="post" class="surface-form">
+    <form method="post" class="surface-form" enctype="multipart/form-data">
         {% csrf_token %}
         <input type="hidden" name="action" value="update_profile">
+
+        <!-- Foto de Perfil Real -->
+        <div style="display: flex; align-items: center; gap: 14px; padding: 12px; border-radius: 14px; background: var(--surface-strong); border: 1px solid var(--line);">
+            <div class="avatar big" id="avatarPreviewContainer" style="width: 58px; height: 58px; overflow: hidden; flex-shrink: 0;">
+                {% if professional.avatar_url %}
+                    <img id="avatarPreviewImg" src="{{ professional.avatar_url }}" alt="{{ professional.name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                {% else %}
+                    <span id="avatarInitialsSpan">{{ professional.initials }}</span>
+                    <img id="avatarPreviewImg" alt="{{ professional.name }}" style="display: none; width: 100%; height: 100%; object-fit: cover;">
+                {% endif %}
+            </div>
+            <div style="flex: 1; min-width: 0;">
+                <strong style="display: block; font-size: 13px; color: var(--text); margin-bottom: 4px;">Foto de perfil profesional</strong>
+                <span style="display: block; font-size: 11px; color: var(--muted); margin-bottom: 8px;">Una foto real de tu rostro o trabajando genera 3x más confianza en los clientes.</span>
+                <input type="file" name="avatar_file" accept="image/*" onchange="previewAvatarFile(this)" style="font-size: 12px; padding: 6px 10px; min-height: auto;">
+            </div>
+        </div>
+
         <div class="form-grid-2">
             <label>Disponibilidad
                 <select name="available">
@@ -65,6 +94,81 @@
         </button>
     </form>
 
+    <!-- Módulo de Auto-Recarga de Créditos -->
+    <div id="recharge-card" class="subsection-title">
+        <div class="section-title">
+            <h2>Recargar créditos</h2>
+            <span>1 crédito = 1 cotización enviada</span>
+        </div>
+        <form method="post" class="surface-form" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="request_recharge">
+            <div class="credit-packages-grid">
+                <label class="credit-package-card">
+                    <input type="radio" name="package" value="5">
+                    <div>
+                        <span class="credit-package-badge">Inicial</span>
+                        <strong>5 Créditos</strong>
+                        <span class="credit-package-price">$5.00</span>
+                        <small>$1.00 por cotización</small>
+                    </div>
+                </label>
+                <label class="credit-package-card popular">
+                    <input type="radio" name="package" value="15" checked>
+                    <div>
+                        <span class="credit-package-badge">Más popular · Ahorra 20%</span>
+                        <strong>15 Créditos</strong>
+                        <span class="credit-package-price">$12.00</span>
+                        <small>$0.80 por cotización</small>
+                    </div>
+                </label>
+                <label class="credit-package-card">
+                    <input type="radio" name="package" value="35">
+                    <div>
+                        <span class="credit-package-badge">Maestro Pro · Ahorra 28%</span>
+                        <strong>35 Créditos</strong>
+                        <span class="credit-package-price">$25.00</span>
+                        <small>$0.71 por cotización</small>
+                    </div>
+                </label>
+            </div>
+
+            <div class="form-grid-2">
+                <label>Método de pago
+                    <select name="payment_method">
+                        <option value="DEUNA">DeUna! (Acreditación rápida)</option>
+                        <option value="TRANSFERENCIA">Transferencia Bancaria</option>
+                    </select>
+                </label>
+                <label>Número de comprobante / referencia
+                    <input name="receipt_reference" maxlength="200" placeholder="Ej: Comprobante #094821" required>
+                </label>
+            </div>
+            <label>Captura del comprobante (Opcional)
+                <input type="file" name="receipt_file" accept="image/*" style="padding: 8px 12px;">
+            </label>
+            <button class="secondary-button" type="submit">
+                <i data-lucide="coins"></i> Enviar comprobante para activar créditos
+            </button>
+        </form>
+
+        {% if my_recharges %}
+        <div style="margin-top: 12px; padding: 12px 14px; border-radius: 12px; background: var(--surface); border: 1px solid var(--line);">
+            <strong style="display: block; font-size: 12px; color: var(--muted); margin-bottom: 8px; text-transform: uppercase;">Últimas recargas</strong>
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+                {% for rec in my_recharges %}
+                <div style="display: flex; align-items: center; justify-content: space-between; font-size: 12px; padding: 4px 0; border-bottom: 1px dashed var(--line);">
+                    <span><strong>+{{ rec.credits_added }} créditos</strong> (${{ rec.amount_paid }} · {{ rec.get_payment_method_display }})</span>
+                    <span class="status-pill {% if rec.status == 'APPROVED' %}status-completed{% elif rec.status == 'REJECTED' %}status-cancelled{% else %}status-in_progress{% endif %}">
+                        {{ rec.get_status_display }}
+                    </span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
     <div class="section-title subsection-title">
         <h2>Portafolio</h2>
         <span>Imágenes públicas</span>
@@ -88,7 +192,7 @@
             {% else %}
             <img src="{{ item.image_url }}" alt="{{ item.caption|default:'Trabajo realizado' }}" loading="lazy" style="width: 100%; height: 180px; object-fit: cover; border-radius: 8px;">
             {% endif %}
-            <figcaption style="margin-top: 8px; font-size: 13px; color: var(--text-muted); font-weight: 500;">{{ item.caption|default:"Trabajo realizado" }}</figcaption>
+            <figcaption style="margin-top: 8px; font-size: 13px; color: var(--muted); font-weight: 500;">{{ item.caption|default:"Trabajo realizado" }}</figcaption>
             <form method="post" style="position: absolute; top: 12px; right: 12px;">
                 {% csrf_token %}
                 <input type="hidden" name="action" value="remove_portfolio">
@@ -109,14 +213,21 @@
     </div>
     <div class="workflow-list">
         {% for job in pending_jobs %}
-        <article class="workflow-card">
+        <article class="workflow-card" style="border-radius: 18px; padding: 20px;">
             <header class="workflow-card__header">
                 <div>
                     <span class="status-pill status-{{ job.status|lower }}">{{ job.get_status_display }}</span>
-                    <h3>{{ job.title }}</h3>
+                    <h3 style="font-size: 18px; margin-top: 8px;">{{ job.title }}</h3>
                 </div>
                 <time>{{ job.created_at|date:"d/m/Y" }}</time>
             </header>
+
+            {% if job.image_url %}
+            <div style="margin: 12px 0; border-radius: 14px; overflow: hidden; border: 1px solid var(--line); max-height: 220px;">
+                <img src="{{ job.image_url }}" alt="Foto del daño subida por el cliente" loading="lazy" style="width: 100%; height: 220px; object-fit: cover; display: block;">
+            </div>
+            {% endif %}
+
             <p class="workflow-description">{{ job.description }}</p>
             <div class="workflow-meta">
                 <span><i data-lucide="wallet"></i>{{ job.estimated_price }}</span>
@@ -124,13 +235,13 @@
                 {% if job.address %}<span><i data-lucide="map-pin"></i>{{ job.address }}</span>{% endif %}
             </div>
             <details class="workflow-details" {% if job.my_quote %}open{% endif %}>
-                <summary>{% if job.my_quote %}Editar cotización{% else %}Enviar cotización{% endif %}</summary>
+                <summary>{% if job.my_quote %}Editar mi cotización (${{ job.my_quote.amount }}){% else %}Enviar cotización al cliente{% endif %}</summary>
                 <form method="post" class="compact-form">
                     {% csrf_token %}
                     <input type="hidden" name="action" value="submit_quote">
                     <input type="hidden" name="job_id" value="{{ job.id }}">
                     <div class="form-grid-2">
-                        <label>Monto total
+                        <label>Monto total ($)
                             <input type="number" name="amount" min="1" step="0.01" required value="{{ job.my_quote.amount|default:'' }}">
                         </label>
                         <label>Días estimados
@@ -138,10 +249,10 @@
                         </label>
                     </div>
                     <label>Alcance y condiciones
-                        <textarea name="message" rows="3" maxlength="1000">{{ job.my_quote.message|default:'' }}</textarea>
+                        <textarea name="message" rows="3" maxlength="1000" placeholder="Detalla qué incluye tu mano de obra y garantía...">{{ job.my_quote.message|default:'' }}</textarea>
                     </label>
                     <button class="primary-button" type="submit" {% if professional.credits == 0 and not job.my_quote %}disabled{% endif %}>
-                        <i data-lucide="send"></i>{% if job.my_quote %}Actualizar{% else %}Enviar propuesta{% endif %}
+                        <i data-lucide="send"></i>{% if job.my_quote %}Actualizar propuesta{% else %}Enviar propuesta (1 crédito){% endif %}
                     </button>
                 </form>
             </details>
@@ -163,14 +274,47 @@
     </div>
     <div class="workflow-list">
         {% for job in jobs %}
-        <article class="workflow-card">
+        <article class="workflow-card" style="border-radius: 18px; padding: 20px;">
             <header class="workflow-card__header">
                 <div>
                     <span class="status-pill status-{{ job.status|lower }}">{{ job.get_status_display }}</span>
-                    <h3>{{ job.title }}</h3>
+                    <h3 style="font-size: 18px; margin-top: 8px;">{{ job.title }}</h3>
                 </div>
-                {% if job.selected_quote %}<strong>${{ job.selected_quote.amount }}</strong>{% endif %}
+                {% if job.selected_quote %}<strong style="font-size: 20px; color: var(--green);">${{ job.selected_quote.amount }}</strong>{% endif %}
             </header>
+
+            <!-- Barra de Progreso Visual (Stepper) -->
+            {% if job.status != 'CANCELLED' %}
+            <div class="job-stepper" aria-label="Progreso del servicio">
+                <div class="job-step completed">
+                    <span class="job-step__dot">1</span>
+                    <small>Publicado</small>
+                </div>
+                <div class="job-step completed">
+                    <span class="job-step__dot">2</span>
+                    <small>Cotizado</small>
+                </div>
+                <div class="job-step completed">
+                    <span class="job-step__dot">3</span>
+                    <small>Asignado</small>
+                </div>
+                <div class="job-step {% if job.status == 'IN_PROGRESS' or job.status == 'AWAITING_CONFIRMATION' or job.status == 'COMPLETED' %}completed{% endif %}">
+                    <span class="job-step__dot">4</span>
+                    <small>En obra</small>
+                </div>
+                <div class="job-step {% if job.status == 'COMPLETED' %}completed{% endif %}">
+                    <span class="job-step__dot">5</span>
+                    <small>Finalizado</small>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if job.image_url %}
+            <div style="margin: 12px 0; border-radius: 14px; overflow: hidden; border: 1px solid var(--line); max-height: 200px;">
+                <img src="{{ job.image_url }}" alt="Foto del trabajo" loading="lazy" style="width: 100%; height: 200px; object-fit: cover; display: block;">
+            </div>
+            {% endif %}
+
             <p class="workflow-description">{{ job.description }}</p>
             <div class="assigned-professional">
                 <div class="avatar">{{ job.client.username|slice:":2"|upper }}</div>
@@ -183,11 +327,11 @@
             </div>
             {% if job.chat_room %}
             <div style="margin: 10px 0; width: 100%;">
-                <a href="{% url 'chat_room_view' job.chat_room.id %}" class="secondary-button" style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%;">
+                <a href="{% url 'chat_room_view' job.chat_room.id %}" class="secondary-button" style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; text-decoration: none;">
                     <i data-lucide="message-square"></i>
                     {% if job.chat_room.is_active %}
                         Chat con el Cliente
-                    &nbsp;{% else %}
+                    {% else %}
                         Ver Historial de Chat (Cerrado)
                     {% endif %}
                 </a>
@@ -199,7 +343,7 @@
                     {% csrf_token %}
                     <input type="hidden" name="action" value="start_job">
                     <input type="hidden" name="job_id" value="{{ job.id }}">
-                    <button class="primary-button" type="submit"><i data-lucide="play"></i>Iniciar</button>
+                    <button class="primary-button" type="submit"><i data-lucide="play"></i>Iniciar obra</button>
                 </form>
                 {% elif job.status == 'IN_PROGRESS' %}
                 <form method="post">
@@ -235,6 +379,22 @@
 <script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key|urlencode }}&libraries=places"></script>
 {% endif %}
 <script>
+function previewAvatarFile(input) {
+    const file = input.files && input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function (e) {
+        const img = document.getElementById('avatarPreviewImg');
+        const span = document.getElementById('avatarInitialsSpan');
+        if (span) span.style.display = 'none';
+        if (img) {
+            img.src = e.target.result;
+            img.style.display = 'block';
+        }
+    };
+    reader.readAsDataURL(file);
+}
+
 document.addEventListener('DOMContentLoaded', function () {
     const locationInput = document.getElementById('location_input');
     const latInput = document.getElementById('lat_input');

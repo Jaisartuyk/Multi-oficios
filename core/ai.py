@@ -54,7 +54,7 @@ def consume_ai_request(user):
     usage.save(update_fields=['requests'])
 
 
-def generate_estimate(user, brief):
+def generate_estimate(user, brief, image_file=None):
     brief = brief.strip()[:2000]
     if not settings.GEMINI_API_KEY:
         return fallback_estimate(brief)
@@ -62,6 +62,7 @@ def generate_estimate(user, brief):
     consume_ai_request(user)
     try:
         from google import genai
+        from google.genai import types
 
         schema = {
             'type': 'object',
@@ -81,15 +82,28 @@ def generate_estimate(user, brief):
             ],
         }
         prompt = (
-            'Actúa como estimador de mantenimiento y construcción para Guayaquil, Ecuador. '
+            'Actúa como estimador experto de mantenimiento y construcción para Guayaquil, Ecuador. '
+            'Analiza la descripción (y la foto adjunta si existe) para diagnosticar el daño o proyecto. '
             'Genera una referencia prudente en USD, sin afirmar que es precio final. '
             'Identifica riesgos y recomienda inspección presencial. Solicitud del cliente: '
             f'{brief}'
         )
+        contents = [prompt]
+        if image_file:
+            try:
+                image_file.seek(0)
+                img_bytes = image_file.read()
+                image_file.seek(0)
+                mime_type = getattr(image_file, 'content_type', None) or 'image/jpeg'
+                if img_bytes and mime_type.startswith('image/'):
+                    contents.append(types.Part.from_bytes(data=img_bytes, mime_type=mime_type))
+            except Exception:
+                pass
+
         client = genai.Client(api_key=settings.GEMINI_API_KEY)
         response = client.models.generate_content(
             model=settings.GEMINI_MODEL,
-            contents=prompt,
+            contents=contents,
             config={
                 'response_mime_type': 'application/json',
                 'response_json_schema': schema,

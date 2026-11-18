@@ -69,7 +69,13 @@
     <div class="pro-list">
         {% for professional in professionals %}
         <a class="pro-card" href="{% url 'professional_detail' professional.id %}">
-            <div class="avatar">{{ professional.initials }}</div>
+            <div class="avatar" style="overflow: hidden;">
+                {% if professional.avatar_url %}
+                    <img src="{{ professional.avatar_url }}" alt="{{ professional.name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                {% else %}
+                    {{ professional.initials }}
+                {% endif %}
+            </div>
             <div class="pro-info">
                 <strong>{{ professional.name }}</strong>
                 <span>{{ professional.specialty }}</span>

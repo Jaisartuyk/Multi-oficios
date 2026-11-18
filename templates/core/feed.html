@@ -929,8 +929,12 @@
                     <!-- Cabecera del Post -->
                     <div class="fb-post-header">
                         <a href="{% url 'professional_detail' item.professional.id %}" style="text-decoration: none; display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1;">
-                            <div class="fb-menu-avatar" style="width: 42px; height: 42px; font-size: 14px;">
-                                {{ item.professional.initials }}
+                            <div class="fb-menu-avatar" style="width: 42px; height: 42px; font-size: 14px; overflow: hidden;">
+                                {% if item.professional.avatar_url %}
+                                    <img src="{{ item.professional.avatar_url }}" alt="{{ item.professional.name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                {% else %}
+                                    {{ item.professional.initials }}
+                                {% endif %}
                             </div>
                             <div style="min-width: 0;">
                                 <div style="display: flex; align-items: center; gap: 6px;">
@@ -1062,8 +1066,12 @@
                 {% for pro in recommended_pros %}
                     <a href="{% url 'professional_detail' pro.id %}" class="fb-contact-row">
                         <div class="fb-contact-avatar-wrap">
-                            <div class="fb-menu-avatar">
-                                {{ pro.initials }}
+                            <div class="fb-menu-avatar" style="overflow: hidden;">
+                                {% if pro.avatar_url %}
+                                    <img src="{{ pro.avatar_url }}" alt="{{ pro.name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                {% else %}
+                                    {{ pro.initials }}
+                                {% endif %}
                             </div>
                             <span class="fb-online-dot" title="Disponible"></span>
                         </div>

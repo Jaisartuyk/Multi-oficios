@@ -37,12 +37,15 @@ from .forms import (
 from .services import (
     WorkflowError,
     apply_recharge,
+    approve_recharge,
     cancel_assignment,
     confirm_job_completion,
     create_payment,
     create_verified_review,
     mark_job_finished,
+    reject_recharge,
     reopen_job,
+    request_recharge,
     select_quote,
     start_job,
     submit_quote,
@@ -234,14 +237,23 @@ def estimator(request):
     result = None
     if request.method == 'POST':
         brief = request.POST.get('brief', '').strip()
+        problem_photo = request.FILES.get('problem_photo')
         if len(brief) < 10:
             messages.error(request, 'Describe el trabajo con al menos 10 caracteres.')
             return render(request, 'core/estimator.html', {'result': None})
         try:
-            estimate = generate_estimate(request.user, brief)
+            estimate = generate_estimate(request.user, brief, image_file=problem_photo)
         except AiLimitError as error:
             messages.error(request, str(error))
             return render(request, 'core/estimator.html', {'result': None})
+
+        image_url = ''
+        if problem_photo:
+            try:
+                image_url = upload_file_to_r2_or_local(problem_photo, 'jobs')
+            except WorkflowError as error:
+                messages.error(request, str(error))
+                return render(request, 'core/estimator.html', {'result': None})
 
         result = {
             'brief': brief,
@@ -251,6 +263,7 @@ def estimator(request):
             'budget': f"{estimate['estimated_price']} referencial",
             'safety_notes': estimate.get('safety_notes', []),
             'source': estimate.get('source', 'rules'),
+            'image_url': image_url,
         }
         job = JobRequest.objects.create(
             client=request.user,
@@ -261,6 +274,7 @@ def estimator(request):
             address=request.POST.get('address', '').strip()[:250],
             lat=parse_coordinate(request.POST.get('lat'), -90, 90),
             lng=parse_coordinate(request.POST.get('lng'), -180, 180),
+            image_url=image_url,
             status='PENDING',
         )
         notifications = [
@@ -315,7 +329,25 @@ def admin_users(request):
 def admin_recharges(request):
     form = RechargeForm(request.POST or None)
     if request.method == 'POST':
-        if form.is_valid():
+        action = request.POST.get('action')
+        if action == 'approve_recharge':
+            try:
+                rec = approve_recharge(request.POST.get('recharge_id'))
+                messages.success(
+                    request,
+                    f'Recarga aprobada: +{rec.credits_added} créditos para {rec.professional.name}.',
+                )
+            except (Recharge.DoesNotExist, WorkflowError) as err:
+                messages.error(request, str(err) or 'No se pudo aprobar la recarga.')
+            return redirect('admin_recharges')
+        elif action == 'reject_recharge':
+            try:
+                rec = reject_recharge(request.POST.get('recharge_id'))
+                messages.info(request, f'Solicitud de {rec.professional.name} rechazada.')
+            except (Recharge.DoesNotExist, WorkflowError) as err:
+                messages.error(request, str(err) or 'No se pudo rechazar la recarga.')
+            return redirect('admin_recharges')
+        elif form.is_valid():
             recharge = apply_recharge(form.cleaned_data)
             messages.success(
                 request,
@@ -325,12 +357,14 @@ def admin_recharges(request):
         messages.error(request, 'Revisa los datos de la recarga.')
         
     recharges = Recharge.objects.all().select_related('professional').order_by('-created_at')
-    total_ingresos = recharges.aggregate(total=Sum('amount_paid'))['total'] or 0
+    total_ingresos = recharges.filter(status='APPROVED').aggregate(total=Sum('amount_paid'))['total'] or 0
+    pending_count = recharges.filter(status='PENDING').count()
     
     return render(request, 'core/admin_recharges.html', {
         'form': form,
         'recharges': recharges,
         'total_ingresos': total_ingresos,
+        'pending_count': pending_count,
     })
 
 
@@ -600,8 +634,38 @@ def professional_dashboard(request):
                 if lat is not None and lng is not None:
                     professional.lat = lat
                     professional.lng = lng
+                avatar_file = request.FILES.get('avatar_file')
+                if avatar_file:
+                    professional.avatar_url = upload_file_to_r2_or_local(avatar_file, 'avatars')
                 professional.save()
                 messages.success(request, 'Perfil actualizado correctamente.')
+            elif action == 'request_recharge':
+                package = request.POST.get('package', '15')
+                packages_map = {
+                    '5': (5.00, 5),
+                    '15': (12.00, 15),
+                    '35': (25.00, 35),
+                }
+                amount_paid, credits_added = packages_map.get(package, (12.00, 15))
+                payment_method = request.POST.get('payment_method', 'DEUNA')
+                if payment_method not in {'DEUNA', 'TRANSFERENCIA', 'EFECTIVO'}:
+                    payment_method = 'DEUNA'
+                receipt_reference = request.POST.get('receipt_reference', '').strip()
+                receipt_file = request.FILES.get('receipt_file')
+                if not receipt_reference and not receipt_file:
+                    raise WorkflowError('Ingresa el número de comprobante o sube la captura del pago.')
+                request_recharge(
+                    professional=professional,
+                    amount_paid=amount_paid,
+                    credits_added=credits_added,
+                    payment_method=payment_method,
+                    receipt_reference=receipt_reference or 'COMPROBANTE ADJUNTO',
+                    receipt_file=receipt_file,
+                )
+                messages.success(
+                    request,
+                    f'Solicitud de +{credits_added} créditos enviada. Se acreditarán tras verificar tu comprobante.',
+                )
             elif action == 'submit_quote':
                 form = QuoteForm(request.POST)
                 if not form.is_valid():
@@ -678,6 +742,7 @@ def professional_dashboard(request):
         'quote_form': QuoteForm(),
         'portfolio_form': PortfolioItemForm(),
         'google_maps_api_key': settings.GOOGLE_MAPS_API_KEY,
+        'my_recharges': professional.recharges.all()[:5],
     })
 
 def professional_google_login(request):
@@ -1036,5 +1101,9 @@ def activate_professional(request):
         return redirect('feed')
         
     return render(request, 'core/activate_professional.html', {'categories': categories})
+
+
+def tiktok_ad(request):
+    return render(request, 'core/tiktok_ad.html')
 
 

@@ -4,17 +4,19 @@
 
 {% block content %}
 <section class="dashboard-heading">
-    <div class="avatar big">{{ user.username|slice:":2"|upper }}</div>
-    <div>
-        <span class="eyebrow">Panel del cliente</span>
-        <h1>Hola, {{ user.first_name|default:user.username }}</h1>
-        <p>Compara propuestas, sigue el trabajo y confirma el resultado.</p>
+    <div style="display: flex; align-items: center; gap: 14px;">
+        <div class="avatar big">{{ user.username|slice:":2"|upper }}</div>
+        <div>
+            <span class="eyebrow"><i data-lucide="shield-check"></i> Panel del cliente</span>
+            <h1>Hola, {{ user.first_name|default:user.username }}</h1>
+            <p>Compara propuestas verificadas, sigue el avance en tiempo real y confirma el resultado.</p>
+        </div>
     </div>
 </section>
 
-<a class="primary-button dashboard-primary-action" href="{% url 'estimator' %}">
-    <i data-lucide="plus"></i>
-    Solicitar un servicio
+<a class="primary-button dashboard-primary-action" href="{% url 'estimator' %}" style="text-decoration: none;">
+    <i data-lucide="sparkles"></i>
+    Solicitar un servicio con IA
 </a>
 
 <section class="section-block">
@@ -26,16 +28,48 @@
     {% if requests %}
     <div class="workflow-list">
         {% for request_obj in requests %}
-        <article class="workflow-card">
+        <article class="workflow-card" style="border-radius: 18px; padding: 20px;">
             <header class="workflow-card__header">
                 <div>
                     <span class="status-pill status-{{ request_obj.status|lower }}">
                         {{ request_obj.get_status_display }}
                     </span>
-                    <h3>{{ request_obj.title }}</h3>
+                    <h3 style="font-size: 18px; margin-top: 8px;">{{ request_obj.title }}</h3>
                 </div>
                 <time>{{ request_obj.created_at|date:"d/m/Y" }}</time>
             </header>
+
+            <!-- Barra de Progreso Visual (Stepper de 5 etapas) -->
+            {% if request_obj.status != 'CANCELLED' %}
+            <div class="job-stepper" aria-label="Progreso del servicio">
+                <div class="job-step completed">
+                    <span class="job-step__dot">1</span>
+                    <small>Publicado</small>
+                </div>
+                <div class="job-step {% if request_obj.status != 'PENDING' %}completed{% endif %}">
+                    <span class="job-step__dot">2</span>
+                    <small>Cotizado</small>
+                </div>
+                <div class="job-step {% if request_obj.status == 'ACCEPTED' or request_obj.status == 'IN_PROGRESS' or request_obj.status == 'AWAITING_CONFIRMATION' or request_obj.status == 'COMPLETED' %}completed{% endif %}">
+                    <span class="job-step__dot">3</span>
+                    <small>Maestro</small>
+                </div>
+                <div class="job-step {% if request_obj.status == 'IN_PROGRESS' or request_obj.status == 'AWAITING_CONFIRMATION' or request_obj.status == 'COMPLETED' %}completed{% endif %}">
+                    <span class="job-step__dot">4</span>
+                    <small>En obra</small>
+                </div>
+                <div class="job-step {% if request_obj.status == 'COMPLETED' %}completed{% endif %}">
+                    <span class="job-step__dot">5</span>
+                    <small>Finalizado</small>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if request_obj.image_url %}
+            <div style="margin: 12px 0; border-radius: 14px; overflow: hidden; border: 1px solid var(--line); max-height: 210px;">
+                <img src="{{ request_obj.image_url }}" alt="Foto del trabajo" loading="lazy" style="width: 100%; height: 210px; object-fit: cover; display: block;">
+            </div>
+            {% endif %}
 
             <p class="workflow-description">{{ request_obj.description }}</p>
 
@@ -50,46 +84,77 @@
             {% if request_obj.status == 'PENDING' or request_obj.status == 'QUOTED' %}
             <div class="workflow-panel">
                 <div class="workflow-panel__title">
-                    <strong>Cotizaciones recibidas</strong>
-                    <span>{{ request_obj.quotes.count }}</span>
+                    <strong>Propuestas recibidas para comparar</strong>
+                    <span style="padding: 2px 10px; border-radius: 999px; background: var(--green-soft); color: var(--green); font-size: 12px; font-weight: 800;">
+                        {{ request_obj.quotes.count }}
+                    </span>
                 </div>
-                {% for quote in request_obj.quotes.all %}
-                    {% if quote.status == 'SUBMITTED' %}
-                    <div class="quote-row">
-                        <div class="avatar">{{ quote.professional.initials }}</div>
-                        <div class="quote-row__body">
-                            <strong>{{ quote.professional.name }}</strong>
-                            <span>{{ quote.professional.specialty }} · {{ quote.professional.rating }} ★</span>
-                            <p>{{ quote.message|default:"Sin observaciones adicionales." }}</p>
+                <div class="quotes-compare-grid">
+                    {% for quote in request_obj.quotes.all %}
+                        {% if quote.status == 'SUBMITTED' %}
+                        <div class="quote-compare-card">
+                            <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                                <a href="{% url 'professional_detail' quote.professional.id %}" style="display: flex; align-items: center; gap: 10px; text-decoration: none; min-width: 0;">
+                                    <div class="avatar" style="overflow: hidden; flex-shrink: 0;">
+                                        {% if quote.professional.avatar_url %}
+                                            <img src="{{ quote.professional.avatar_url }}" alt="{{ quote.professional.name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                        {% else %}
+                                            {{ quote.professional.initials }}
+                                        {% endif %}
+                                    </div>
+                                    <div style="min-width: 0;">
+                                        <strong style="display: block; font-size: 14px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ quote.professional.name }}</strong>
+                                        <span style="display: block; font-size: 12px; color: var(--muted);">
+                                            {{ quote.professional.specialty }} · <strong style="color: var(--green);">★ {{ quote.professional.rating }}</strong> ({{ quote.professional.jobs }} obras)
+                                        </span>
+                                    </div>
+                                </a>
+                                <div style="text-align: right; flex-shrink: 0;">
+                                    <strong style="display: block; font-size: 20px; color: var(--green); line-height: 1.1;">${{ quote.amount }}</strong>
+                                    <small style="font-size: 11px; color: var(--muted); font-weight: 700;">en {{ quote.estimated_days }} día{{ quote.estimated_days|pluralize:"s" }}</small>
+                                </div>
+                            </div>
+                            <p style="margin: 10px 0 12px; font-size: 13px; color: var(--muted); line-height: 1.45; background: var(--surface); padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line);">
+                                {{ quote.message|default:"Incluye mano de obra profesional y garantía de cumplimiento." }}
+                            </p>
+                            <div style="display: flex; gap: 8px; align-items: center;">
+                                <a href="{% url 'professional_detail' quote.professional.id %}" class="secondary-button" style="flex: 1; min-height: 40px; font-size: 12px; text-decoration: none;">
+                                    <i data-lucide="user"></i> Ver portafolio
+                                </a>
+                                <form method="post" style="flex: 1.2; margin: 0;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="select_quote">
+                                    <input type="hidden" name="quote_id" value="{{ quote.id }}">
+                                    <button class="primary-button" type="submit" style="width: 100%; min-height: 40px; font-size: 12px;">
+                                        <i data-lucide="check-circle"></i> Elegir maestro
+                                    </button>
+                                </form>
+                            </div>
                         </div>
-                        <div class="quote-row__price">
-                            <strong>${{ quote.amount }}</strong>
-                            <span>{{ quote.estimated_days }} días</span>
-                            <form method="post">
-                                {% csrf_token %}
-                                <input type="hidden" name="action" value="select_quote">
-                                <input type="hidden" name="quote_id" value="{{ quote.id }}">
-                                <button class="compact-button" type="submit">Elegir</button>
-                            </form>
+                        {% endif %}
+                    {% empty %}
+                        <div class="empty-inline">
+                            <i data-lucide="hourglass"></i>
+                            Esperando propuestas de profesionales cercanos.
                         </div>
-                    </div>
-                    {% endif %}
-                {% empty %}
-                    <div class="empty-inline">
-                        <i data-lucide="hourglass"></i>
-                        Esperando propuestas de profesionales cercanos.
-                    </div>
-                {% endfor %}
+                    {% endfor %}
+                </div>
             </div>
             {% endif %}
 
             {% if request_obj.professional %}
             <div class="assigned-professional">
-                <div class="avatar">{{ request_obj.professional.initials }}</div>
+                <div class="avatar" style="overflow: hidden;">
+                    {% if request_obj.professional.avatar_url %}
+                        <img src="{{ request_obj.professional.avatar_url }}" alt="{{ request_obj.professional.name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                    {% else %}
+                        {{ request_obj.professional.initials }}
+                    {% endif %}
+                </div>
                 <div>
                     <small>Profesional seleccionado</small>
                     <strong>{{ request_obj.professional.name }}</strong>
-                    <span>{{ request_obj.professional.specialty }}</span>
+                    <span>{{ request_obj.professional.specialty }} · ★ {{ request_obj.professional.rating }}</span>
                 </div>
                 <a class="icon-button" href="{% url 'professional_detail' request_obj.professional.id %}" aria-label="Ver perfil">
                     <i data-lucide="arrow-up-right"></i>
@@ -97,10 +162,10 @@
             </div>
             {% if request_obj.chat_room %}
             <div style="margin: 10px 0;">
-                <a href="{% url 'chat_room_view' request_obj.chat_room.id %}" class="secondary-button" style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%;">
+                <a href="{% url 'chat_room_view' request_obj.chat_room.id %}" class="secondary-button" style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; text-decoration: none;">
                     <i data-lucide="message-square"></i>
                     {% if request_obj.chat_room.is_active %}
-                        Chat con el Profesional
+                        Chat en vivo con el Profesional
                     {% else %}
                         Ver Historial de Chat (Cerrado)
                     {% endif %}
@@ -153,7 +218,7 @@
                     <input type="hidden" name="action" value="confirm_completion">
                     <input type="hidden" name="job_id" value="{{ request_obj.id }}">
                     <button class="primary-button" type="submit">
-                        <i data-lucide="badge-check"></i>Confirmar trabajo
+                        <i data-lucide="badge-check"></i>Confirmar trabajo terminado
                     </button>
                 </form>
                 {% endif %}
@@ -169,7 +234,7 @@
             </div>
 
             {% if request_obj.status == 'COMPLETED' and not request_obj.review %}
-            <details class="workflow-details review-box">
+            <details class="workflow-details review-box" open>
                 <summary>Calificar servicio verificado</summary>
                 <form method="post" class="compact-form">
                     {% csrf_token %}
@@ -198,7 +263,7 @@
             {% elif request_obj.review %}
             <div class="payment-status">
                 <i data-lucide="star"></i>
-                Reseña verificada: {{ request_obj.review.rating }}/5
+                Reseña verificada: {{ request_obj.review.rating }}/5 ★
             </div>
             {% endif %}
         </article>
@@ -208,8 +273,8 @@
     <div class="empty-state">
         <i data-lucide="clipboard-list"></i>
         <h3>Aún no tienes solicitudes</h3>
-        <p>Describe el trabajo y recibe propuestas de profesionales.</p>
-        <a class="primary-button" href="{% url 'estimator' %}">Crear solicitud</a>
+        <p>Describe el trabajo o sube una foto y recibe propuestas de profesionales.</p>
+        <a class="primary-button" href="{% url 'estimator' %}" style="padding: 0 20px; text-decoration: none;">Crear solicitud</a>
     </div>
     {% endif %}
 </section>
@@ -230,7 +295,7 @@
             }
             if (fileLabel) fileLabel.style.display = 'none';
             if (fileInput) {
-                fileInput.value = ''; // limpiar archivo cargado
+                fileInput.value = '';
             }
         } else {
             if (referenceLabel) referenceLabel.style.display = 'block';
@@ -239,7 +304,6 @@
         }
     }
 
-    // Inicializar el estado de los inputs al cargar la página
     document.addEventListener("DOMContentLoaded", function() {
         document.querySelectorAll('.payment-method-select').forEach(select => {
             handlePaymentMethodChange(select);
@@ -247,4 +311,3 @@
     });
 </script>
 {% endblock %}
-

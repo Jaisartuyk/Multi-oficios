@@ -1,6 +1,6 @@
 {% extends 'core/base.html' %}
 
-{% block title %}Cotizador Inteligente | ObraYa{% endblock %}
+{% block title %}Cotizador Inteligente con IA | ObraYa{% endblock %}
 
 {% block content %}
 <style>
@@ -11,7 +11,7 @@
         border-radius: 24px;
         padding: 28px 24px;
         margin-bottom: 24px;
-        animation: slideUp 0.5s ease-out;
+        animation: slideUp 0.45s ease-out;
     }
 
     @keyframes slideUp {
@@ -30,8 +30,7 @@
         font-size: 15px;
         font-family: inherit;
         resize: vertical;
-        transition: all 0.3s ease;
-        margin-bottom: 16px;
+        transition: all 0.25s ease;
     }
 
     .ai-panel textarea:focus {
@@ -40,30 +39,42 @@
         box-shadow: 0 0 0 4px rgba(19, 93, 159, 0.12);
     }
 
-    .upload-box {
+    .photo-dropzone {
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
+        gap: 6px;
         padding: 20px;
         border: 2px dashed var(--line);
         border-radius: 16px;
-        cursor: not-allowed;
+        cursor: pointer;
         background: var(--surface-strong);
-        color: var(--muted);
-        transition: all 0.2s ease;
-        margin-bottom: 20px;
-        opacity: 0.8;
+        color: var(--text);
+        transition: border-color 0.2s ease, background 0.2s ease;
+        text-align: center;
     }
 
-    .upload-box i {
-        margin-bottom: 8px;
-        color: var(--muted);
+    .photo-dropzone:hover {
+        border-color: var(--green);
+        background: color-mix(in srgb, var(--green-soft) 45%, var(--surface-strong));
     }
 
-    .upload-box span {
-        font-size: 13px;
-        font-weight: 700;
+    .photo-preview-box {
+        display: none;
+        position: relative;
+        border-radius: 16px;
+        overflow: hidden;
+        border: 1.5px solid var(--line);
+        max-height: 220px;
+        background: #08131f;
+    }
+
+    .photo-preview-box img {
+        width: 100%;
+        height: 220px;
+        object-fit: cover;
+        display: block;
     }
 
     .result-card {
@@ -73,7 +84,6 @@
         border-left: 5px solid var(--green);
         background: var(--surface);
         box-shadow: var(--shadow);
-        animation: fadeIn 0.4s ease-out;
     }
 
     .result-card h2 {
@@ -106,6 +116,7 @@
     .result-row i {
         color: var(--green);
         margin-top: 2px;
+        flex-shrink: 0;
     }
 
     .quote-grid {
@@ -113,12 +124,6 @@
         grid-template-columns: 1fr;
         gap: 16px;
         margin-bottom: 24px;
-    }
-
-    @media (min-width: 380px) {
-        .quote-grid {
-            grid-template-columns: 1fr;
-        }
     }
 
     .quote-block {
@@ -202,24 +207,41 @@
 </style>
 
 <section class="ai-panel">
-    <span class="eyebrow"><i data-lucide="sparkles"></i> Cotizador Inteligente</span>
-    <h1 style="margin: 12px 0 8px 0; font-size: 26px; font-weight: 800; line-height: 1.1;">Describe tu trabajo</h1>
+    <span class="eyebrow"><i data-lucide="sparkles"></i> Cotizador Inteligente + Visión IA</span>
+    <h1 style="margin: 12px 0 8px 0; font-size: 26px; font-weight: 800; line-height: 1.1;">Describe tu trabajo o sube una foto</h1>
     <p style="margin: 0 0 20px 0; font-size: 14px; color: var(--muted); line-height: 1.4;">
-        Nuestra IA analizará tu problem y calculará materiales, tiempo y un presupuesto estimado de referencia.
+        Nuestra IA analiza tu descripción y la foto del daño para calcular materiales, tiempo estimado y presupuesto referencial, notificándole al instante a los profesionales cercanos.
     </p>
-    <form method="post" class="estimate-form">
+    <form method="post" class="estimate-form" enctype="multipart/form-data">
         {% csrf_token %}
-        <textarea name="brief" rows="5" placeholder="Ej: Pintar la sala de estar (4x3m) color blanco mate, reparar grieta en panel de yeso y cambiar 2 tomacorrientes que no funcionan..." required></textarea>
-        <label>Sector del trabajo
+        <textarea name="brief" rows="4" placeholder="Ej: Pintar la sala de estar (4x3m) color blanco mate, reparar grieta con humedad en la pared y cambiar 2 tomacorrientes..." required></textarea>
+
+        <!-- Subida de Foto del Daño para Gemini Vision y Bolsa de Trabajo -->
+        <label class="photo-dropzone" id="photoDropzone">
+            <input id="problemPhotoInput" type="file" name="problem_photo" accept="image/*" style="display: none;" onchange="previewProblemPhoto(this)">
+            <i data-lucide="camera" style="width: 28px; height: 28px; color: var(--green);"></i>
+            <strong id="photoDropzoneTitle" style="font-size: 14px;">Adjuntar foto del problema o área (Opcional)</strong>
+            <span style="font-size: 12px; color: var(--muted);">La IA analizará la imagen y los maestros podrán cotizar con mayor exactitud</span>
+        </label>
+
+        <div id="problemPhotoPreviewBox" class="photo-preview-box">
+            <img id="problemPhotoPreview" alt="Vista previa del problema">
+            <button type="button" onclick="clearProblemPhoto()" style="position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.65); color: #fff; border: none; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                <i data-lucide="trash-2" style="width: 15px; height: 15px;"></i>
+            </button>
+        </div>
+
+        <label style="font-size: 13px; font-weight: 700; color: var(--muted); display: grid; gap: 6px;">
+            Sector del trabajo
             <div class="input-with-action">
-                <input id="job-address" name="address" maxlength="250" placeholder="Ej: Urdesa, Guayaquil">
-                <button class="icon-button" type="button" data-job-location aria-label="Usar ubicación actual"><i data-lucide="locate-fixed"></i></button>
+                <input id="job-address" class="form-control" name="address" maxlength="250" placeholder="Ej: Urdesa, Guayaquil">
+                <button class="icon-button" type="button" data-job-location aria-label="Usar ubicación actual" title="Usar mi GPS"><i data-lucide="locate-fixed"></i></button>
             </div>
         </label>
         <input id="job-lat" type="hidden" name="lat">
         <input id="job-lng" type="hidden" name="lng">
         <button class="primary-button" type="submit" style="width: 100%;">
-            <i data-lucide="wand-2"></i> Generar cotización con IA
+            <i data-lucide="wand-2"></i> Generar cotización y publicar solicitud
         </button>
     </form>
 </section>
@@ -228,8 +250,17 @@
 <section class="result-card">
     <div class="section-title">
         <h2>Cotización referencial</h2>
-        <span>{% if result.source == 'gemini' %}Gemini{% else %}Estimador de respaldo{% endif %}</span>
+        <span style="padding: 4px 10px; border-radius: 999px; background: var(--green-soft); color: var(--green); font-size: 11px; font-weight: 800;">
+            {% if result.source == 'gemini' %}✨ Analizado con Gemini IA{% else %}Estimador Inteligente{% endif %}
+        </span>
     </div>
+
+    {% if result.image_url %}
+    <div style="margin-bottom: 16px; border-radius: 14px; overflow: hidden; border: 1px solid var(--line); max-height: 240px;">
+        <img src="{{ result.image_url }}" alt="Foto enviada del problema" style="width: 100%; height: 240px; object-fit: cover; display: block;">
+    </div>
+    {% endif %}
+
     <div class="result-brief">
         <strong>Detalle del Trabajo:</strong> {{ result.brief }}
     </div>
@@ -276,10 +307,42 @@
         <div>{% for note in result.safety_notes %}<p>{{ note }}</p>{% endfor %}</div>
     </div>
     {% endif %}
+
+    <div style="margin-top: 16px; display: flex; justify-content: flex-end;">
+        <a href="{% url 'client_dashboard' %}" class="primary-button" style="padding: 10px 20px; text-decoration: none;">
+            <i data-lucide="arrow-right"></i> Ver mis solicitudes y cotizaciones
+        </a>
+    </div>
 </section>
 {% endif %}
 
 <script>
+function previewProblemPhoto(input) {
+    const file = input.files && input.files[0];
+    const previewBox = document.getElementById('problemPhotoPreviewBox');
+    const previewImg = document.getElementById('problemPhotoPreview');
+    const title = document.getElementById('photoDropzoneTitle');
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function (e) {
+        previewImg.src = e.target.result;
+        previewBox.style.display = 'block';
+        title.textContent = 'Foto seleccionada: ' + file.name;
+    };
+    reader.readAsDataURL(file);
+}
+
+function clearProblemPhoto() {
+    const input = document.getElementById('problemPhotoInput');
+    const previewBox = document.getElementById('problemPhotoPreviewBox');
+    const previewImg = document.getElementById('problemPhotoPreview');
+    const title = document.getElementById('photoDropzoneTitle');
+    if (input) input.value = '';
+    if (previewImg) previewImg.src = '';
+    if (previewBox) previewBox.style.display = 'none';
+    if (title) title.textContent = 'Adjuntar foto del problema o área (Opcional)';
+}
+
 document.querySelector('[data-job-location]')?.addEventListener('click', function () {
     if (!navigator.geolocation) return;
     const button = this;

@@ -35,12 +35,69 @@ def apply_recharge(cleaned_data):
         amount_paid=cleaned_data['amount_paid'],
         credits_added=credits,
         payment_method=cleaned_data['payment_method'],
+        status='APPROVED',
     )
     notify(
         professional.user,
         'CREDITS',
         'Recarga confirmada',
         f'Se añadieron {credits} créditos a tu cuenta.',
+        '/dashboard/profesional/',
+    )
+    return recharge
+
+
+@transaction.atomic
+def request_recharge(professional, amount_paid, credits_added, payment_method, receipt_reference='', receipt_file=None):
+    if amount_paid <= 0 or credits_added <= 0:
+        raise WorkflowError('Monto o cantidad de créditos inválidos.')
+    receipt_url = ''
+    if receipt_file:
+        receipt_url = upload_file_to_r2_or_local(receipt_file, 'recharges')
+    recharge = Recharge.objects.create(
+        professional=professional,
+        amount_paid=amount_paid,
+        credits_added=credits_added,
+        payment_method=payment_method,
+        status='PENDING',
+        receipt_reference=receipt_reference[:200],
+        receipt_url=receipt_url,
+    )
+    return recharge
+
+
+@transaction.atomic
+def approve_recharge(recharge_id):
+    recharge = Recharge.objects.select_for_update().select_related('professional').get(pk=recharge_id)
+    if recharge.status != 'PENDING':
+        raise WorkflowError('Esta recarga ya fue procesada.')
+    professional = Professional.objects.select_for_update().get(pk=recharge.professional_id)
+    professional.credits = F('credits') + recharge.credits_added
+    professional.save(update_fields=['credits'])
+    recharge.status = 'APPROVED'
+    recharge.save(update_fields=['status'])
+    notify(
+        professional.user,
+        'CREDITS',
+        'Recarga aprobada',
+        f'Tu solicitud fue aprobada: +{recharge.credits_added} créditos disponibles.',
+        '/dashboard/profesional/',
+    )
+    return recharge
+
+
+@transaction.atomic
+def reject_recharge(recharge_id):
+    recharge = Recharge.objects.select_for_update().select_related('professional').get(pk=recharge_id)
+    if recharge.status != 'PENDING':
+        raise WorkflowError('Esta recarga ya fue procesada.')
+    recharge.status = 'REJECTED'
+    recharge.save(update_fields=['status'])
+    notify(
+        recharge.professional.user,
+        'SYSTEM',
+        'Recarga observada',
+        'No pudimos validar el comprobante de tu recarga. Revisa la referencia e intenta nuevamente.',
         '/dashboard/profesional/',
     )
     return recharge
@@ -249,6 +306,19 @@ def upload_file_to_r2_or_local(file_obj, subfolder='receipts'):
     from django.conf import settings
     from django.utils import timezone
     import os
+
+    # Validación de seguridad de tamaño y extensión
+    max_size_mb = 40
+    if getattr(file_obj, 'size', 0) > max_size_mb * 1024 * 1024:
+        raise WorkflowError(f'El archivo supera el límite permitido de {max_size_mb} MB.')
+
+    allowed_exts = {
+        '.jpg', '.jpeg', '.png', '.webp', '.gif', '.heic',
+        '.mp4', '.webm', '.mov', '.ogg', '.mp3', '.wav', '.m4a', '.pdf'
+    }
+    _, ext = os.path.splitext((file_obj.name or '').lower())
+    if ext and ext not in allowed_exts:
+        raise WorkflowError('Formato de archivo no permitido.')
 
     # Verificar si R2 está configurado
     use_r2 = all([

@@ -5,7 +5,13 @@
 {% block content %}
 <section class="profile-hero">
     <div class="profile-head">
-        <div class="avatar big">{{ professional.initials }}</div>
+        <div class="avatar big" style="overflow: hidden;">
+            {% if professional.avatar_url %}
+                <img src="{{ professional.avatar_url }}" alt="{{ professional.name }}" style="width: 100%; height: 100%; object-fit: cover;">
+            {% else %}
+                {{ professional.initials }}
+            {% endif %}
+        </div>
         <div>
             <span class="eyebrow"><i data-lucide="badge-check"></i> {{ professional.badge }}</span>
             <h1>{{ professional.name }}</h1>
