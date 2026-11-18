@@ -1,76 +1,688 @@
 {% extends 'core/base.html' %}
 
-{% block title %}Panel Administrativo | ObraYa{% endblock %}
+{% block title %}Centro de Control Administrativo | ObraYa{% endblock %}
+
+{% block extra_css %}
+<style>
+    .admin-dashboard {
+        max-width: 1120px;
+        margin: 14px auto 40px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    /* Banner Ejecutivo Superior */
+    .admin-command-hero {
+        position: relative;
+        overflow: hidden;
+        border-radius: 24px;
+        padding: 26px 24px;
+        background:
+            radial-gradient(circle at 88% 18%, rgba(24, 167, 106, 0.38), transparent 42%),
+            radial-gradient(circle at 12% 85%, rgba(59, 130, 246, 0.28), transparent 48%),
+            linear-gradient(135deg, #0b2f4f 0%, #103b63 60%, #0f4c43 100%);
+        color: #fff;
+        box-shadow: 0 18px 44px rgba(11, 47, 79, 0.22);
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+    }
+
+    @media (min-width: 820px) {
+        .admin-command-hero {
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            padding: 30px 32px;
+        }
+    }
+
+    .admin-live-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 5px 12px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.14);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        font-size: 11px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        margin-bottom: 10px;
+    }
+
+    .admin-live-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #37d98c;
+        box-shadow: 0 0 0 3px rgba(55, 217, 140, 0.28);
+    }
+
+    .admin-command-hero h1 {
+        margin: 0 0 6px;
+        font-size: 26px;
+        font-weight: 800;
+        line-height: 1.15;
+    }
+
+    @media (min-width: 820px) {
+        .admin-command-hero h1 {
+            font-size: 30px;
+        }
+    }
+
+    .admin-command-hero p {
+        margin: 0;
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.82);
+        max-width: 540px;
+        line-height: 1.45;
+    }
+
+    .admin-hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        flex-shrink: 0;
+    }
+
+    .admin-hero-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 11px 16px;
+        border-radius: 14px;
+        font-size: 13px;
+        font-weight: 800;
+        text-decoration: none;
+        transition: transform 0.15s ease, background 0.15s ease;
+    }
+
+    .admin-hero-btn:hover {
+        transform: translateY(-2px);
+    }
+
+    .admin-hero-btn.primary {
+        background: #18a76a;
+        color: #fff;
+        box-shadow: 0 8px 20px rgba(24, 167, 106, 0.35);
+    }
+
+    .admin-hero-btn.ghost {
+        background: rgba(255, 255, 255, 0.14);
+        color: #fff;
+        border: 1px solid rgba(255, 255, 255, 0.22);
+    }
+
+    /* Tarjetas KPI Ejecutivas */
+    .admin-kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 14px;
+    }
+
+    @media (min-width: 860px) {
+        .admin-kpi-grid {
+            grid-template-columns: repeat(4, 1fr);
+        }
+    }
+
+    .admin-kpi-card {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        padding: 18px;
+        box-shadow: 0 6px 20px rgba(11, 47, 79, 0.05);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+    .admin-kpi-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+    }
+
+    .admin-kpi-label {
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+
+    .admin-kpi-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .admin-kpi-value {
+        font-size: 28px;
+        font-weight: 800;
+        color: var(--text);
+        line-height: 1.05;
+        display: block;
+    }
+
+    .admin-kpi-trend {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--green);
+    }
+
+    /* Módulos de Navegación Rápida */
+    .admin-modules-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    @media (min-width: 600px) {
+        .admin-modules-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (min-width: 960px) {
+        .admin-modules-grid {
+            grid-template-columns: repeat(4, 1fr);
+        }
+    }
+
+    .admin-module-card {
+        position: relative;
+        background: var(--surface);
+        border: 1.5px solid var(--line);
+        border-radius: 18px;
+        padding: 18px;
+        text-decoration: none;
+        color: var(--text);
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+        transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+        box-shadow: 0 4px 14px rgba(11, 47, 79, 0.04);
+    }
+
+    .admin-module-card:hover {
+        transform: translateY(-3px);
+        border-color: var(--green);
+        box-shadow: 0 12px 26px rgba(11, 47, 79, 0.1);
+    }
+
+    .admin-module-icon {
+        width: 46px;
+        height: 46px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .admin-module-info h3 {
+        margin: 0 0 4px;
+        font-size: 15px;
+        font-weight: 800;
+        color: var(--text);
+    }
+
+    .admin-module-info p {
+        margin: 0;
+        font-size: 12px;
+        color: var(--muted);
+        line-height: 1.35;
+    }
+
+    .admin-badge-alert {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        padding: 2px 8px;
+        border-radius: 999px;
+        background: #ef4444;
+        color: #fff;
+        font-size: 10px;
+        font-weight: 800;
+    }
+
+    /* Layout Principal en 2 Columnas */
+    .admin-main-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 20px;
+        align-items: start;
+    }
+
+    @media (min-width: 920px) {
+        .admin-main-grid {
+            grid-template-columns: 1.45fr 1fr;
+        }
+    }
+
+    .admin-box {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 22px;
+        padding: 20px;
+        box-shadow: 0 6px 22px rgba(11, 47, 79, 0.05);
+    }
+
+    .admin-box-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 16px;
+    }
+
+    .admin-box-header h2 {
+        margin: 0;
+        font-size: 17px;
+        font-weight: 800;
+        color: var(--text);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    /* Lista de Solicitudes Recientes */
+    .admin-jobs-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .admin-job-row {
+        padding: 14px 16px;
+        border-radius: 16px;
+        background: var(--surface-strong);
+        border: 1px solid var(--line);
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        transition: border-color 0.15s;
+    }
+
+    .admin-job-row:hover {
+        border-color: rgba(19, 93, 159, 0.35);
+    }
+
+    .admin-job-row-top {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 10px;
+    }
+
+    .admin-job-row-meta {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        font-size: 12px;
+        color: var(--muted);
+    }
+
+    /* Centro de Moderación & Alertas */
+    .admin-alert-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .admin-alert-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 12px 14px;
+        border-radius: 14px;
+        background: var(--surface-strong);
+        border: 1px solid var(--line);
+        text-decoration: none;
+        color: var(--text);
+        font-size: 13px;
+        font-weight: 600;
+        transition: background 0.15s, transform 0.15s;
+    }
+
+    .admin-alert-item:hover {
+        transform: translateX(3px);
+        border-color: var(--blue);
+    }
+
+    .admin-alert-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    /* Top Profesionales */
+    .admin-pro-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 10px 8px;
+        border-bottom: 1px solid var(--line);
+        text-decoration: none;
+        color: var(--text);
+        border-radius: 10px;
+        transition: background 0.15s;
+    }
+
+    .admin-pro-row:last-child {
+        border-bottom: none;
+    }
+
+    .admin-pro-row:hover {
+        background: var(--surface-strong);
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<section class="admin-hero">
-    <span class="eyebrow"><i data-lucide="activity"></i> Panel administrativo</span>
-    <h1>Operación y control de ObraYa en vivo.</h1>
-    <p>Gestiona usuarios, trabajos creados con IA, reportes y crecimiento desde tu dashboard moderno.</p>
-</section>
+<div class="admin-dashboard">
 
-<!-- Accesos directos rápidos -->
-<div class="admin-shortcuts">
-    <a href="{% url 'admin_users' %}" class="detail-card" style="text-decoration: none; text-align: center; border: 1px solid var(--line);">
-        <i data-lucide="users" style="color: var(--primary); margin-bottom: 8px;"></i>
-        <h3 style="color: var(--text); margin: 0; font-size: 16px;">Gestión de Usuarios</h3>
-    </a>
-    <a href="{% url 'admin_recharges' %}" class="detail-card" style="text-decoration: none; text-align: center; border: 1px solid var(--green); background: var(--green-soft);">
-        <i data-lucide="dollar-sign" style="color: var(--green); margin-bottom: 8px;"></i>
-        <h3 style="color: var(--green); margin: 0; font-size: 16px;">Finanzas y Recargas</h3>
-    </a>
-    <a href="{% url 'admin_payments' %}" class="detail-card admin-shortcut">
-        <i data-lucide="shield-check"></i>
-        <h3>Pagos y garantías</h3>
-    </a>
-    <a href="{% url 'admin_reviews' %}" class="detail-card admin-shortcut" style="border: 1px solid var(--blue); background: rgba(59, 130, 246, 0.08);">
-        <i data-lucide="star" style="color: var(--blue);"></i>
-        <h3>Valoraciones y reportes</h3>
-    </a>
-</div>
-
-<section class="metric-grid">
-    {% for metric in metrics %}
-    <article>
-        <span>{{ metric.label }}</span>
-        <strong>{{ metric.value }}</strong>
-        <small>{{ metric.trend }}</small>
-    </article>
-    {% endfor %}
-</section>
-
-<section class="dashboard-panel">
-    <div class="panel-header">
-        <h2>Solicitudes Recientes de Clientes (IA)</h2>
-        <span>Últimas solicitudes</span>
-    </div>
-    {% if recent_jobs %}
-        <div class="pro-list" style="margin-top: 10px;">
-            {% for job in recent_jobs %}
-                <div class="pro-card" style="grid-template-columns: 1fr; cursor: default; background: var(--surface); border: 1px solid var(--line);">
-                    <div>
-                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
-                            <strong style="font-size: 15px;">{{ job.title }}</strong>
-                            <span class="verified-review" style="font-size: 10px;">{{ job.get_status_display }}</span>
-                        </div>
-                        <p style="color: var(--muted); font-size: 12px; margin: 4px 0;">
-                            Cliente: <strong>{{ job.client.username }}</strong> 
-                            {% if job.professional %} | Profesional: <strong>{{ job.professional.name }}</strong>{% endif %}
-                        </p>
-                        <small style="color: var(--muted); font-size: 11px;">Solicitado el: {{ job.created_at|date:"d/m/Y H:i" }}</small>
-                    </div>
-                </div>
-            {% endfor %}
+    <!-- ======================================================================
+         BANNER EJECUTIVO DE OPERACIÓN EN VIVO
+         ====================================================================== -->
+    <section class="admin-command-hero">
+        <div>
+            <span class="admin-live-pill">
+                <span class="admin-live-dot"></span>
+                Centro de Comando ObraYa · En vivo
+            </span>
+            <h1>Operación y control de ObraYa</h1>
+            <p>Supervisa solicitudes con IA, recargas de créditos, comprobantes con garantía y reputación de profesionales en tiempo real.</p>
         </div>
-    {% else %}
-        <p style="color: var(--muted); text-align: center; padding: 20px;">No hay solicitudes registradas aún.</p>
-    {% endif %}
-</section>
+        <div class="admin-hero-actions">
+            <a href="{% url 'admin_add_professional' %}" class="admin-hero-btn primary">
+                <i data-lucide="user-plus" style="width: 16px; height: 16px;"></i>
+                <span>+ Profesional</span>
+            </a>
+            <a href="{% url 'admin_add_client' %}" class="admin-hero-btn ghost">
+                <i data-lucide="plus" style="width: 16px; height: 16px;"></i>
+                <span>+ Cliente</span>
+            </a>
+            <a href="{% url 'feed' %}" class="admin-hero-btn ghost">
+                <i data-lucide="rss" style="width: 16px; height: 16px;"></i>
+                <span>Ver Comunidad</span>
+            </a>
+        </div>
+    </section>
 
-<section class="moderation-list">
-    <h2>Moderación inteligente</h2>
-    <article><i data-lucide="user-check"></i><span>Validación de identidad pendiente: {{ pros_count }} perfiles</span></article>
-    <article><i data-lucide="message-square-warning"></i><span>Reseñas marcadas para revisión: 0 casos</span></article>
-    <article><i data-lucide="credit-card"></i><span>Pagos con garantía en seguimiento: {{ active_guarantees }}</span></article>
-</section>
+    <!-- ======================================================================
+         4 TARJETAS KPI EJECUTIVAS
+         ====================================================================== -->
+    <section class="admin-kpi-grid" aria-label="Métricas principales">
+        <article class="admin-kpi-card">
+            <div class="admin-kpi-top">
+                <span class="admin-kpi-label">Trabajos activos</span>
+                <div class="admin-kpi-icon" style="background: rgba(59, 130, 246, 0.14); color: #3b82f6;">
+                    <i data-lucide="briefcase-business"></i>
+                </div>
+            </div>
+            <div>
+                <strong class="admin-kpi-value">{{ active_jobs|default:0 }}</strong>
+                <span class="admin-kpi-trend">
+                    <i data-lucide="check-circle-2" style="width: 13px; height: 13px;"></i>
+                    {{ completed_jobs_count|default:0 }} completados en total
+                </span>
+            </div>
+        </article>
+
+        <article class="admin-kpi-card">
+            <div class="admin-kpi-top">
+                <span class="admin-kpi-label">Pagos procesados</span>
+                <div class="admin-kpi-icon" style="background: rgba(24, 167, 106, 0.14); color: var(--green);">
+                    <i data-lucide="shield-check"></i>
+                </div>
+            </div>
+            <div>
+                <strong class="admin-kpi-value">${{ processed_payments|default:0 }}</strong>
+                <span class="admin-kpi-trend">
+                    <i data-lucide="clock" style="width: 13px; height: 13px;"></i>
+                    {{ pending_payments_count|default:0 }} por verificar
+                </span>
+            </div>
+        </article>
+
+        <article class="admin-kpi-card">
+            <div class="admin-kpi-top">
+                <span class="admin-kpi-label">Venta de créditos</span>
+                <div class="admin-kpi-icon" style="background: rgba(245, 158, 11, 0.14); color: #f59e0b;">
+                    <i data-lucide="coins"></i>
+                </div>
+            </div>
+            <div>
+                <strong class="admin-kpi-value">${{ recharge_revenue|default:0 }}</strong>
+                <span class="admin-kpi-trend">
+                    <i data-lucide="trending-up" style="width: 13px; height: 13px;"></i>
+                    {{ pending_recharges_count|default:0 }} recargas pendientes
+                </span>
+            </div>
+        </article>
+
+        <article class="admin-kpi-card">
+            <div class="admin-kpi-top">
+                <span class="admin-kpi-label">Red de usuarios</span>
+                <div class="admin-kpi-icon" style="background: rgba(139, 92, 246, 0.14); color: #8b5cf6;">
+                    <i data-lucide="users"></i>
+                </div>
+            </div>
+            <div>
+                <strong class="admin-kpi-value">{{ pros_count }} <small style="font-size: 13px; font-weight: 600; color: var(--muted);">maestros</small></strong>
+                <span class="admin-kpi-trend" style="color: var(--blue);">
+                    <i data-lucide="user-check" style="width: 13px; height: 13px;"></i>
+                    {{ clients_count }} clientes · {{ active_guarantees }} garantías
+                </span>
+            </div>
+        </article>
+    </section>
+
+    <!-- ======================================================================
+         4 MÓDULOS DE GESTIÓN RÁPIDA
+         ====================================================================== -->
+    <section class="admin-modules-grid" aria-label="Módulos de administración">
+        <a href="{% url 'admin_users' %}" class="admin-module-card">
+            <div class="admin-module-icon" style="background: rgba(59, 130, 246, 0.14); color: #3b82f6;">
+                <i data-lucide="users"></i>
+            </div>
+            <div class="admin-module-info">
+                <h3>Gestión de Usuarios</h3>
+                <p>Administra perfiles de profesionales, clientes, ubicaciones y accesos.</p>
+            </div>
+        </a>
+
+        <a href="{% url 'admin_recharges' %}" class="admin-module-card">
+            {% if pending_recharges_count %}
+                <span class="admin-badge-alert">{{ pending_recharges_count }} pendiente{{ pending_recharges_count|pluralize:"s" }}</span>
+            {% endif %}
+            <div class="admin-module-icon" style="background: rgba(24, 167, 106, 0.14); color: var(--green);">
+                <i data-lucide="coins"></i>
+            </div>
+            <div class="admin-module-info">
+                <h3>Finanzas y Recargas</h3>
+                <p>Aprueba compras de paquetes de créditos y consulta ingresos.</p>
+            </div>
+        </a>
+
+        <a href="{% url 'admin_payments' %}" class="admin-module-card">
+            {% if pending_payments_count %}
+                <span class="admin-badge-alert">{{ pending_payments_count }} por revisar</span>
+            {% endif %}
+            <div class="admin-module-icon" style="background: rgba(245, 158, 11, 0.14); color: #f59e0b;">
+                <i data-lucide="shield-check"></i>
+            </div>
+            <div class="admin-module-info">
+                <h3>Pagos y Garantías</h3>
+                <p>Verifica comprobantes DeUna/Transferencia y libera pagos.</p>
+            </div>
+        </a>
+
+        <a href="{% url 'admin_reviews' %}" class="admin-module-card">
+            {% if flagged_reviews_count %}
+                <span class="admin-badge-alert" style="background: var(--blue);">{{ flagged_reviews_count }} nota{{ flagged_reviews_count|pluralize:"s" }}</span>
+            {% endif %}
+            <div class="admin-module-icon" style="background: rgba(139, 92, 246, 0.14); color: #8b5cf6;">
+                <i data-lucide="star"></i>
+            </div>
+            <div class="admin-module-info">
+                <h3>Valoraciones y Reportes</h3>
+                <p>Audita reseñas verificadas y observaciones privadas de clientes.</p>
+            </div>
+        </a>
+    </section>
+
+    <!-- ======================================================================
+         GRID OPERATIVO EN 2 COLUMNAS
+         ====================================================================== -->
+    <div class="admin-main-grid">
+
+        <!-- Columna Izquierda: Solicitudes Recientes Creadas con IA -->
+        <section class="admin-box">
+            <div class="admin-box-header">
+                <h2><i data-lucide="sparkles" style="color: var(--green);"></i> Solicitudes recientes de clientes (IA)</h2>
+                <span style="font-size: 12px; font-weight: 700; color: var(--muted);">Últimas {{ recent_jobs|length }}</span>
+            </div>
+
+            {% if recent_jobs %}
+                <div class="admin-jobs-stack">
+                    {% for job in recent_jobs %}
+                        <article class="admin-job-row">
+                            <div class="admin-job-row-top">
+                                <div>
+                                    <strong style="font-size: 15px; color: var(--text); display: block; margin-bottom: 3px;">{{ job.title }}</strong>
+                                    <span style="font-size: 12px; color: var(--muted);">
+                                        Cliente: <strong style="color: var(--text);">{{ job.client.username }}</strong>
+                                        {% if job.professional %}
+                                            · Maestro: <a href="{% url 'professional_detail' job.professional.id %}" style="color: var(--blue); font-weight: 700;">{{ job.professional.name }}</a>
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                <span class="status-pill status-{{ job.status|lower }}">
+                                    {{ job.get_status_display }}
+                                </span>
+                            </div>
+
+                            <div class="admin-job-row-meta">
+                                <span>
+                                    <i data-lucide="calendar" style="width: 12px; height: 12px; vertical-align: middle;"></i>
+                                    {{ job.created_at|date:"d/m/Y H:i" }}
+                                    {% if job.estimated_price %} · Ref: <strong>{{ job.estimated_price }}</strong>{% endif %}
+                                </span>
+                                {% if job.chat_room %}
+                                    <a href="{% url 'chat_room_view' job.chat_room.id %}" style="font-size: 12px; font-weight: 700; color: var(--blue); display: inline-flex; align-items: center; gap: 4px;">
+                                        <i data-lucide="message-square" style="width: 13px; height: 13px;"></i> Auditar chat ↗
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </article>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-inline" style="padding: 24px 0; justify-content: center;">
+                    <i data-lucide="inbox"></i>
+                    No hay solicitudes registradas aún.
+                </div>
+            {% endif %}
+        </section>
+
+        <!-- Columna Derecha: Moderación Inteligente + Top Profesionales -->
+        <aside style="display: flex; flex-direction: column; gap: 20px;">
+
+            <!-- Moderación Inteligente -->
+            <section class="admin-box">
+                <div class="admin-box-header">
+                    <h2><i data-lucide="shield-alert" style="color: #f59e0b;"></i> Moderación inteligente</h2>
+                </div>
+                <div class="admin-alert-list">
+                    <a href="{% url 'admin_users' %}" class="admin-alert-item">
+                        <div class="admin-alert-left">
+                            <i data-lucide="user-check" style="color: var(--green); width: 18px; height: 18px;"></i>
+                            <span>Validación de identidad: {{ pros_count }} perfiles</span>
+                        </div>
+                        <i data-lucide="chevron-right" style="width: 16px; height: 16px; color: var(--muted);"></i>
+                    </a>
+
+                    <a href="{% url 'admin_recharges' %}" class="admin-alert-item">
+                        <div class="admin-alert-left">
+                            <i data-lucide="coins" style="color: #f59e0b; width: 18px; height: 18px;"></i>
+                            <span>Recargas de créditos pendientes: {{ pending_recharges_count|default:0 }}</span>
+                        </div>
+                        <i data-lucide="chevron-right" style="width: 16px; height: 16px; color: var(--muted);"></i>
+                    </a>
+
+                    <a href="{% url 'admin_reviews' %}" class="admin-alert-item">
+                        <div class="admin-alert-left">
+                            <i data-lucide="message-square-warning" style="color: var(--blue); width: 18px; height: 18px;"></i>
+                            <span>Reseñas con nota privada: {{ flagged_reviews_count|default:0 }} casos</span>
+                        </div>
+                        <i data-lucide="chevron-right" style="width: 16px; height: 16px; color: var(--muted);"></i>
+                    </a>
+
+                    <a href="{% url 'admin_payments' %}" class="admin-alert-item">
+                        <div class="admin-alert-left">
+                            <i data-lucide="credit-card" style="color: #8b5cf6; width: 18px; height: 18px;"></i>
+                            <span>Pagos con garantía en seguimiento: {{ active_guarantees }}</span>
+                        </div>
+                        <i data-lucide="chevron-right" style="width: 16px; height: 16px; color: var(--muted);"></i>
+                    </a>
+                </div>
+            </section>
+
+            <!-- Ranking de Profesionales Destacados -->
+            <section class="admin-box">
+                <div class="admin-box-header">
+                    <h2><i data-lucide="award" style="color: var(--green);"></i> Top profesionales</h2>
+                    <a href="{% url 'admin_users' %}" style="font-size: 12px; font-weight: 700; color: var(--blue);">Ver todos</a>
+                </div>
+                <div>
+                    {% for pro in top_professionals %}
+                        <a href="{% url 'professional_detail' pro.id %}" class="admin-pro-row">
+                            <div style="display: flex; align-items: center; gap: 10px; min-width: 0;">
+                                <div class="avatar" style="width: 38px; height: 38px; font-size: 13px; overflow: hidden; flex-shrink: 0;">
+                                    {% if pro.avatar_url %}
+                                        <img src="{{ pro.avatar_url }}" alt="{{ pro.name }}">
+                                    {% else %}
+                                        {{ pro.initials }}
+                                    {% endif %}
+                                </div>
+                                <div style="min-width: 0;">
+                                    <strong style="display: block; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ pro.name }}</strong>
+                                    <span style="display: block; font-size: 11px; color: var(--muted);">{{ pro.specialty }} · {{ pro.jobs }} obras</span>
+                                </div>
+                            </div>
+                            <div style="text-align: right; flex-shrink: 0;">
+                                <strong style="display: block; font-size: 13px; color: var(--green);">★ {{ pro.rating }}</strong>
+                                <small style="font-size: 11px; color: var(--muted);">{{ pro.credits }} créd.</small>
+                            </div>
+                        </a>
+                    {% empty %}
+                        <p style="font-size: 12px; color: var(--muted); margin: 0;">Sin profesionales registrados.</p>
+                    {% endfor %}
+                </div>
+            </section>
+
+        </aside>
+    </div>
+
+</div>
 {% endblock %}

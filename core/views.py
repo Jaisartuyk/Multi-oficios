@@ -295,16 +295,28 @@ def estimator(request):
 # FRONTEND ADMIN VIEWS
 @role_required('ADMIN')
 def admin_panel(request):
-    recent_jobs = JobRequest.objects.all().order_by('-created_at')[:5]
+    recent_jobs = (
+        JobRequest.objects.select_related('client', 'professional', 'chat_room')
+        .order_by('-created_at')[:6]
+    )
     all_pros = Professional.objects.all().count()
     all_clients = UserProfile.objects.filter(role='CLIENT').count()
     active_jobs = JobRequest.objects.exclude(status__in=['COMPLETED', 'CANCELLED']).count()
+    completed_jobs_count = JobRequest.objects.filter(status='COMPLETED').count()
     processed_payments = Payment.objects.filter(
         status__in=['VERIFIED', 'RELEASED']
     ).aggregate(total=Sum('amount'))['total'] or 0
     active_guarantees = Payment.objects.filter(
         guarantee_status__in=['PENDING', 'ACTIVE']
     ).count()
+    recharge_revenue = Recharge.objects.filter(
+        status='APPROVED'
+    ).aggregate(total=Sum('amount_paid'))['total'] or 0
+    pending_recharges_count = Recharge.objects.filter(status='PENDING').count()
+    pending_payments_count = Payment.objects.filter(status='PENDING').count()
+    flagged_reviews_count = Review.objects.exclude(admin_observation='').count()
+    top_professionals = Professional.objects.order_by('-rating', '-jobs')[:5]
+
     metrics = [
         {'label': 'Trabajos activos', 'value': active_jobs, 'trend': 'En operación'},
         {'label': 'Pagos procesados', 'value': f'${processed_payments}', 'trend': 'Verificados'},
@@ -317,7 +329,15 @@ def admin_panel(request):
         'recent_jobs': recent_jobs,
         'pros_count': all_pros,
         'clients_count': all_clients,
+        'active_jobs': active_jobs,
+        'completed_jobs_count': completed_jobs_count,
+        'processed_payments': processed_payments,
         'active_guarantees': active_guarantees,
+        'recharge_revenue': recharge_revenue,
+        'pending_recharges_count': pending_recharges_count,
+        'pending_payments_count': pending_payments_count,
+        'flagged_reviews_count': flagged_reviews_count,
+        'top_professionals': top_professionals,
     })
 
 @role_required('ADMIN')
