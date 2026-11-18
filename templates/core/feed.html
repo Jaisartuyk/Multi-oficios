@@ -841,20 +841,26 @@
                     {% endif %}
 
                     {% for item in page_obj|slice:":8" %}
-                        <a href="{% url 'professional_detail' item.professional.id %}" class="fb-story-card">
+                        <div class="fb-story-card" role="button" tabindex="0" onclick="openFbStory({{ forloop.counter0 }})" onkeydown="if(event.key==='Enter') openFbStory({{ forloop.counter0 }})">
                             {% if item.is_video %}
                                 <video src="{{ item.image_url }}" muted playsinline preload="metadata"></video>
                             {% else %}
                                 <img src="{{ item.image_url }}" alt="{{ item.professional.name }}" loading="lazy">
                             {% endif %}
                             <div class="fb-story-overlay">
-                                <div class="fb-story-avatar">{{ item.professional.initials }}</div>
+                                <div class="fb-story-avatar" style="overflow: hidden;">
+                                    {% if item.professional.avatar_url %}
+                                        <img src="{{ item.professional.avatar_url }}" alt="{{ item.professional.name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                    {% else %}
+                                        {{ item.professional.initials }}
+                                    {% endif %}
+                                </div>
                                 <div class="fb-story-name">
                                     {{ item.professional.name }}
                                     <span style="display: block; font-size: 10px; opacity: 0.85; font-weight: 500;">{{ item.professional.specialty }}</span>
                                 </div>
                             </div>
-                        </a>
+                        </div>
                     {% endfor %}
                 </div>
                 <button type="button" class="fb-stories-next" onclick="scrollStories()" aria-label="Ver más destacados">
@@ -1122,7 +1128,786 @@
 
 </div>
 
+<style>
+    /* ==========================================================================
+       VISOR DE HISTORIAS A PANTALLA COMPLETA ESTILO FACEBOOK
+       ========================================================================== */
+    .fb-story-viewer {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 10000;
+        background: #000;
+        color: #fff;
+        font-family: inherit;
+    }
+
+    .fb-story-viewer.open {
+        display: flex;
+    }
+
+    /* Panel Izquierdo de Historias (Escritorio) */
+    .fb-sv-sidebar {
+        display: none;
+        width: 360px;
+        background: var(--surface);
+        color: var(--text);
+        border-right: 1px solid var(--line);
+        flex-direction: column;
+        height: 100vh;
+        flex-shrink: 0;
+    }
+
+    @media (min-width: 900px) {
+        .fb-sv-sidebar {
+            display: flex;
+        }
+    }
+
+    .fb-sv-sidebar-top {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--line);
+    }
+
+    .fb-sv-close-circle {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: none;
+        background: var(--surface-strong);
+        color: var(--text);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: filter 0.15s;
+    }
+
+    .fb-sv-close-circle:hover {
+        filter: brightness(0.92);
+    }
+
+    .fb-sv-sidebar-body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 16px;
+    }
+
+    .fb-sv-sidebar-body h2 {
+        margin: 0 0 4px;
+        font-size: 24px;
+        font-weight: 800;
+        color: var(--text);
+    }
+
+    .fb-sv-section-label {
+        margin: 18px 0 8px;
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--text);
+    }
+
+    .fb-sv-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 8px 10px;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: background 0.15s;
+        text-decoration: none;
+        color: var(--text);
+    }
+
+    .fb-sv-item:hover {
+        background: var(--surface-strong);
+    }
+
+    .fb-sv-item.active {
+        background: var(--surface-strong);
+    }
+
+    .fb-sv-item-avatar {
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        border: 3px solid var(--green);
+        padding: 2px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        background: linear-gradient(135deg, var(--navy), var(--green));
+        color: #fff;
+        font-weight: 800;
+        font-size: 15px;
+    }
+
+    .fb-sv-item-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 50%;
+    }
+
+    /* Escenario Negro Derecho */
+    .fb-sv-stage {
+        flex: 1;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: #05080d;
+        padding: 12px 16px;
+        overflow: hidden;
+    }
+
+    .fb-sv-player-row {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 20px;
+        width: 100%;
+        flex: 1;
+        min-height: 0;
+    }
+
+    .fb-sv-nav-btn {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        border: none;
+        background: rgba(255, 255, 255, 0.18);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: background 0.15s, transform 0.15s;
+        flex-shrink: 0;
+        z-index: 5;
+    }
+
+    .fb-sv-nav-btn:hover {
+        background: rgba(255, 255, 255, 0.32);
+        transform: scale(1.06);
+    }
+
+    .fb-sv-card {
+        position: relative;
+        width: 100%;
+        max-width: 400px;
+        height: 100%;
+        max-height: 700px;
+        border-radius: 16px;
+        overflow: hidden;
+        background: #111827;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.65);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .fb-sv-card-bg {
+        position: absolute;
+        inset: -20px;
+        background-size: cover;
+        background-position: center;
+        filter: blur(28px) brightness(0.45);
+        z-index: 0;
+    }
+
+    .fb-sv-media {
+        position: relative;
+        z-index: 1;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        display: block;
+    }
+
+    /* Barra de Progreso Superior */
+    .fb-sv-top-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 3;
+        padding: 12px 14px 24px;
+        background: linear-gradient(180deg, rgba(0,0,0,0.75) 0%, transparent 100%);
+    }
+
+    .fb-sv-progress-bars {
+        display: flex;
+        gap: 5px;
+        margin-bottom: 10px;
+    }
+
+    .fb-sv-progress-seg {
+        flex: 1;
+        height: 3.5px;
+        border-radius: 99px;
+        background: rgba(255, 255, 255, 0.32);
+        overflow: hidden;
+    }
+
+    .fb-sv-progress-fill {
+        height: 100%;
+        width: 0%;
+        background: #fff;
+        transition: width 0.08s linear;
+    }
+
+    .fb-sv-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+    }
+
+    .fb-sv-author {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        text-decoration: none;
+        color: #fff;
+        min-width: 0;
+    }
+
+    .fb-sv-author-avatar {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--green), #059669);
+        color: #fff;
+        font-size: 13px;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        flex-shrink: 0;
+        border: 2px solid #fff;
+    }
+
+    .fb-sv-author-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .fb-sv-controls {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .fb-sv-ctrl-btn {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        border: none;
+        background: rgba(0, 0, 0, 0.38);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+    }
+
+    .fb-sv-caption-box {
+        position: absolute;
+        bottom: 14px;
+        left: 14px;
+        right: 14px;
+        z-index: 3;
+        padding: 12px 14px;
+        border-radius: 12px;
+        background: rgba(0, 0, 0, 0.62);
+        backdrop-filter: blur(8px);
+        color: #fff;
+        font-size: 13px;
+        line-height: 1.45;
+    }
+
+    /* Barra Inferior de Mensaje y Reacciones (Estilo Facebook) */
+    .fb-sv-bottom-bar {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        width: 100%;
+        max-width: 660px;
+        padding: 10px 4px 2px;
+        flex-wrap: wrap;
+    }
+
+    .fb-sv-reply-box {
+        flex: 1;
+        min-width: 210px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 18px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.35);
+        background: rgba(255, 255, 255, 0.08);
+        color: #fff;
+        font-size: 14px;
+        text-decoration: none;
+        transition: background 0.15s;
+    }
+
+    .fb-sv-reply-box:hover {
+        background: rgba(255, 255, 255, 0.16);
+    }
+
+    .fb-sv-reactions {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .fb-sv-react-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: none;
+        background: rgba(255, 255, 255, 0.12);
+        font-size: 21px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.15s ease, background 0.15s ease;
+    }
+
+    .fb-sv-react-btn:hover {
+        transform: scale(1.25) translateY(-3px);
+        background: rgba(255, 255, 255, 0.24);
+    }
+
+    .fb-sv-floating-emoji {
+        position: fixed;
+        bottom: 70px;
+        font-size: 32px;
+        pointer-events: none;
+        z-index: 10005;
+        animation: floatUpEmoji 1.2s ease-out forwards;
+    }
+
+    @keyframes floatUpEmoji {
+        0% { opacity: 1; transform: translateY(0) scale(0.8); }
+        50% { opacity: 1; transform: translateY(-90px) scale(1.3); }
+        100% { opacity: 0; transform: translateY(-170px) scale(1); }
+    }
+
+    @media (max-width: 600px) {
+        .fb-sv-stage {
+            padding: 0;
+        }
+        .fb-sv-card {
+            max-width: 100%;
+            max-height: 100%;
+            border-radius: 0;
+        }
+        .fb-sv-nav-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 38px;
+            height: 38px;
+        }
+        .fb-sv-nav-btn.prev { left: 8px; }
+        .fb-sv-nav-btn.next { right: 8px; }
+        .fb-sv-bottom-bar {
+            padding: 8px 12px 12px;
+            background: #000;
+        }
+    }
+</style>
+
+<!-- VISOR DE HISTORIAS A PANTALLA COMPLETA (COMO FACEBOOK STORIES) -->
+<div id="fbStoryViewer" class="fb-story-viewer" aria-label="Visor de historias">
+
+    <!-- Barra Lateral Izquierda (Igual a Facebook Desktop) -->
+    <aside class="fb-sv-sidebar">
+        <div class="fb-sv-sidebar-top">
+            <button type="button" class="fb-sv-close-circle" onclick="closeFbStory()" aria-label="Cerrar historias">
+                <i data-lucide="x" style="width: 20px; height: 20px;"></i>
+            </button>
+            <img src="{% static 'img/logo.png' %}" alt="ObraYa" style="width: 38px; height: 38px; border-radius: 10px; object-fit: cover;">
+            <strong style="font-size: 16px;">ObraYa</strong>
+        </div>
+
+        <div class="fb-sv-sidebar-body">
+            <h2>Historias</h2>
+            <small style="color: var(--muted); font-size: 12px;">Trabajos reales · Comunidad ObraYa</small>
+
+            <div class="fb-sv-section-label">Tu historia</div>
+            {% if user.is_authenticated and user.profile.role == 'PROFESSIONAL' %}
+                <div class="fb-sv-item" onclick="closeFbStory(); openPublishModal('photo');">
+                    <div style="width: 52px; height: 52px; border-radius: 50%; background: var(--surface-strong); color: var(--blue); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        <i data-lucide="plus" style="width: 22px; height: 22px;"></i>
+                    </div>
+                    <div>
+                        <strong style="display: block; font-size: 14px;">Crea una historia</strong>
+                        <span style="font-size: 12px; color: var(--muted);">Comparte una foto o un video de tu obra</span>
+                    </div>
+                </div>
+            {% else %}
+                <a href="{% url 'estimator' %}" class="fb-sv-item">
+                    <div style="width: 52px; height: 52px; border-radius: 50%; background: var(--surface-strong); color: var(--green); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        <i data-lucide="sparkles" style="width: 22px; height: 22px;"></i>
+                    </div>
+                    <div>
+                        <strong style="display: block; font-size: 14px;">Cotizar una obra</strong>
+                        <span style="font-size: 12px; color: var(--muted);">Describe tu proyecto y recibe propuestas</span>
+                    </div>
+                </a>
+            {% endif %}
+
+            <div class="fb-sv-section-label">Todas las historias</div>
+            <div style="display: flex; flex-direction: column; gap: 4px;" id="fbSvSidebarList">
+                {% for item in page_obj|slice:":8" %}
+                    <div class="fb-sv-item" data-story-idx="{{ forloop.counter0 }}" onclick="openFbStory({{ forloop.counter0 }})">
+                        <div class="fb-sv-item-avatar">
+                            {% if item.professional.avatar_url %}
+                                <img src="{{ item.professional.avatar_url }}" alt="{{ item.professional.name }}">
+                            {% else %}
+                                {{ item.professional.initials }}
+                            {% endif %}
+                        </div>
+                        <div style="min-width: 0; flex: 1;">
+                            <strong style="display: block; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                {{ item.professional.name }}
+                            </strong>
+                            <span style="display: block; font-size: 12px; color: var(--blue); font-weight: 600;">
+                                {{ item.professional.specialty }} · <span style="color: var(--muted); font-weight: 400;">{{ item.created_at|timesince }}</span>
+                            </span>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </aside>
+
+    <!-- Escenario Central Negro con Reproductor 9:16 -->
+    <div class="fb-sv-stage">
+        <div class="fb-sv-player-row">
+            <button type="button" class="fb-sv-nav-btn prev" onclick="prevFbStory()" aria-label="Historia anterior">
+                <i data-lucide="chevron-left" style="width: 24px; height: 24px;"></i>
+            </button>
+
+            <div class="fb-sv-card">
+                <div id="fbSvCardBg" class="fb-sv-card-bg"></div>
+
+                <!-- Progreso y Cabecera -->
+                <div class="fb-sv-top-overlay">
+                    <div class="fb-sv-progress-bars" id="fbSvProgressBars"></div>
+                    <div class="fb-sv-header">
+                        <a id="fbSvAuthorLink" href="#" class="fb-sv-author">
+                            <div class="fb-sv-author-avatar" id="fbSvAuthorAvatar"></div>
+                            <div style="min-width: 0;">
+                                <div style="display: flex; align-items: center; gap: 6px;">
+                                    <strong id="fbSvAuthorName" style="font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"></strong>
+                                    <span id="fbSvTime" style="font-size: 12px; opacity: 0.8;"></span>
+                                </div>
+                                <span id="fbSvSpecialty" style="display: block; font-size: 11px; opacity: 0.85;"></span>
+                            </div>
+                        </a>
+
+                        <div class="fb-sv-controls">
+                            <button type="button" class="fb-sv-ctrl-btn" id="fbSvMuteBtn" onclick="toggleFbStoryMute()" title="Sonido" style="display: none;">
+                                <i data-lucide="volume-2" style="width: 16px; height: 16px;"></i>
+                            </button>
+                            <button type="button" class="fb-sv-ctrl-btn" id="fbSvPauseBtn" onclick="toggleFbStoryPause()" title="Pausar / Reanudar">
+                                <i data-lucide="pause" style="width: 16px; height: 16px;"></i>
+                            </button>
+                            <button type="button" class="fb-sv-ctrl-btn" onclick="closeFbStory()" title="Cerrar">
+                                <i data-lucide="x" style="width: 18px; height: 18px;"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Imagen o Video de la Historia -->
+                <img id="fbSvImage" class="fb-sv-media" alt="Historia de trabajo" style="display: none;">
+                <video id="fbSvVideo" class="fb-sv-media" playsinline style="display: none;"></video>
+
+                <!-- Descripción del trabajo -->
+                <div id="fbSvCaption" class="fb-sv-caption-box" style="display: none;"></div>
+            </div>
+
+            <button type="button" class="fb-sv-nav-btn next" onclick="nextFbStory()" aria-label="Siguiente historia">
+                <i data-lucide="chevron-right" style="width: 24px; height: 24px;"></i>
+            </button>
+        </div>
+
+        <!-- Barra Inferior de Contacto y Reacciones estilo Facebook -->
+        <div class="fb-sv-bottom-bar">
+            <a id="fbSvReplyBtn" href="#" target="_blank" rel="noopener" class="fb-sv-reply-box">
+                <span id="fbSvReplyText">Contactar al profesional...</span>
+                <i data-lucide="send" style="width: 16px; height: 16px;"></i>
+            </a>
+            <div class="fb-sv-reactions">
+                <button type="button" class="fb-sv-react-btn" onclick="triggerStoryReaction('👍', event)" title="Me gusta">👍</button>
+                <button type="button" class="fb-sv-react-btn" onclick="triggerStoryReaction('❤️', event)" title="Me encanta">❤️</button>
+                <button type="button" class="fb-sv-react-btn" onclick="triggerStoryReaction('🔥', event)" title="Excelente obra">🔥</button>
+                <button type="button" class="fb-sv-react-btn" onclick="triggerStoryReaction('👏', event)" title="Felicidades">👏</button>
+                <button type="button" class="fb-sv-react-btn" onclick="triggerStoryReaction('😮', event)" title="Me asombra">😮</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
+const FB_STORIES_DATA = [
+    {% for item in page_obj|slice:":8" %}
+    {
+        id: {{ item.id }},
+        proName: "{{ item.professional.name|escapejs }}",
+        proInitials: "{{ item.professional.initials|escapejs }}",
+        proAvatar: "{{ item.professional.avatar_url|default:''|escapejs }}",
+        proSpecialty: "{{ item.professional.specialty|escapejs }}",
+        proUrl: "{% url 'professional_detail' item.professional.id %}",
+        whatsappUrl: "{% if item.professional.user.profile.phone %}https://wa.me/{{ item.professional.user.profile.whatsapp_number }}?text=Hola%20{{ item.professional.name|urlencode }}%2C%20vi%20tu%20historia%20en%20ObraYa%20y%20me%20interesa%20cotizar.{% else %}{% url 'professional_detail' item.professional.id %}{% endif %}",
+        hasWhatsapp: {% if item.professional.user.profile.phone %}true{% else %}false{% endif %},
+        mediaUrl: "{{ item.image_url|escapejs }}",
+        isVideo: {% if item.is_video %}true{% else %}false{% endif %},
+        caption: "{{ item.caption|default:''|escapejs }}",
+        timeAgo: "{{ item.created_at|timesince|escapejs }}"
+    }{% if not forloop.last %},{% endif %}
+    {% endfor %}
+];
+
+let currentStoryIdx = 0;
+let storyTimer = null;
+let storyProgress = 0;
+let storyPaused = false;
+let storyMuted = false;
+
+function buildStoryProgressBars() {
+    const container = document.getElementById('fbSvProgressBars');
+    if (!container) return;
+    container.innerHTML = '';
+    FB_STORIES_DATA.forEach((_, idx) => {
+        const seg = document.createElement('div');
+        seg.className = 'fb-sv-progress-seg';
+        const fill = document.createElement('div');
+        fill.className = 'fb-sv-progress-fill';
+        fill.id = 'fbSvProgFill_' + idx;
+        seg.appendChild(fill);
+        container.appendChild(seg);
+    });
+}
+
+function updateStoryProgressUI() {
+    FB_STORIES_DATA.forEach((_, idx) => {
+        const fill = document.getElementById('fbSvProgFill_' + idx);
+        if (!fill) return;
+        if (idx < currentStoryIdx) {
+            fill.style.width = '100%';
+        } else if (idx > currentStoryIdx) {
+            fill.style.width = '0%';
+        } else {
+            fill.style.width = Math.min(100, storyProgress) + '%';
+        }
+    });
+}
+
+function openFbStory(index) {
+    if (!FB_STORIES_DATA.length) return;
+    const viewer = document.getElementById('fbStoryViewer');
+    if (!viewer) return;
+
+    currentStoryIdx = (index + FB_STORIES_DATA.length) % FB_STORIES_DATA.length;
+    viewer.classList.add('open');
+    document.body.style.overflow = 'hidden';
+
+    buildStoryProgressBars();
+    renderActiveFbStory();
+}
+
+function renderActiveFbStory() {
+    clearInterval(storyTimer);
+    storyProgress = 0;
+    storyPaused = false;
+
+    const story = FB_STORIES_DATA[currentStoryIdx];
+    if (!story) return;
+
+    // Resaltar en el sidebar izquierdo
+    document.querySelectorAll('#fbSvSidebarList .fb-sv-item').forEach(el => {
+        el.classList.toggle('active', Number(el.dataset.storyIdx) === currentStoryIdx);
+    });
+
+    // Cabecera
+    const authorLink = document.getElementById('fbSvAuthorLink');
+    const authorAvatar = document.getElementById('fbSvAuthorAvatar');
+    const authorName = document.getElementById('fbSvAuthorName');
+    const timeEl = document.getElementById('fbSvTime');
+    const specEl = document.getElementById('fbSvSpecialty');
+    const captionEl = document.getElementById('fbSvCaption');
+    const replyBtn = document.getElementById('fbSvReplyBtn');
+    const replyText = document.getElementById('fbSvReplyText');
+    const bgEl = document.getElementById('fbSvCardBg');
+
+    if (authorLink) authorLink.href = story.proUrl;
+    if (authorAvatar) {
+        authorAvatar.innerHTML = story.proAvatar
+            ? `<img src="${story.proAvatar}" alt="${story.proName}">`
+            : story.proInitials;
+    }
+    if (authorName) authorName.textContent = story.proName;
+    if (timeEl) timeEl.textContent = story.timeAgo;
+    if (specEl) specEl.textContent = story.proSpecialty;
+
+    if (captionEl) {
+        if (story.caption) {
+            captionEl.textContent = story.caption;
+            captionEl.style.display = 'block';
+        } else {
+            captionEl.style.display = 'none';
+        }
+    }
+
+    if (replyBtn && replyText) {
+        replyBtn.href = story.whatsappUrl;
+        replyBtn.target = story.hasWhatsapp ? '_blank' : '_self';
+        replyText.textContent = story.hasWhatsapp
+            ? `Enviar mensaje por WhatsApp a ${story.proName}...`
+            : `Ver perfil de ${story.proName}...`;
+    }
+
+    const imgEl = document.getElementById('fbSvImage');
+    const vidEl = document.getElementById('fbSvVideo');
+    const muteBtn = document.getElementById('fbSvMuteBtn');
+
+    if (vidEl) {
+        vidEl.pause();
+        vidEl.removeAttribute('src');
+    }
+
+    if (story.isVideo) {
+        if (imgEl) imgEl.style.display = 'none';
+        if (bgEl) bgEl.style.backgroundImage = 'none';
+        if (muteBtn) muteBtn.style.display = 'flex';
+        if (vidEl) {
+            vidEl.style.display = 'block';
+            vidEl.src = story.mediaUrl;
+            vidEl.muted = storyMuted;
+            vidEl.currentTime = 0;
+            vidEl.play().catch(() => {
+                vidEl.muted = true;
+                vidEl.play().catch(() => {});
+            });
+            vidEl.ontimeupdate = function () {
+                if (vidEl.duration) {
+                    storyProgress = (vidEl.currentTime / vidEl.duration) * 100;
+                    updateStoryProgressUI();
+                }
+            };
+            vidEl.onended = function () {
+                nextFbStory();
+            };
+        }
+    } else {
+        if (vidEl) vidEl.style.display = 'none';
+        if (muteBtn) muteBtn.style.display = 'none';
+        if (imgEl) {
+            imgEl.style.display = 'block';
+            imgEl.src = story.mediaUrl;
+        }
+        if (bgEl) {
+            bgEl.style.backgroundImage = `url('${story.mediaUrl}')`;
+        }
+        // Temporizador de 6 segundos para fotos
+        storyTimer = setInterval(() => {
+            if (!storyPaused) {
+                storyProgress += 1.6;
+                updateStoryProgressUI();
+                if (storyProgress >= 100) {
+                    nextFbStory();
+                }
+            }
+        }, 90);
+    }
+
+    updateStoryProgressUI();
+    if (window.lucide) window.lucide.createIcons();
+}
+
+function nextFbStory() {
+    if (currentStoryIdx < FB_STORIES_DATA.length - 1) {
+        currentStoryIdx++;
+        renderActiveFbStory();
+    } else {
+        closeFbStory();
+    }
+}
+
+function prevFbStory() {
+    if (currentStoryIdx > 0) {
+        currentStoryIdx--;
+        renderActiveFbStory();
+    } else {
+        currentStoryIdx = 0;
+        renderActiveFbStory();
+    }
+}
+
+function toggleFbStoryPause() {
+    storyPaused = !storyPaused;
+    const vidEl = document.getElementById('fbSvVideo');
+    const story = FB_STORIES_DATA[currentStoryIdx];
+    if (story && story.isVideo && vidEl) {
+        if (storyPaused) vidEl.pause();
+        else vidEl.play().catch(() => {});
+    }
+}
+
+function toggleFbStoryMute() {
+    storyMuted = !storyMuted;
+    const vidEl = document.getElementById('fbSvVideo');
+    if (vidEl) vidEl.muted = storyMuted;
+}
+
+function closeFbStory() {
+    clearInterval(storyTimer);
+    const viewer = document.getElementById('fbStoryViewer');
+    const vidEl = document.getElementById('fbSvVideo');
+    if (vidEl) {
+        vidEl.pause();
+        vidEl.removeAttribute('src');
+    }
+    if (viewer) viewer.classList.remove('open');
+    document.body.style.overflow = '';
+}
+
+function triggerStoryReaction(emoji, event) {
+    const el = document.createElement('span');
+    el.className = 'fb-sv-floating-emoji';
+    el.textContent = emoji;
+    const rect = event.currentTarget.getBoundingClientRect();
+    el.style.left = (rect.left + 6) + 'px';
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 1250);
+}
+
+document.addEventListener('keydown', function (e) {
+    const viewer = document.getElementById('fbStoryViewer');
+    if (!viewer || !viewer.classList.contains('open')) return;
+    if (e.key === 'Escape') closeFbStory();
+    else if (e.key === 'ArrowRight') nextFbStory();
+    else if (e.key === 'ArrowLeft') prevFbStory();
+});
+
 function scrollStories() {
     const track = document.getElementById('storiesTrack');
     if (!track) return;
