@@ -1,93 +1,821 @@
 {% extends 'core/base.html' %}
+{% load static %}
 
-{% block title %}{{ professional.name }} | ObraYa{% endblock %}
+{% block title %}{{ professional.name }} – {{ professional.specialty }} | ObraYa{% endblock %}
+
+{% block extra_css %}
+<style>
+    .pro-profile-page {
+        max-width: 1040px;
+        margin: 16px auto 40px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    /* Tarjeta Hero con Portada estilo Facebook / LinkedIn / Airbnb */
+    .pro-hero-card {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 24px;
+        overflow: hidden;
+        box-shadow: var(--shadow);
+    }
+
+    .pro-cover {
+        position: relative;
+        height: 150px;
+        background:
+            radial-gradient(circle at 85% 20%, rgba(24, 167, 106, 0.45), transparent 45%),
+            radial-gradient(circle at 15% 80%, rgba(59, 130, 246, 0.35), transparent 50%),
+            linear-gradient(135deg, #0b2f4f 0%, #123e66 55%, #0f5c4d 100%);
+        padding: 16px 20px;
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+    }
+
+    @media (min-width: 768px) {
+        .pro-cover {
+            height: 185px;
+            padding: 20px 28px;
+        }
+    }
+
+    .pro-cover-back {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 14px;
+        border-radius: 999px;
+        background: rgba(16, 29, 43, 0.55);
+        backdrop-filter: blur(10px);
+        color: #fff;
+        font-size: 13px;
+        font-weight: 700;
+        text-decoration: none;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        transition: background 0.2s;
+    }
+
+    .pro-cover-back:hover {
+        background: rgba(16, 29, 43, 0.8);
+    }
+
+    .pro-availability-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 7px 14px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.92);
+        color: #0b2f4f;
+        font-size: 12px;
+        font-weight: 800;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+    }
+
+    .pro-availability-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #16a34a;
+        box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.2);
+    }
+
+    .pro-hero-body {
+        padding: 0 20px 22px;
+    }
+
+    @media (min-width: 768px) {
+        .pro-hero-body {
+            padding: 0 28px 26px;
+        }
+    }
+
+    .pro-hero-top {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        margin-top: -48px;
+        position: relative;
+        z-index: 2;
+    }
+
+    @media (min-width: 768px) {
+        .pro-hero-top {
+            flex-direction: row;
+            align-items: flex-end;
+            justify-content: space-between;
+            margin-top: -54px;
+        }
+    }
+
+    .pro-avatar-identity {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    @media (min-width: 600px) {
+        .pro-avatar-identity {
+            flex-direction: row;
+            align-items: flex-end;
+            gap: 18px;
+        }
+    }
+
+    .pro-avatar-wrap {
+        position: relative;
+        width: 96px;
+        height: 96px;
+        border-radius: 50%;
+        border: 4px solid var(--surface);
+        background: linear-gradient(135deg, var(--navy), var(--green));
+        color: #fff;
+        font-size: 28px;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 10px 28px rgba(11, 47, 79, 0.22);
+        overflow: hidden;
+        flex-shrink: 0;
+    }
+
+    @media (min-width: 768px) {
+        .pro-avatar-wrap {
+            width: 116px;
+            height: 116px;
+            font-size: 34px;
+            border-width: 5px;
+        }
+    }
+
+    .pro-avatar-wrap img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+    .pro-title-block {
+        padding-top: 4px;
+    }
+
+    .pro-verified-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 3px 10px;
+        border-radius: 999px;
+        background: var(--green-soft);
+        color: var(--green);
+        font-size: 11px;
+        font-weight: 800;
+        margin-bottom: 6px;
+    }
+
+    .pro-title-block h1 {
+        margin: 0;
+        font-size: 24px;
+        font-weight: 800;
+        color: var(--text);
+        line-height: 1.15;
+    }
+
+    @media (min-width: 768px) {
+        .pro-title-block h1 {
+            font-size: 28px;
+        }
+    }
+
+    .pro-subtitle-meta {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px;
+        margin-top: 6px;
+        font-size: 13px;
+        color: var(--muted);
+        font-weight: 600;
+    }
+
+    .pro-subtitle-meta span {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    /* Botones CTA del Hero */
+    .pro-cta-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 18px;
+        padding-top: 18px;
+        border-top: 1px solid var(--line);
+    }
+
+    .pro-cta-btn {
+        flex: 1 1 160px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-height: 46px;
+        padding: 10px 18px;
+        border-radius: 14px;
+        font-size: 14px;
+        font-weight: 800;
+        text-decoration: none;
+        border: none;
+        cursor: pointer;
+        transition: transform 0.15s ease, filter 0.15s ease;
+    }
+
+    .pro-cta-btn:hover {
+        transform: translateY(-2px);
+    }
+
+    .pro-cta-whatsapp {
+        background: #25D366;
+        color: #fff;
+        box-shadow: 0 8px 20px rgba(37, 211, 102, 0.25);
+    }
+
+    .pro-cta-quote {
+        background: linear-gradient(135deg, var(--navy), var(--blue));
+        color: #fff;
+    }
+
+    .pro-cta-call {
+        background: var(--surface-strong);
+        color: var(--text);
+        border: 1px solid var(--line);
+    }
+
+    .pro-cta-share {
+        flex: 0 0 auto;
+        min-height: 46px;
+        padding: 10px 14px;
+        border-radius: 14px;
+        background: var(--surface-strong);
+        color: var(--text);
+        border: 1px solid var(--line);
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        font-weight: 700;
+    }
+
+    /* Franja de 4 KPIs */
+    .pro-kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+
+    @media (min-width: 768px) {
+        .pro-kpi-grid {
+            grid-template-columns: repeat(4, 1fr);
+        }
+    }
+
+    .pro-kpi-card {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 16px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        box-shadow: 0 4px 16px rgba(11, 47, 79, 0.05);
+    }
+
+    .pro-kpi-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .pro-kpi-card strong {
+        display: block;
+        font-size: 20px;
+        font-weight: 800;
+        color: var(--text);
+        line-height: 1.1;
+    }
+
+    .pro-kpi-card span {
+        display: block;
+        font-size: 12px;
+        color: var(--muted);
+        font-weight: 600;
+        margin-top: 2px;
+    }
+
+    /* Grid Principal de 2 Columnas en Escritorio */
+    .pro-content-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 20px;
+        align-items: start;
+    }
+
+    @media (min-width: 860px) {
+        .pro-content-grid {
+            grid-template-columns: 330px minmax(0, 1fr);
+        }
+    }
+
+    .pro-panel-card {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        padding: 20px;
+        box-shadow: 0 4px 18px rgba(11, 47, 79, 0.05);
+    }
+
+    .pro-panel-card h2 {
+        margin: 0 0 14px;
+        font-size: 17px;
+        font-weight: 800;
+        color: var(--text);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .pro-bio-text {
+        font-size: 14px;
+        color: var(--text);
+        line-height: 1.6;
+        margin: 0 0 16px;
+        white-space: pre-line;
+    }
+
+    .pro-trust-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-top: 14px;
+        padding-top: 14px;
+        border-top: 1px solid var(--line);
+    }
+
+    .pro-trust-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text);
+    }
+
+    .pro-trust-item i {
+        color: var(--green);
+        flex-shrink: 0;
+    }
+
+    /* Galería Moderna de Portafolio */
+    .pro-portfolio-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+        gap: 14px;
+    }
+
+    .pro-portfolio-card {
+        position: relative;
+        border-radius: 16px;
+        overflow: hidden;
+        background: var(--surface-strong);
+        border: 1px solid var(--line);
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .pro-portfolio-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 24px rgba(11, 47, 79, 0.14);
+    }
+
+    .pro-portfolio-media {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+        display: block;
+        background: #08131f;
+    }
+
+    .pro-portfolio-caption {
+        padding: 10px 12px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text);
+        background: var(--surface);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+    }
+
+    .pro-portfolio-caption small {
+        font-size: 11px;
+        color: var(--muted);
+        font-weight: 500;
+        flex-shrink: 0;
+    }
+
+    /* Tarjetas de Reseñas Verificadas */
+    .pro-reviews-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .pro-review-card {
+        padding: 16px;
+        border-radius: 16px;
+        background: var(--surface-strong);
+        border: 1px solid var(--line);
+    }
+
+    .pro-review-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 8px;
+    }
+
+    .pro-review-author {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .pro-review-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--blue), var(--navy));
+        color: #fff;
+        font-size: 12px;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .pro-review-stars {
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: rgba(245, 158, 11, 0.15);
+        color: #d97706;
+        font-size: 12px;
+        font-weight: 800;
+    }
+
+    /* Lightbox Modal para ver foto de portafolio a pantalla completa */
+    .pro-lightbox {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        background: rgba(8, 19, 31, 0.88);
+        backdrop-filter: blur(8px);
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+
+    .pro-lightbox.open {
+        display: flex;
+    }
+
+    .pro-lightbox-inner {
+        position: relative;
+        max-width: 820px;
+        width: 100%;
+        background: var(--surface);
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.45);
+    }
+
+    .pro-lightbox-inner img {
+        width: 100%;
+        max-height: 75vh;
+        object-fit: contain;
+        background: #000;
+        display: block;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<section class="profile-hero">
-    <div class="profile-head">
-        <div class="avatar big" style="overflow: hidden;">
-            {% if professional.avatar_url %}
-                <img src="{{ professional.avatar_url }}" alt="{{ professional.name }}" style="width: 100%; height: 100%; object-fit: cover;">
-            {% else %}
-                {{ professional.initials }}
-            {% endif %}
+<div class="pro-profile-page">
+
+    <!-- ======================================================================
+         TARJETA HERO DEL PROFESIONAL
+         ====================================================================== -->
+    <section class="pro-hero-card">
+        <div class="pro-cover">
+            <a href="{% url 'feed' %}" class="pro-cover-back">
+                <i data-lucide="arrow-left" style="width: 16px; height: 16px;"></i>
+                <span>Comunidad</span>
+            </a>
+            <span class="pro-availability-pill">
+                <span class="pro-availability-dot"></span>
+                {{ professional.available }}
+            </span>
         </div>
-        <div>
-            <span class="eyebrow"><i data-lucide="badge-check"></i> {{ professional.badge }}</span>
-            <h1>{{ professional.name }}</h1>
-            <p>{{ professional.specialty }}</p>
+
+        <div class="pro-hero-body">
+            <div class="pro-hero-top">
+                <div class="pro-avatar-identity">
+                    <div class="pro-avatar-wrap">
+                        {% if professional.avatar_url %}
+                            <img src="{{ professional.avatar_url }}" alt="{{ professional.name }}">
+                        {% else %}
+                            {{ professional.initials }}
+                        {% endif %}
+                    </div>
+                    <div class="pro-title-block">
+                        <span class="pro-verified-badge">
+                            <i data-lucide="badge-check" style="width: 14px; height: 14px;"></i>
+                            {{ professional.badge }} · {{ professional.level }}
+                        </span>
+                        <h1>{{ professional.name }}</h1>
+                        <div class="pro-subtitle-meta">
+                            <span><i data-lucide="wrench" style="width: 14px; height: 14px; color: var(--green);"></i> {{ professional.specialty }}</span>
+                            <span>·</span>
+                            <span><i data-lucide="map-pin" style="width: 14px; height: 14px; color: var(--blue);"></i> {{ professional.location }} (Cobertura {{ professional.coverage_radius_km }} km)</span>
+                            <span>·</span>
+                            <span><i data-lucide="award" style="width: 14px; height: 14px; color: #f59e0b;"></i> {{ professional.experience }} exp.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Barra de Botones de Acción -->
+            <div class="pro-cta-row">
+                {% if professional.user.profile.phone %}
+                    <a class="pro-cta-btn pro-cta-whatsapp"
+                       href="https://wa.me/{{ professional.user.profile.whatsapp_number }}?text=Hola%20{{ professional.name|urlencode }}%2C%20vi%20tu%20perfil%20verificado%20en%20ObraYa%20y%20me%20interesa%20cotizar%20un%20trabajo."
+                       target="_blank" rel="noopener">
+                        <i data-lucide="message-circle" style="width: 18px; height: 18px;"></i>
+                        <span>Contactar por WhatsApp</span>
+                    </a>
+                    <a class="pro-cta-btn pro-cta-call" href="tel:{{ professional.user.profile.phone }}">
+                        <i data-lucide="phone" style="width: 18px; height: 18px;"></i>
+                        <span>Llamar ahora</span>
+                    </a>
+                {% endif %}
+                <a class="pro-cta-btn pro-cta-quote" href="{% url 'estimator' %}">
+                    <i data-lucide="sparkles" style="width: 18px; height: 18px;"></i>
+                    <span>Cotizar obra con IA</span>
+                </a>
+                <button type="button" class="pro-cta-share" onclick="shareProProfile()" id="shareBtn">
+                    <i data-lucide="share-2" style="width: 16px; height: 16px;"></i>
+                    <span id="shareBtnText">Compartir</span>
+                </button>
+            </div>
         </div>
-    </div>
-    <div class="profile-actions">
-        {% if professional.user.profile.phone %}
-            <a class="primary-button" href="tel:{{ professional.user.profile.phone }}" style="text-decoration: none;"><i data-lucide="phone"></i>Llamar</a>
-            <a class="whatsapp-button" href="https://wa.me/{{ professional.user.profile.whatsapp_number }}" target="_blank" style="text-decoration: none;"><i data-lucide="message-circle"></i>WhatsApp</a>
-        {% else %}
-            <span style="color: var(--muted); font-size: 13px; font-weight: 600;">Teléfono no disponible</span>
-        {% endif %}
-    </div>
-</section>
+    </section>
 
-<section class="reputation-grid">
-    <article><strong>{{ professional.rating }}</strong><span>Estrellas</span></article>
-    <article><strong>{{ professional.jobs }}</strong><span>Trabajos</span></article>
-    <article><strong>{{ professional.punctuality }}%</strong><span>Puntualidad</span></article>
-    <article><strong>{{ professional.response }}</strong><span>Respuesta</span></article>
-</section>
-
-<section class="detail-card">
-    <h2>Confianza digital</h2>
-    <div class="level-line">
-        <span>Nuevo</span><span>Confiable</span><span>Profesional</span><span>Experto</span><span>Maestro Elite</span>
-    </div>
-    <div class="level-progress"><span style="width: 92%"></span></div>
-    <p>{{ professional.about }}</p>
-    <div class="chips">
-        <span>{{ professional.level }}</span>
-        <span>{{ professional.experience }}</span>
-        <span>{{ professional.location }}</span>
-        <span>{{ professional.available }}</span>
-    </div>
-</section>
-
-<section class="section-block">
-    <div class="section-title">
-        <h2>Portafolio</h2>
-        <span>Trabajos verificados</span>
-    </div>
-    <div class="portfolio-grid">
-        {% for item in professional.portfolio_items.all %}
-        <figure class="portfolio-item" style="overflow: hidden; border-radius: 12px; border: 1px solid var(--line); padding: 8px; background: var(--surface);">
-            {% if item.is_video %}
-            <video src="{{ item.image_url }}" controls style="width: 100%; height: 180px; object-fit: cover; border-radius: 8px; background: #000;" preload="metadata"></video>
-            {% else %}
-            <img src="{{ item.image_url }}" alt="{{ item.caption|default:'Trabajo realizado' }}" loading="lazy" style="width: 100%; height: 180px; object-fit: cover; border-radius: 8px;">
-            {% endif %}
-            <figcaption style="margin-top: 8px; font-size: 13px; color: var(--text-muted); font-weight: 500;">{{ item.caption|default:"Trabajo realizado" }}</figcaption>
-        </figure>
-        {% empty %}
-        {% for item in professional.portfolio %}
-        <article><i data-lucide="image"></i><strong>{{ item }}</strong></article>
-        {% empty %}
-        <div class="empty-inline">Este profesional aún no añadió imágenes.</div>
-        {% endfor %}
-        {% endfor %}
-    </div>
-</section>
-
-<section class="detail-card">
-    <h2>Opiniones verificadas</h2>
-    <div class="review-list">
-        {% for review in professional.verified_reviews.all %}
-        <article class="review-item">
-            <strong>{{ review.rating }}/5 ★</strong>
-            <p>{{ review.comment|default:"Servicio calificado sin comentario." }}</p>
-            <small>Puntualidad {{ review.punctuality }}/5 · Calidad {{ review.quality }}/5 · {{ review.created_at|date:"d/m/Y" }}</small>
+    <!-- ======================================================================
+         FRANJA DE 4 MÉTRICAS DE REPUTACIÓN
+         ====================================================================== -->
+    <section class="pro-kpi-grid" aria-label="Indicadores de desempeño">
+        <article class="pro-kpi-card">
+            <div class="pro-kpi-icon" style="background: rgba(245, 158, 11, 0.14); color: #f59e0b;">
+                <i data-lucide="star"></i>
+            </div>
+            <div>
+                <strong>{{ professional.rating }} ★</strong>
+                <span>Calificación media</span>
+            </div>
         </article>
-        {% empty %}
-        <div class="empty-inline">Aún no tiene reseñas verificadas.</div>
-        {% endfor %}
+        <article class="pro-kpi-card">
+            <div class="pro-kpi-icon" style="background: rgba(24, 167, 106, 0.14); color: var(--green);">
+                <i data-lucide="check-circle-2"></i>
+            </div>
+            <div>
+                <strong>{{ professional.jobs }}</strong>
+                <span>Obras completadas</span>
+            </div>
+        </article>
+        <article class="pro-kpi-card">
+            <div class="pro-kpi-icon" style="background: rgba(59, 130, 246, 0.14); color: #3b82f6;">
+                <i data-lucide="clock"></i>
+            </div>
+            <div>
+                <strong>{{ professional.punctuality }}%</strong>
+                <span>Puntualidad</span>
+            </div>
+        </article>
+        <article class="pro-kpi-card">
+            <div class="pro-kpi-icon" style="background: rgba(139, 92, 246, 0.14); color: #8b5cf6;">
+                <i data-lucide="zap"></i>
+            </div>
+            <div>
+                <strong>{{ professional.response }}</strong>
+                <span>Tiempo de respuesta</span>
+            </div>
+        </article>
+    </section>
+
+    <!-- ======================================================================
+         CONTENIDO EN 2 COLUMNAS (ACERCA DE / CONFIANZA + PORTAFOLIO / RESEÑAS)
+         ====================================================================== -->
+    <div class="pro-content-grid">
+
+        <!-- Columna Izquierda: Sobre el Profesional y Garantía -->
+        <aside style="display: flex; flex-direction: column; gap: 20px;">
+            <section class="pro-panel-card">
+                <h2><i data-lucide="user-check" style="color: var(--green);"></i> Acerca del profesional</h2>
+                <p class="pro-bio-text">{{ professional.about }}</p>
+
+                <div class="chips">
+                    <span>{{ professional.specialty }}</span>
+                    <span>{{ professional.level }}</span>
+                    <span>{{ professional.experience }}</span>
+                    <span>{{ professional.location }}</span>
+                </div>
+
+                <div class="pro-trust-list">
+                    <div class="pro-trust-item">
+                        <i data-lucide="shield-check" style="width: 18px; height: 18px;"></i>
+                        <span>Identidad y perfil verificados en ObraYa</span>
+                    </div>
+                    <div class="pro-trust-item">
+                        <i data-lucide="map-pinned" style="width: 18px; height: 18px;"></i>
+                        <span>Atención en {{ professional.location }} (hasta {{ professional.coverage_radius_km }} km)</span>
+                    </div>
+                    <div class="pro-trust-item">
+                        <i data-lucide="award" style="width: 18px; height: 18px;"></i>
+                        <span>Aplica a Garantía ObraYa al contratar en plataforma</span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="pro-panel-card">
+                <h2><i data-lucide="trending-up" style="color: var(--blue);"></i> Nivel de confianza digital</h2>
+                <div class="level-line" style="margin-top: 6px;">
+                    <span>Nuevo</span><span>Confiable</span><span>Profesional</span><span>Experto</span><span>Maestro Elite</span>
+                </div>
+                <div class="level-progress"><span style="width: 92%"></span></div>
+                <p style="margin: 12px 0 0; font-size: 12px; color: var(--muted); line-height: 1.45;">
+                    El índice de confianza se calcula automáticamente en base a trabajos terminados, puntualidad y reseñas verificadas de clientes reales.
+                </p>
+            </section>
+        </aside>
+
+        <!-- Columna Derecha: Portafolio Visual + Reseñas Verificadas -->
+        <div style="display: flex; flex-direction: column; gap: 20px;">
+
+            <!-- Portafolio Visual -->
+            <section class="pro-panel-card">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
+                    <h2 style="margin: 0;"><i data-lucide="images" style="color: var(--green);"></i> Portafolio de trabajos reales</h2>
+                    <span style="font-size: 12px; font-weight: 700; color: var(--muted);">
+                        {{ professional.portfolio_items.count }} publicación{{ professional.portfolio_items.count|pluralize:"es" }}
+                    </span>
+                </div>
+
+                <div class="pro-portfolio-grid">
+                    {% for item in professional.portfolio_items.all %}
+                        <article class="pro-portfolio-card"
+                                 {% if not item.is_video %}onclick="openProLightbox('{{ item.image_url|escapejs }}', '{{ item.caption|default:'Trabajo realizado'|escapejs }}')"{% endif %}>
+                            {% if item.is_video %}
+                                <video src="{{ item.image_url }}" controls preload="metadata" class="pro-portfolio-media"></video>
+                            {% else %}
+                                <img src="{{ item.image_url }}" alt="{{ item.caption|default:'Trabajo realizado' }}" loading="lazy" class="pro-portfolio-media">
+                            {% endif %}
+                            <div class="pro-portfolio-caption">
+                                <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                    {{ item.caption|default:"Trabajo realizado" }}
+                                </span>
+                                <small>{{ item.created_at|date:"d/m/Y" }}</small>
+                            </div>
+                        </article>
+                    {% empty %}
+                        {% for item in professional.portfolio %}
+                            <article class="pro-review-card" style="display: flex; align-items: center; gap: 10px;">
+                                <i data-lucide="check-circle" style="color: var(--green);"></i>
+                                <strong>{{ item }}</strong>
+                            </article>
+                        {% empty %}
+                            <div class="empty-inline" style="grid-column: 1 / -1; padding: 24px 0;">
+                                <i data-lucide="image-off"></i>
+                                Este profesional aún no ha subido fotos a su portafolio.
+                            </div>
+                        {% endfor %}
+                    {% endfor %}
+                </div>
+            </section>
+
+            <!-- Opiniones Verificadas -->
+            <section class="pro-panel-card">
+                <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 16px;">
+                    <h2 style="margin: 0;"><i data-lucide="message-square-quote" style="color: #f59e0b;"></i> Opiniones verificadas de clientes</h2>
+                    <span style="display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 700; color: var(--green); background: var(--green-soft); padding: 4px 10px; border-radius: 999px;">
+                        <i data-lucide="check-circle" style="width: 14px; height: 14px;"></i> Solo obras completadas
+                    </span>
+                </div>
+
+                <div class="pro-reviews-stack">
+                    {% for review in professional.verified_reviews.all %}
+                        <article class="pro-review-card">
+                            <div class="pro-review-top">
+                                <div class="pro-review-author">
+                                    <div class="pro-review-avatar">
+                                        {{ review.client.username|slice:":2"|upper }}
+                                    </div>
+                                    <div>
+                                        <strong style="display: block; font-size: 14px; color: var(--text);">
+                                            {{ review.client.first_name|default:review.client.username }}
+                                        </strong>
+                                        <small style="font-size: 11px; color: var(--muted);">
+                                            {{ review.created_at|date:"d/m/Y" }} · Puntualidad {{ review.punctuality }}/5 · Calidad {{ review.quality }}/5
+                                        </small>
+                                    </div>
+                                </div>
+                                <span class="pro-review-stars">★ {{ review.rating }}/5</span>
+                            </div>
+                            <p style="margin: 0; font-size: 14px; color: var(--text); line-height: 1.5;">
+                                {{ review.comment|default:"Excelente servicio, cumplido y verificado." }}
+                            </p>
+                        </article>
+                    {% empty %}
+                        <div class="empty-inline" style="padding: 16px 0;">
+                            <i data-lucide="star"></i>
+                            Aún no tiene reseñas publicadas. ¡Sé el primero en contratarlo y calificar su trabajo!
+                        </div>
+                    {% endfor %}
+                </div>
+            </section>
+
+        </div>
     </div>
-    <span class="verified-review"><i data-lucide="check-circle"></i>Solo trabajos completados pueden calificarse</span>
-</section>
+
+</div>
+
+<!-- Lightbox Modal para ampliar imágenes del portafolio -->
+<div id="proLightbox" class="pro-lightbox" onclick="if(event.target===this) closeProLightbox()">
+    <div class="pro-lightbox-inner">
+        <button type="button" onclick="closeProLightbox()" aria-label="Cerrar"
+                style="position: absolute; top: 12px; right: 12px; width: 36px; height: 36px; border-radius: 50%; border: none; background: rgba(0,0,0,0.65); color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+            <i data-lucide="x" style="width: 18px; height: 18px;"></i>
+        </button>
+        <img id="proLightboxImg" alt="Trabajo ampliado">
+        <div id="proLightboxCaption" style="padding: 14px 18px; font-size: 14px; font-weight: 700; color: var(--text);"></div>
+    </div>
+</div>
+
+<script>
+function openProLightbox(url, caption) {
+    const lb = document.getElementById('proLightbox');
+    const img = document.getElementById('proLightboxImg');
+    const cap = document.getElementById('proLightboxCaption');
+    if (!lb || !img) return;
+    img.src = url;
+    if (cap) cap.textContent = caption || 'Trabajo realizado';
+    lb.classList.add('open');
+}
+
+function closeProLightbox() {
+    const lb = document.getElementById('proLightbox');
+    const img = document.getElementById('proLightboxImg');
+    if (lb) lb.classList.remove('open');
+    if (img) img.src = '';
+}
+
+function shareProProfile() {
+    const shareData = {
+        title: '{{ professional.name|escapejs }} – {{ professional.specialty|escapejs }} | ObraYa',
+        text: 'Mira el perfil y portafolio verificado de {{ professional.name|escapejs }} en ObraYa:',
+        url: window.location.href
+    };
+    if (navigator.share) {
+        navigator.share(shareData).catch(() => {});
+    } else if (navigator.clipboard) {
+        navigator.clipboard.writeText(window.location.href).then(() => {
+            const txt = document.getElementById('shareBtnText');
+            if (txt) {
+                txt.textContent = '¡Enlace copiado!';
+                setTimeout(() => { txt.textContent = 'Compartir'; }, 2200);
+            }
+        });
+    }
+}
+</script>
 {% endblock %}
