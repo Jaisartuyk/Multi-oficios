@@ -5,673 +5,1136 @@
 
 {% block extra_css %}
 <style>
-    .community-container {
-        max-width: 1160px;
-        margin: 0 auto;
-        padding: 0 16px 40px;
+    /* ==========================================================================
+       LAYOUT ESTILO FACEBOOK PARA /comunidad/
+       - Topbar fija arriba a todo lo ancho
+       - Sidebar izquierdo fijo (no se mueve al hacer scroll)
+       - Sidebar derecho fijo (no se mueve al hacer scroll)
+       - Solo la columna central (feed) hace scroll
+       ========================================================================== */
+
+    .app-shell {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-height: 100vh;
+        margin: 0 !important;
+        padding: 60px 0 80px !important;
+        background: var(--bg) !important;
     }
 
-    .community-grid {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr);
-        gap: 20px;
-        align-items: start;
+    .topbar {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        height: 60px !important;
+        padding: 0 20px !important;
+        border-radius: 0 !important;
+        border-top: none !important;
+        border-left: none !important;
+        border-right: none !important;
+        border-bottom: 1px solid var(--line) !important;
+        background: var(--surface) !important;
+        box-shadow: 0 1px 6px rgba(0, 0, 0, 0.05) !important;
+        z-index: 1000 !important;
     }
 
-    /* Ocultar barras laterales por defecto en móvil */
-    .community-left {
-        display: none;
-    }
-
-    .community-right {
-        display: none;
-    }
-    
+    /* En escritorio ocultamos la barra flotante inferior porque el menú está en el sidebar izquierdo estilo Facebook */
     @media (min-width: 768px) {
-        .community-grid {
-            grid-template-columns: 240px minmax(0, 1fr);
+        .app-shell {
+            padding-bottom: 24px !important;
         }
-        .community-left {
-            display: block;
-        }
-    }
-    
-    @media (min-width: 992px) {
-        .community-grid {
-            grid-template-columns: 240px minmax(0, 1fr) 290px;
-        }
-        .community-right {
-            display: block;
+        .bottom-nav {
+            display: none !important;
         }
     }
 
-    /* Tarjeta del Perfil (Izquierda) */
-    .profile-sidebar-card {
-        background: var(--surface);
-        border: 1px solid var(--line);
-        border-radius: 16px;
-        overflow: hidden;
-        box-shadow: 0 2px 12px rgba(0,0,0,0.04);
-        position: sticky;
-        top: 80px;
+    /* Contenedor general del layout Facebook */
+    .fb-layout {
+        position: relative;
+        width: 100%;
+        min-height: calc(100vh - 60px);
     }
-    
-    .profile-sidebar-bg {
-        height: 64px;
-        background: linear-gradient(135deg, rgba(16,185,129,0.1) 0%, rgba(59,130,246,0.1) 100%);
-        border-bottom: 1px solid var(--line);
+
+    /* --------------------------------------------------------------------------
+       SIDEBAR IZQUIERDO FIJO (Menú estilo Facebook + Accesos directos)
+       -------------------------------------------------------------------------- */
+    .fb-left-sidebar {
+        display: none;
     }
-    
-    .profile-sidebar-avatar-wrapper {
-        margin-top: -32px;
+
+    @media (min-width: 768px) {
+        .fb-left-sidebar {
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            top: 60px;
+            left: 0;
+            bottom: 0;
+            width: 280px;
+            padding: 16px 10px 24px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            z-index: 90;
+            scrollbar-width: thin;
+            scrollbar-color: transparent transparent;
+            transition: scrollbar-color 0.2s;
+        }
+        .fb-left-sidebar:hover {
+            scrollbar-color: var(--line) transparent;
+        }
+        .fb-left-sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .fb-left-sidebar::-webkit-scrollbar-thumb {
+            background: transparent;
+            border-radius: 10px;
+        }
+        .fb-left-sidebar:hover::-webkit-scrollbar-thumb {
+            background: var(--line);
+        }
+    }
+
+    @media (min-width: 1200px) {
+        .fb-left-sidebar {
+            width: 310px;
+            padding: 16px 14px 24px;
+        }
+    }
+
+    .fb-menu-list {
         display: flex;
-        justify-content: center;
+        flex-direction: column;
+        gap: 2px;
     }
-    
-    .profile-sidebar-avatar {
-        width: 64px;
-        height: 64px;
-        border-radius: 50%;
-        border: 4px solid var(--surface);
-        background: linear-gradient(135deg, var(--green), #059669);
-        color: white;
-        font-weight: 800;
-        font-size: 20px;
+
+    .fb-menu-item {
         display: flex;
         align-items: center;
-        justify-content: center;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-    }
-    
-    .profile-sidebar-info {
-        text-align: center;
-        padding: 16px 16px 20px;
-        border-bottom: 1px solid var(--line);
-    }
-    
-    .profile-sidebar-name {
-        font-size: 15px;
-        font-weight: 800;
+        gap: 12px;
+        padding: 8px 10px;
+        border-radius: 10px;
         color: var(--text);
-        margin: 0 0 4px;
-    }
-    
-    .profile-sidebar-role {
-        font-size: 11px;
-        font-weight: 700;
-        color: var(--green);
-        background: rgba(16,185,129,0.08);
-        padding: 2px 10px;
-        border-radius: 100px;
-        display: inline-block;
-        margin-bottom: 8px;
-    }
-    
-    .profile-sidebar-desc {
-        font-size: 12px;
-        color: var(--muted);
-        line-height: 1.4;
-        margin: 0;
-    }
-    
-    .profile-sidebar-stats {
-        padding: 12px 16px;
-        border-bottom: 1px solid var(--line);
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-    }
-    
-    .profile-sidebar-stat-item {
-        display: flex;
-        justify-content: space-between;
-        font-size: 12px;
-        color: var(--text-muted);
-    }
-    
-    .profile-sidebar-stat-value {
-        font-weight: 700;
-        color: var(--text);
-    }
-    
-    .profile-sidebar-links {
-        padding: 8px 0;
-    }
-    
-    .profile-sidebar-link-item {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding: 10px 16px;
-        font-size: 13px;
-        font-weight: 600;
-        color: var(--text);
-        text-decoration: none;
-        transition: background 0.2s, color 0.2s;
-    }
-    
-    .profile-sidebar-link-item:hover {
-        background: var(--surface-strong);
-        color: var(--green);
-    }
-    
-    .profile-sidebar-link-item i {
-        width: 16px;
-        height: 16px;
-        color: var(--muted);
-    }
-
-    /* Columna Central (Feed) */
-    .community-center {
-        display: flex;
-        flex-direction: column;
-        gap: 20px;
-    }
-
-    /* Tarjetas del Sidebar Derecho */
-    .right-sidebar-widgets {
-        display: flex;
-        flex-direction: column;
-        gap: 20px;
-        position: sticky;
-        top: 80px;
-    }
-    
-    .widget-card {
-        background: var(--surface);
-        border: 1px solid var(--line);
-        border-radius: 16px;
-        padding: 16px;
-        box-shadow: 0 2px 12px rgba(0,0,0,0.04);
-    }
-    
-    .widget-title {
         font-size: 14px;
-        font-weight: 800;
-        color: var(--text);
-        margin: 0 0 12px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: background 0.15s ease;
+        cursor: pointer;
     }
-    
-    .widget-pro-item {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding: 10px 0;
-        border-bottom: 1px solid var(--line);
+
+    .fb-menu-item:hover {
+        background: var(--surface-strong);
     }
-    
-    .widget-pro-item:last-child {
-        border-bottom: none;
+
+    .fb-menu-item.active {
+        background: rgba(24, 167, 106, 0.12);
+        color: var(--green);
+        font-weight: 700;
     }
-    
-    .widget-pro-avatar {
+
+    .fb-menu-avatar {
         width: 36px;
         height: 36px;
         border-radius: 50%;
         background: linear-gradient(135deg, var(--green), #059669);
-        color: white;
+        color: #fff;
+        font-weight: 800;
+        font-size: 13px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 12px;
-        font-weight: 700;
         flex-shrink: 0;
-    }
-    
-    .widget-pro-info {
-        flex: 1;
-        min-width: 0;
-    }
-    
-    .widget-pro-name {
-        font-size: 13px;
-        font-weight: 700;
-        color: var(--text);
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        display: block;
-    }
-    
-    .widget-pro-spec {
-        font-size: 11px;
-        color: var(--muted);
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        display: block;
-    }
-    
-    .widget-pro-rating {
-        display: flex;
-        align-items: center;
-        gap: 2px;
-        font-size: 11px;
-        font-weight: 700;
-        color: #F59E0B;
-    }
-    
-    .widget-pro-link {
-        font-size: 11px;
-        font-weight: 700;
-        color: var(--green);
-        text-decoration: none;
-        padding: 5px 10px;
-        border-radius: 8px;
-        background: rgba(16,185,129,0.08);
-        flex-shrink: 0;
-        transition: background 0.2s;
-    }
-    
-    .widget-pro-link:hover {
-        background: rgba(16,185,129,0.15);
-    }
-    
-    .tip-item {
-        display: flex;
-        gap: 10px;
-        align-items: flex-start;
-        font-size: 12px;
-        color: var(--text-muted);
-        line-height: 1.4;
-        margin-bottom: 12px;
-    }
-    
-    .tip-item:last-child {
-        margin-bottom: 0;
-    }
-    
-    .tip-icon {
-        color: var(--green);
-        flex-shrink: 0;
-        margin-top: 1px;
+        box-shadow: 0 2px 6px rgba(24, 167, 106, 0.25);
     }
 
-    /* Reglas para móviles (Estilo de feed de LinkedIn Edge-to-Edge) */
+    .fb-menu-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .fb-menu-icon i,
+    .fb-menu-icon svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    .fb-icon-green { background: rgba(16, 185, 129, 0.14); color: #10b981; }
+    .fb-icon-blue { background: rgba(59, 130, 246, 0.14); color: #3b82f6; }
+    .fb-icon-purple { background: rgba(139, 92, 246, 0.14); color: #8b5cf6; }
+    .fb-icon-amber { background: rgba(245, 158, 11, 0.14); color: #f59e0b; }
+    .fb-icon-cyan { background: rgba(6, 182, 212, 0.14); color: #06b6d4; }
+    .fb-icon-rose { background: rgba(244, 63, 94, 0.14); color: #f43f5e; }
+
+    .fb-menu-text {
+        flex: 1;
+        min-width: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .fb-menu-sub {
+        display: block;
+        font-size: 11px;
+        font-weight: 500;
+        color: var(--muted);
+    }
+
+    .fb-divider {
+        border: 0;
+        border-top: 1px solid var(--line);
+        margin: 12px 10px;
+    }
+
+    .fb-section-header {
+        padding: 4px 10px 8px;
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--muted);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    /* --------------------------------------------------------------------------
+       SIDEBAR DERECHO FIJO (Contactos / Sugerencias / Alianzas estilo Facebook)
+       -------------------------------------------------------------------------- */
+    .fb-right-sidebar {
+        display: none;
+    }
+
+    @media (min-width: 1024px) {
+        .fb-right-sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            position: fixed;
+            top: 60px;
+            right: 0;
+            bottom: 0;
+            width: 300px;
+            padding: 16px 14px 24px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            z-index: 90;
+            scrollbar-width: thin;
+            scrollbar-color: transparent transparent;
+        }
+        .fb-right-sidebar:hover {
+            scrollbar-color: var(--line) transparent;
+        }
+        .fb-right-sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .fb-right-sidebar::-webkit-scrollbar-thumb {
+            background: transparent;
+            border-radius: 10px;
+        }
+        .fb-right-sidebar:hover::-webkit-scrollbar-thumb {
+            background: var(--line);
+        }
+    }
+
+    @media (min-width: 1280px) {
+        .fb-right-sidebar {
+            width: 330px;
+            padding: 16px 18px 24px;
+        }
+    }
+
+    /* --------------------------------------------------------------------------
+       COLUMNA CENTRAL (FEED QUE HACE SCROLL)
+       -------------------------------------------------------------------------- */
+    .fb-center-wrapper {
+        width: 100%;
+        padding: 16px 12px 40px;
+    }
+
+    @media (min-width: 768px) {
+        .fb-center-wrapper {
+            padding-left: 290px;
+            padding-right: 16px;
+            padding-top: 20px;
+        }
+    }
+
+    @media (min-width: 1024px) {
+        .fb-center-wrapper {
+            padding-left: 290px;
+            padding-right: 310px;
+        }
+    }
+
+    @media (min-width: 1200px) {
+        .fb-center-wrapper {
+            padding-left: 320px;
+            padding-right: 320px;
+        }
+    }
+
+    @media (min-width: 1280px) {
+        .fb-center-wrapper {
+            padding-left: 330px;
+            padding-right: 340px;
+        }
+    }
+
+    .fb-feed-column {
+        width: 100%;
+        max-width: 640px;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    /* --------------------------------------------------------------------------
+       CARRUSEL DE HISTORIAS / TRABAJOS DESTACADOS (COMO FACEBOOK STORIES)
+       -------------------------------------------------------------------------- */
+    .fb-stories-wrapper {
+        position: relative;
+        width: 100%;
+    }
+
+    .fb-stories-track {
+        display: flex;
+        gap: 10px;
+        overflow-x: auto;
+        scroll-behavior: smooth;
+        scrollbar-width: none;
+        padding: 2px 0;
+    }
+
+    .fb-stories-track::-webkit-scrollbar {
+        display: none;
+    }
+
+    .fb-story-card {
+        position: relative;
+        flex: 0 0 118px;
+        height: 200px;
+        border-radius: 14px;
+        overflow: hidden;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        cursor: pointer;
+        text-decoration: none;
+        color: #fff;
+        transition: transform 0.2s ease;
+    }
+
+    .fb-story-card:hover {
+        transform: scale(1.02);
+    }
+
+    .fb-story-card img,
+    .fb-story-card video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+        transition: transform 0.3s ease;
+    }
+
+    .fb-story-card:hover img,
+    .fb-story-card:hover video {
+        transform: scale(1.06);
+    }
+
+    .fb-story-overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(180deg, rgba(0,0,0,0.25) 0%, transparent 40%, rgba(0,0,0,0.75) 100%);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 10px;
+    }
+
+    .fb-story-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        border: 3px solid var(--green);
+        background: linear-gradient(135deg, var(--navy), var(--green));
+        color: #fff;
+        font-size: 12px;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    }
+
+    .fb-story-name {
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 1.25;
+        color: #fff;
+        text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    /* Primera tarjeta tipo "Crear historia / Publicar" */
+    .fb-story-create {
+        display: flex;
+        flex-direction: column;
+        background: var(--surface);
+        color: var(--text);
+    }
+
+    .fb-story-create-top {
+        height: 132px;
+        background: linear-gradient(135deg, #0b2f4f 0%, #18a76a 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-size: 28px;
+        font-weight: 800;
+    }
+
+    .fb-story-create-bottom {
+        flex: 1;
+        position: relative;
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        padding: 8px 6px 10px;
+        text-align: center;
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--text);
+        background: var(--surface);
+    }
+
+    .fb-story-plus {
+        position: absolute;
+        top: -18px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: var(--green);
+        border: 4px solid var(--surface);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .fb-stories-next {
+        position: absolute;
+        right: -12px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        color: var(--text);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        z-index: 5;
+        transition: transform 0.15s ease, background 0.15s ease;
+    }
+
+    .fb-stories-next:hover {
+        background: var(--surface-strong);
+        transform: translateY(-50%) scale(1.06);
+    }
+
+    /* --------------------------------------------------------------------------
+       TARJETA DE CREAR PUBLICACIÓN Y POSTS ESTILO FACEBOOK
+       -------------------------------------------------------------------------- */
+    .fb-card {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+    }
+
+    .fb-create-top {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 16px;
+    }
+
+    .fb-create-input {
+        flex: 1;
+        text-align: left;
+        background: var(--surface-strong);
+        border: none;
+        padding: 10px 16px;
+        border-radius: 999px;
+        color: var(--muted);
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: filter 0.15s;
+    }
+
+    .fb-create-input:hover {
+        filter: brightness(0.96);
+    }
+
+    .fb-create-actions {
+        display: flex;
+        border-top: 1px solid var(--line);
+        padding: 6px 12px;
+    }
+
+    .fb-create-btn {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        background: transparent;
+        border: none;
+        padding: 8px 10px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--muted);
+        cursor: pointer;
+        transition: background 0.15s;
+    }
+
+    .fb-create-btn:hover {
+        background: var(--surface-strong);
+    }
+
+    /* Píldoras de filtro en móvil/tablet */
+    .fb-mobile-filter {
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+        scrollbar-width: none;
+        padding-bottom: 2px;
+    }
+    .fb-mobile-filter::-webkit-scrollbar {
+        display: none;
+    }
+    .fb-filter-chip {
+        flex-shrink: 0;
+        padding: 7px 14px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 700;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        color: var(--text);
+        text-decoration: none;
+        transition: all 0.15s;
+    }
+    .fb-filter-chip.active,
+    .fb-filter-chip:hover {
+        background: var(--green);
+        color: #fff;
+        border-color: var(--green);
+    }
+
+    /* Post Header, Body & Action Bar */
+    .fb-post-header {
+        padding: 12px 16px 10px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+    }
+
+    .fb-post-caption {
+        padding: 0 16px 12px;
+        font-size: 14px;
+        color: var(--text);
+        line-height: 1.5;
+        margin: 0;
+    }
+
+    .fb-post-stats {
+        padding: 10px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 12px;
+        color: var(--muted);
+        border-bottom: 1px solid var(--line);
+    }
+
+    .fb-post-actions {
+        display: flex;
+        padding: 4px 8px;
+        gap: 4px;
+    }
+
+    .fb-action-btn {
+        flex: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 8px 10px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--muted);
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        text-decoration: none;
+        transition: background 0.15s, color 0.15s;
+    }
+
+    .fb-action-btn:hover {
+        background: var(--surface-strong);
+        color: var(--text);
+    }
+
+    .fb-action-btn.liked {
+        color: var(--blue);
+        font-weight: 700;
+    }
+
+    .fb-action-btn.whatsapp:hover {
+        color: #25D366;
+        background: rgba(37, 211, 102, 0.1);
+    }
+
+    /* Contactos en el Sidebar Derecho estilo Facebook */
+    .fb-contact-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px;
+        border-radius: 10px;
+        text-decoration: none;
+        color: var(--text);
+        transition: background 0.15s;
+    }
+
+    .fb-contact-row:hover {
+        background: var(--surface-strong);
+    }
+
+    .fb-contact-avatar-wrap {
+        position: relative;
+        flex-shrink: 0;
+    }
+
+    .fb-online-dot {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #22c55e;
+        border: 2px solid var(--surface);
+    }
+
+    /* Ajustes para móviles */
     @media (max-width: 767px) {
-        .community-container {
-            padding: 0 0 40px !important;
-            margin-left: -14px !important;
-            margin-right: -14px !important;
-            width: calc(100% + 28px) !important;
-            max-width: calc(100% + 28px) !important;
+        .fb-center-wrapper {
+            padding: 10px 0 32px;
         }
-        .selector-wrapper {
-            padding: 0 16px !important;
+        .fb-stories-wrapper,
+        .fb-mobile-filter {
+            padding-left: 12px;
+            padding-right: 12px;
         }
-        .feed-card {
-            border-radius: 0 !important;
-            border-left: none !important;
-            border-right: none !important;
-            box-shadow: none !important;
-            margin-bottom: 8px !important;
+        .fb-stories-next {
+            display: none;
         }
-        .community-center {
-            gap: 8px !important;
+        .fb-card {
+            border-radius: 0;
+            border-left: none;
+            border-right: none;
         }
-        /* Ajustar cabecera de feed en móvil */
-        .dashboard-heading {
-            padding: 12px 16px 8px !important;
-        }
-        .dashboard-heading h1 {
-            font-size: 20px !important;
-        }
-        /* Ajustar fila de botones del creador de posts en móvil */
-        .creator-buttons-row {
-            flex-wrap: wrap !important;
-            justify-content: space-around !important;
-            gap: 4px !important;
-        }
-        .creator-buttons-row button {
-            padding: 6px 10px !important;
-            font-size: 11px !important;
-            gap: 4px !important;
-        }
-        /* Ajustar pie de tarjeta de post en móvil */
-        .post-card-footer {
-            flex-wrap: wrap !important;
-            gap: 8px !important;
+        .fb-feed-column {
+            gap: 10px;
         }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<section class="dashboard-heading" style="text-align: center; padding-bottom: 16px;">
-    <div>
-        <span class="eyebrow"><i data-lucide="globe"></i> Red profesional</span>
-        <h1 style="font-size: 22px;">Comunidad ObraYa</h1>
-        <p style="max-width: 400px; margin: 4px auto 0; font-size: 13px; color: var(--muted);">
-            Descubre trabajos reales de profesionales verificados. Contrata con confianza.
-        </p>
-    </div>
-</section>
+<div class="fb-layout">
 
-<div class="community-container">
-    <div class="community-grid">
-        
-        <!-- Columna Izquierda: Perfil y Accesos Directos -->
-        <aside class="community-left">
-            <div class="profile-sidebar-card">
-                <div class="profile-sidebar-bg"></div>
-                <div class="profile-sidebar-avatar-wrapper">
-                    <div class="profile-sidebar-avatar">
-                        {% if user.is_authenticated %}
-                            {% if user.profile.role == 'PROFESSIONAL' %}
-                                {{ user.professional_profile.initials }}
-                            {% else %}
-                                {{ user.username|slice:":2"|upper }}
-                            {% endif %}
-                        {% else %}
-                            🔨
-                        {% endif %}
-                    </div>
-                </div>
-                
-                <div class="profile-sidebar-info">
-                    {% if user.is_authenticated %}
-                        <h4 class="profile-sidebar-name">
-                            {% if user.profile.role == 'PROFESSIONAL' %}
-                                {{ user.professional_profile.name }}
-                            {% else %}
-                                {{ user.first_name|default:user.username }}
-                            {% endif %}
-                        </h4>
-                        <span class="profile-sidebar-role">
-                            {{ user.profile.get_role_display }}
-                        </span>
-                        <p class="profile-sidebar-desc">
-                            {% if user.profile.role == 'PROFESSIONAL' %}
-                                {{ user.professional_profile.specialty }}
-                            {% else %}
-                                Miembro verificado de ObraYa
-                            {% endif %}
-                        </p>
-                    {% else %}
-                        <h4 class="profile-sidebar-name">Bienvenido a ObraYa</h4>
-                        <p class="profile-sidebar-desc">
-                            Inicia sesión para interactuar con la comunidad y contratar profesionales.
-                        </p>
-                    {% endif %}
-                </div>
-                
-                {% if user.is_authenticated %}
-                <div class="profile-sidebar-stats">
-                    {% if user.profile.role == 'PROFESSIONAL' %}
-                        <div class="profile-sidebar-stat-item">
-                            <span>Trabajos realizados</span>
-                            <span class="profile-sidebar-stat-value">{{ user.professional_profile.jobs }}</span>
-                        </div>
-                        <div class="profile-sidebar-stat-item">
-                            <span>Calificación</span>
-                            <span class="profile-sidebar-stat-value">⭐ {{ user.professional_profile.rating }}</span>
-                        </div>
-                        <div class="profile-sidebar-stat-item">
-                            <span>Créditos</span>
-                            <span class="profile-sidebar-stat-value">{{ user.professional_profile.credits }}</span>
-                        </div>
-                    {% else %}
-                        <div class="profile-sidebar-stat-item">
-                            <span>Solicitudes hechas</span>
-                            <span class="profile-sidebar-stat-value">{{ user.requests_made.count }}</span>
-                        </div>
-                        <div class="profile-sidebar-stat-item">
-                            <span>Ecuador</span>
-                            <span class="profile-sidebar-stat-value">Guayaquil</span>
-                        </div>
-                    {% endif %}
-                </div>
-                {% endif %}
-                
-                <div class="profile-sidebar-links">
-                    {% if user.is_authenticated %}
+    <!-- ======================================================================
+         COLUMNA IZQUIERDA FIJA (Menú lateral estilo Facebook)
+         ====================================================================== -->
+    <aside class="fb-left-sidebar" aria-label="Menú de comunidad">
+        <nav class="fb-menu-list">
+            {% if user.is_authenticated %}
+                <a href="{% if user.profile.role == 'PROFESSIONAL' %}{% url 'professional_dashboard' %}{% elif user.is_superuser or user.profile.role == 'ADMIN' %}{% url 'admin_panel' %}{% else %}{% url 'client_dashboard' %}{% endif %}" class="fb-menu-item">
+                    <div class="fb-menu-avatar">
                         {% if user.profile.role == 'PROFESSIONAL' %}
-                            <a href="{% url 'professional_dashboard' %}" class="profile-sidebar-link-item">
-                                <i data-lucide="layout-dashboard"></i>
-                                <span>Panel de Control</span>
-                            </a>
-                            <a href="{% url 'professional_detail' user.professional_profile.id %}" class="profile-sidebar-link-item">
-                                <i data-lucide="user"></i>
-                                <span>Mi Perfil Público</span>
-                            </a>
+                            {{ user.professional_profile.initials }}
                         {% else %}
-                            <a href="{% url 'client_dashboard' %}" class="profile-sidebar-link-item">
-                                <i data-lucide="layout-dashboard"></i>
-                                <span>Mi Panel</span>
-                            </a>
-                            <a href="{% url 'estimator' %}" class="profile-sidebar-link-item">
-                                <i data-lucide="plus-circle"></i>
-                                <span>Solicitar Servicio</span>
-                            </a>
+                            {{ user.username|slice:":2"|upper }}
                         {% endif %}
-                    {% else %}
-                        <a href="{% url 'login' %}" class="profile-sidebar-link-item">
-                            <i data-lucide="log-in"></i>
-                            <span>Iniciar Sesión</span>
-                        </a>
-                    {% endif %}
-                </div>
-            </div>
-        </aside>
-
-        <!-- Columna Central: Contenido Principal -->
-        <main class="community-center">
-            
-            <!-- Selector de Especialidades -->
-            <div class="selector-wrapper" style="position: relative; width: 100%;">
-                <select onchange="location = this.value;" style="width: 100%; padding: 12px 16px; padding-right: 40px; border-radius: 12px; font-size: 14px; font-weight: 700; border: 1.5px solid var(--line); background: var(--surface); color: var(--text); appearance: none; -webkit-appearance: none; cursor: pointer; transition: border-color 0.2s, box-shadow 0.2s; outline: none; font-family: inherit;">
-                    <option value="{% url 'feed' %}" {% if not current_filter %}selected{% endif %}>🔍 Todas las especialidades</option>
-                    {% for spec in specialties %}
-                        <option value="{% url 'feed' %}?especialidad={{ spec|urlencode }}" {% if current_filter == spec %}selected{% endif %}>
-                            🛠️ {{ spec }}
-                        </option>
-                    {% endfor %}
-                </select>
-                <div style="position: absolute; right: 16px; top: 50%; transform: translateY(-50%); pointer-events: none; color: var(--text-muted); display: flex; align-items: center;">
-                    <i data-lucide="chevron-down" style="width: 18px; height: 18px;"></i>
-                </div>
-            </div>
-
-            {% if user.is_authenticated and user.profile.role == 'PROFESSIONAL' %}
-            <!-- Creador de Publicación -->
-            <div class="feed-card" style="background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.04);">
-                <div style="display: flex; align-items: center; gap: 12px;">
-                    <div class="avatar" style="width: 44px; height: 44px; font-size: 14px; background: linear-gradient(135deg, var(--green), #059669); color: white; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-weight: 800; flex-shrink: 0;">
-                        {{ user.professional_profile.initials }}
                     </div>
-                    <button onclick="openPublishModal()" style="flex: 1; text-align: left; background: var(--surface-strong); border: 1.5px solid var(--line); padding: 12px 20px; border-radius: 100px; color: var(--text-muted); font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.2s, border-color 0.2s; outline: none; font-family: inherit;">
-                        Crear publicación...
-                    </button>
-                </div>
-                <hr style="border: 0; border-top: 1px solid var(--line); margin: 12px 0;">
-                <div class="creator-buttons-row" style="display: flex; justify-content: space-around; gap: 8px;">
-                    <button onclick="openPublishModal('video')" style="display: flex; align-items: center; gap: 8px; background: transparent; border: none; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; color: var(--text); cursor: pointer; transition: background 0.2; font-family: inherit;">
-                        <i data-lucide="video" style="color: #10B981; width: 18px; height: 18px;"></i>
-                        <span>Vídeo</span>
-                    </button>
-                    <button onclick="openPublishModal('photo')" style="display: flex; align-items: center; gap: 8px; background: transparent; border: none; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; color: var(--text); cursor: pointer; transition: background 0.2; font-family: inherit;">
-                        <i data-lucide="image" style="color: #3B82F6; width: 18px; height: 18px;"></i>
-                        <span>Foto</span>
-                    </button>
-                    <button onclick="openPublishModal('article')" style="display: flex; align-items: center; gap: 8px; background: transparent; border: none; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; color: var(--text); cursor: pointer; transition: background 0.2; font-family: inherit;">
-                        <i data-lucide="pen-square" style="color: #F59E0B; width: 18px; height: 18px;"></i>
-                        <span>Escribir artículo</span>
-                    </button>
-                </div>
-            </div>
+                    <div class="fb-menu-text">
+                        {% if user.profile.role == 'PROFESSIONAL' %}
+                            {{ user.professional_profile.name }}
+                        {% else %}
+                            {{ user.first_name|default:user.username }}
+                        {% endif %}
+                        <span class="fb-menu-sub">{{ user.profile.get_role_display }}</span>
+                    </div>
+                </a>
+            {% else %}
+                <a href="{% url 'login' %}" class="fb-menu-item">
+                    <div class="fb-menu-avatar">🔨</div>
+                    <div class="fb-menu-text">
+                        Iniciar sesión
+                        <span class="fb-menu-sub">Únete a la comunidad ObraYa</span>
+                    </div>
+                </a>
             {% endif %}
 
-            <!-- Publicaciones -->
-            {% for item in page_obj %}
-            <article class="feed-card" style="background: var(--surface); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.06); transition: transform 0.2s ease, box-shadow 0.2s ease;">
-                
-                <!-- Cabecera de la Publicación -->
-                <div style="padding: 14px 16px; display: flex; align-items: center; gap: 12px;">
-                    <a href="{% url 'professional_detail' item.professional.id %}" style="text-decoration: none; display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0;">
-                        <div class="avatar" style="flex-shrink: 0; width: 44px; height: 44px; font-size: 14px; background: linear-gradient(135deg, var(--green), #059669); color: white; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-weight: 800;">
-                            {{ item.professional.initials }}
+            <a href="{% url 'feed' %}" class="fb-menu-item {% if not current_filter %}active{% endif %}">
+                <div class="fb-menu-icon fb-icon-blue">
+                    <i data-lucide="newspaper"></i>
+                </div>
+                <span class="fb-menu-text">Feed de Comunidad</span>
+            </a>
+
+            <a href="{% url 'estimator' %}" class="fb-menu-item">
+                <div class="fb-menu-icon fb-icon-purple">
+                    <i data-lucide="sparkles"></i>
+                </div>
+                <div class="fb-menu-text">
+                    Cotizador con IA
+                    <span class="fb-menu-sub">Presupuesto instantáneo</span>
+                </div>
+            </a>
+
+            <a href="{% url 'home' %}" class="fb-menu-item">
+                <div class="fb-menu-icon fb-icon-green">
+                    <i data-lucide="users"></i>
+                </div>
+                <span class="fb-menu-text">Buscar Profesionales</span>
+            </a>
+
+            {% if user.is_authenticated %}
+                {% if user.profile.role == 'PROFESSIONAL' %}
+                    <a href="{% url 'professional_dashboard' %}" class="fb-menu-item">
+                        <div class="fb-menu-icon fb-icon-amber">
+                            <i data-lucide="bar-chart-3"></i>
                         </div>
-                        <div style="min-width: 0;">
-                            <strong style="display: block; font-size: 14px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ item.professional.name }}</strong>
-                            <span style="display: block; font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                                {{ item.professional.specialty }} · {{ item.professional.location }}
-                            </span>
+                        <div class="fb-menu-text">
+                            Panel para Profesionales
+                            <span class="fb-menu-sub">{{ user.professional_profile.credits }} créditos · ⭐ {{ user.professional_profile.rating }}</span>
                         </div>
                     </a>
-                    <div style="display: flex; align-items: center; gap: 4px; flex-shrink: 0;">
-                        <span style="font-size: 12px; font-weight: 700; color: var(--green);">{{ item.professional.rating }} ★</span>
-                    </div>
-                </div>
-
-                <!-- Imagen o Video -->
-                {% if item.is_video %}
-                <video src="{{ item.image_url }}" controls preload="metadata"
-                       style="width: 100%; max-height: 420px; object-fit: cover; background: #000; display: block;">
-                </video>
+                    <a href="{% url 'professional_dashboard' %}#job-market" class="fb-menu-item">
+                        <div class="fb-menu-icon fb-icon-cyan">
+                            <i data-lucide="briefcase-business"></i>
+                        </div>
+                        <span class="fb-menu-text">Bolsa de Empleo</span>
+                    </a>
+                    <a href="{% url 'professional_detail' user.professional_profile.id %}" class="fb-menu-item">
+                        <div class="fb-menu-icon fb-icon-rose">
+                            <i data-lucide="user-check"></i>
+                        </div>
+                        <span class="fb-menu-text">Mi Perfil Público</span>
+                    </a>
                 {% else %}
-                <img src="{{ item.image_url }}" alt="{{ item.caption|default:'Trabajo realizado' }}" loading="lazy"
-                     style="width: 100%; max-height: 420px; object-fit: cover; display: block;">
+                    <a href="{% url 'client_dashboard' %}" class="fb-menu-item">
+                        <div class="fb-menu-icon fb-icon-amber">
+                            <i data-lucide="clipboard-list"></i>
+                        </div>
+                        <div class="fb-menu-text">
+                            Mis Solicitudes
+                            <span class="fb-menu-sub">{{ user.requests_made.count }} solicitudes creadas</span>
+                        </div>
+                    </a>
+                    <a href="{% url 'switch_role' 'PROFESSIONAL' %}" class="fb-menu-item">
+                        <div class="fb-menu-icon fb-icon-cyan">
+                            <i data-lucide="hard-hat"></i>
+                        </div>
+                        <span class="fb-menu-text">Modo Trabajador</span>
+                    </a>
                 {% endif %}
+            {% endif %}
+        </nav>
 
-                <!-- Pie de la Publicación -->
-                <div style="padding: 14px 16px;">
-                    {% if item.caption %}
-                    <p style="margin: 0 0 12px; font-size: 14px; color: var(--text); line-height: 1.5;">
-                        <strong style="color: var(--text); margin-right: 4px;">{{ item.professional.name }}</strong>{{ item.caption }}
-                    </p>
+        <hr class="fb-divider">
+
+        <!-- Tus accesos directos / Especialidades (como en Facebook) -->
+        <div class="fb-section-header">
+            <span>Tus accesos directos</span>
+            {% if current_filter %}
+                <a href="{% url 'feed' %}" style="font-size: 12px; color: var(--blue); font-weight: 600;">Ver todos</a>
+            {% endif %}
+        </div>
+
+        <div class="fb-menu-list">
+            <a href="{% url 'feed' %}" class="fb-menu-item {% if not current_filter %}active{% endif %}">
+                <div class="fb-menu-icon fb-icon-green" style="border-radius: 10px;">
+                    <i data-lucide="layers"></i>
+                </div>
+                <span class="fb-menu-text">Todas las especialidades</span>
+            </a>
+            {% for spec in specialties %}
+                <a href="{% url 'feed' %}?especialidad={{ spec|urlencode }}" class="fb-menu-item {% if current_filter == spec %}active{% endif %}">
+                    <div class="fb-menu-icon fb-icon-blue" style="border-radius: 10px;">
+                        <i data-lucide="wrench"></i>
+                    </div>
+                    <span class="fb-menu-text">{{ spec }}</span>
+                </a>
+            {% endfor %}
+        </div>
+    </aside>
+
+    <!-- ======================================================================
+         COLUMNA CENTRAL (La única que se mueve con el scroll)
+         ====================================================================== -->
+    <div class="fb-center-wrapper">
+        <div class="fb-feed-column">
+
+            <!-- Carrusel de Historias / Trabajos Destacados (Estilo Facebook) -->
+            <div class="fb-stories-wrapper">
+                <div class="fb-stories-track" id="storiesTrack">
+                    {% if user.is_authenticated and user.profile.role == 'PROFESSIONAL' %}
+                        <div class="fb-story-card fb-story-create" onclick="openPublishModal('photo')">
+                            <div class="fb-story-create-top">
+                                {{ user.professional_profile.initials }}
+                            </div>
+                            <div class="fb-story-create-bottom">
+                                <div class="fb-story-plus">
+                                    <i data-lucide="plus" style="width: 18px; height: 18px;"></i>
+                                </div>
+                                Subir trabajo
+                            </div>
+                        </div>
+                    {% else %}
+                        <a href="{% url 'estimator' %}" class="fb-story-card fb-story-create">
+                            <div class="fb-story-create-top">
+                                <i data-lucide="sparkles" style="width: 34px; height: 34px;"></i>
+                            </div>
+                            <div class="fb-story-create-bottom">
+                                <div class="fb-story-plus">
+                                    <i data-lucide="plus" style="width: 18px; height: 18px;"></i>
+                                </div>
+                                Cotizar obra
+                            </div>
+                        </a>
                     {% endif %}
 
-                    <div class="post-card-footer" style="display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
-                        <time style="font-size: 11px; color: var(--muted); font-weight: 500;">
-                            {{ item.created_at|timesince }} atrás
-                        </time>
-                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                            {% if item.professional.user.profile.phone %}
-                            <a href="https://wa.me/{{ item.professional.user.profile.whatsapp_number }}?text=Hola%2C%20vi%20tu%20trabajo%20en%20ObraYa%20y%20me%20interesa%20cotizar." target="_blank" rel="noopener"
-                               style="display: inline-flex; align-items: center; gap: 5px; padding: 6px 14px; border-radius: 100px; font-size: 12px; font-weight: 700; background: #25D366; color: white; text-decoration: none; border: none; cursor: pointer; transition: opacity 0.2s;">
-                                <i data-lucide="message-circle" style="width: 14px; height: 14px;"></i>Contactar
-                            </a>
+                    {% for item in page_obj|slice:":8" %}
+                        <a href="{% url 'professional_detail' item.professional.id %}" class="fb-story-card">
+                            {% if item.is_video %}
+                                <video src="{{ item.image_url }}" muted playsinline preload="metadata"></video>
+                            {% else %}
+                                <img src="{{ item.image_url }}" alt="{{ item.professional.name }}" loading="lazy">
                             {% endif %}
-                            <a href="{% url 'professional_detail' item.professional.id %}"
-                               style="display: inline-flex; align-items: center; gap: 5px; padding: 6px 14px; border-radius: 100px; font-size: 12px; font-weight: 700; background: var(--surface-strong); color: var(--text); text-decoration: none; border: 1px solid var(--line); transition: background 0.2s;">
-                                <i data-lucide="user" style="width: 14px; height: 14px;"></i>Ver perfil
-                            </a>
+                            <div class="fb-story-overlay">
+                                <div class="fb-story-avatar">{{ item.professional.initials }}</div>
+                                <div class="fb-story-name">
+                                    {{ item.professional.name }}
+                                    <span style="display: block; font-size: 10px; opacity: 0.85; font-weight: 500;">{{ item.professional.specialty }}</span>
+                                </div>
+                            </div>
+                        </a>
+                    {% endfor %}
+                </div>
+                <button type="button" class="fb-stories-next" onclick="scrollStories()" aria-label="Ver más destacados">
+                    <i data-lucide="chevron-right" style="width: 20px; height: 20px;"></i>
+                </button>
+            </div>
+
+            <!-- Filtro rápido por especialidad (visible para cambio rápido) -->
+            <div class="fb-mobile-filter">
+                <a href="{% url 'feed' %}" class="fb-filter-chip {% if not current_filter %}active{% endif %}">
+                    Todos
+                </a>
+                {% for spec in specialties %}
+                    <a href="{% url 'feed' %}?especialidad={{ spec|urlencode }}" class="fb-filter-chip {% if current_filter == spec %}active{% endif %}">
+                        {{ spec }}
+                    </a>
+                {% endfor %}
+            </div>
+
+            <!-- Caja "¿Qué trabajo realizaste hoy?" (Estilo Facebook) -->
+            {% if user.is_authenticated and user.profile.role == 'PROFESSIONAL' %}
+                <div class="fb-card">
+                    <div class="fb-create-top">
+                        <div class="fb-menu-avatar" style="width: 40px; height: 40px;">
+                            {{ user.professional_profile.initials }}
                         </div>
+                        <button type="button" class="fb-create-input" onclick="openPublishModal()">
+                            ¿Qué trabajo realizaste hoy, {{ user.professional_profile.name| truncatechars:22 }}?
+                        </button>
+                    </div>
+                    <div class="fb-create-actions">
+                        <button type="button" class="fb-create-btn" onclick="openPublishModal('video')">
+                            <i data-lucide="video" style="color: #f43f5e; width: 20px; height: 20px;"></i>
+                            <span>Vídeo de obra</span>
+                        </button>
+                        <button type="button" class="fb-create-btn" onclick="openPublishModal('photo')">
+                            <i data-lucide="images" style="color: #10b981; width: 20px; height: 20px;"></i>
+                            <span>Foto / Antes y después</span>
+                        </button>
+                        <button type="button" class="fb-create-btn" onclick="openPublishModal('article')">
+                            <i data-lucide="smile" style="color: #f59e0b; width: 20px; height: 20px;"></i>
+                            <span>Proyecto terminado</span>
+                        </button>
                     </div>
                 </div>
-            </article>
+            {% else %}
+                <div class="fb-card">
+                    <div class="fb-create-top">
+                        <div class="fb-menu-avatar" style="width: 40px; height: 40px;">
+                            {% if user.is_authenticated %}{{ user.username|slice:":2"|upper }}{% else %}🔨{% endif %}
+                        </div>
+                        <a href="{% url 'estimator' %}" class="fb-create-input" style="text-decoration: none; display: block;">
+                            ¿Necesitas un maestro o cotizar una reparación hoy?
+                        </a>
+                    </div>
+                    <div class="fb-create-actions">
+                        <a href="{% url 'estimator' %}" class="fb-create-btn" style="text-decoration: none;">
+                            <i data-lucide="sparkles" style="color: #8b5cf6; width: 18px; height: 18px;"></i>
+                            <span>Cotizar con IA</span>
+                        </a>
+                        <a href="{% url 'home' %}" class="fb-create-btn" style="text-decoration: none;">
+                            <i data-lucide="map-pin" style="color: #10b981; width: 18px; height: 18px;"></i>
+                            <span>Ver mapa</span>
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Lista de Publicaciones del Feed (Estilo Facebook) -->
+            {% for item in page_obj %}
+                <article class="fb-card">
+                    <!-- Cabecera del Post -->
+                    <div class="fb-post-header">
+                        <a href="{% url 'professional_detail' item.professional.id %}" style="text-decoration: none; display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1;">
+                            <div class="fb-menu-avatar" style="width: 42px; height: 42px; font-size: 14px;">
+                                {{ item.professional.initials }}
+                            </div>
+                            <div style="min-width: 0;">
+                                <div style="display: flex; align-items: center; gap: 6px;">
+                                    <strong style="font-size: 14px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ item.professional.name }}</strong>
+                                    <span style="font-size: 12px; font-weight: 700; color: var(--blue);">· Verificado</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--muted);">
+                                    <span>{{ item.professional.specialty }}</span>
+                                    <span>·</span>
+                                    <span>{{ item.created_at|timesince }}</span>
+                                    <span>·</span>
+                                    <i data-lucide="globe" style="width: 12px; height: 12px;"></i>
+                                </div>
+                            </div>
+                        </a>
+                        <span style="padding: 4px 10px; border-radius: 999px; background: var(--green-soft); color: var(--green); font-size: 12px; font-weight: 800; flex-shrink: 0;">
+                            ★ {{ item.professional.rating }}
+                        </span>
+                    </div>
+
+                    <!-- Texto arriba de la imagen (estilo Facebook) -->
+                    {% if item.caption %}
+                        <p class="fb-post-caption">{{ item.caption }}</p>
+                    {% endif %}
+
+                    <!-- Imagen o Video -->
+                    <div style="background: #08131f;">
+                        {% if item.is_video %}
+                            <video src="{{ item.image_url }}" controls preload="metadata"
+                                   style="width: 100%; max-height: 500px; object-fit: cover; display: block;">
+                            </video>
+                        {% else %}
+                            <img src="{{ item.image_url }}" alt="{{ item.caption|default:'Trabajo realizado' }}" loading="lazy"
+                                 style="width: 100%; max-height: 500px; object-fit: cover; display: block;">
+                        {% endif %}
+                    </div>
+
+                    <!-- Barra de información del post -->
+                    <div class="fb-post-stats">
+                        <span style="display: inline-flex; align-items: center; gap: 6px;">
+                            <span style="width: 20px; height: 20px; border-radius: 50%; background: var(--blue); color: #fff; display: inline-flex; align-items: center; justify-content: center;">
+                                <i data-lucide="thumbs-up" style="width: 11px; height: 11px;"></i>
+                            </span>
+                            <span>Trabajo verificado en {{ item.professional.location }}</span>
+                        </span>
+                        <span>{{ item.professional.jobs }} obras completadas</span>
+                    </div>
+
+                    <!-- Botones de Acción estilo Facebook -->
+                    <div class="fb-post-actions">
+                        <button type="button" class="fb-action-btn" onclick="this.classList.toggle('liked')">
+                            <i data-lucide="thumbs-up" style="width: 18px; height: 18px;"></i>
+                            <span>Me gusta</span>
+                        </button>
+                        {% if item.professional.user.profile.phone %}
+                            <a href="https://wa.me/{{ item.professional.user.profile.whatsapp_number }}?text=Hola%2C%20vi%20tu%20trabajo%20en%20ObraYa%20y%20me%20interesa%20cotizar."
+                               target="_blank" rel="noopener" class="fb-action-btn whatsapp">
+                                <i data-lucide="message-circle" style="width: 18px; height: 18px;"></i>
+                                <span>Contactar</span>
+                            </a>
+                        {% endif %}
+                        <a href="{% url 'professional_detail' item.professional.id %}" class="fb-action-btn">
+                            <i data-lucide="user" style="width: 18px; height: 18px;"></i>
+                            <span>Ver perfil</span>
+                        </a>
+                    </div>
+                </article>
             {% empty %}
-            <div style="text-align: center; padding: 60px 20px; background: var(--surface); border: 1px solid var(--line); border-radius: 16px;">
-                <i data-lucide="image-off" style="width: 48px; height: 48px; color: var(--muted); margin-bottom: 12px;"></i>
-                <h3 style="font-size: 16px; color: var(--text); margin: 0 0 6px;">Sin publicaciones aún</h3>
-                <p style="font-size: 13px; color: var(--muted); margin: 0;">Los profesionales están empezando a compartir sus trabajos.</p>
-            </div>
+                <div class="fb-card" style="text-align: center; padding: 60px 20px;">
+                    <i data-lucide="image-off" style="width: 48px; height: 48px; color: var(--muted); margin-bottom: 12px;"></i>
+                    <h3 style="font-size: 16px; color: var(--text); margin: 0 0 6px;">Sin publicaciones aún</h3>
+                    <p style="font-size: 13px; color: var(--muted); margin: 0;">Los profesionales están empezando a compartir sus trabajos.</p>
+                </div>
             {% endfor %}
 
             <!-- Paginación -->
             {% if page_obj.has_other_pages %}
-            <div style="display: flex; justify-content: center; gap: 8px; padding: 16px 0;">
-                {% if page_obj.has_previous %}
-                <a href="?page={{ page_obj.previous_page_number }}{% if current_filter %}&especialidad={{ current_filter|urlencode }}{% endif %}"
-                   style="padding: 8px 20px; border-radius: 12px; font-size: 13px; font-weight: 700; background: var(--surface); border: 1px solid var(--line); color: var(--text); text-decoration: none;">
-                    ← Anterior
-                </a>
-                {% endif %}
-                <span style="padding: 8px 16px; font-size: 13px; font-weight: 700; color: var(--muted); display: flex; align-items: center;">
-                    {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
-                </span>
-                {% if page_obj.has_next %}
-                <a href="?page={{ page_obj.next_page_number }}{% if current_filter %}&especialidad={{ current_filter|urlencode }}{% endif %}"
-                   style="padding: 8px 20px; border-radius: 12px; font-size: 13px; font-weight: 700; background: var(--green); color: white; text-decoration: none; border: none;">
-                    Siguiente →
-                </a>
-                {% endif %}
-            </div>
+                <div style="display: flex; justify-content: center; gap: 8px; padding: 12px 0;">
+                    {% if page_obj.has_previous %}
+                        <a href="?page={{ page_obj.previous_page_number }}{% if current_filter %}&especialidad={{ current_filter|urlencode }}{% endif %}"
+                           style="padding: 8px 20px; border-radius: 10px; font-size: 13px; font-weight: 700; background: var(--surface); border: 1px solid var(--line); color: var(--text); text-decoration: none;">
+                            ← Anterior
+                        </a>
+                    {% endif %}
+                    <span style="padding: 8px 16px; font-size: 13px; font-weight: 700; color: var(--muted); display: flex; align-items: center;">
+                        Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+                    </span>
+                    {% if page_obj.has_next %}
+                        <a href="?page={{ page_obj.next_page_number }}{% if current_filter %}&especialidad={{ current_filter|urlencode }}{% endif %}"
+                           style="padding: 8px 20px; border-radius: 10px; font-size: 13px; font-weight: 700; background: var(--green); color: white; text-decoration: none;">
+                            Siguiente →
+                        </a>
+                    {% endif %}
+                </div>
             {% endif %}
-            
-        </main>
 
-        <!-- Columna Derecha: Recomendados y Widgets -->
-        <aside class="community-right">
-            <div class="right-sidebar-widgets">
-                
-                <!-- Widget Sugerencias -->
-                <div class="widget-card">
-                    <h4 class="widget-title">Sugerencias de contacto</h4>
-                    <div style="display: flex; flex-direction: column; gap: 4px;">
-                        {% for pro in recommended_pros %}
-                        <div class="widget-pro-item">
-                            <div class="widget-pro-avatar">
+        </div>
+    </div>
+
+    <!-- ======================================================================
+         COLUMNA DERECHA FIJA (Sugerencias y Contactos estilo Facebook)
+         ====================================================================== -->
+    <aside class="fb-right-sidebar" aria-label="Información y contactos">
+
+        <!-- Bloque Destacado (Estilo Cumpleaños / Novedades de Facebook) -->
+        <div>
+            <div class="fb-section-header" style="padding-left: 4px;">
+                <span>Garantía ObraYa</span>
+            </div>
+            <div style="display: flex; align-items: flex-start; gap: 10px; padding: 8px 6px; font-size: 13px; color: var(--text); line-height: 1.4;">
+                <div class="fb-menu-icon fb-icon-green" style="width: 34px; height: 34px; border-radius: 10px;">
+                    <i data-lucide="shield-check"></i>
+                </div>
+                <span>
+                    Contratalos con respaldo: revisa portafolios reales y calificaciones verificadas en <strong>Guayaquil</strong>.
+                </span>
+            </div>
+        </div>
+
+        <hr class="fb-divider" style="margin: 4px 0;">
+
+        <!-- Contactos / Profesionales Recomendados (Con punto verde en línea como Facebook) -->
+        <div>
+            <div class="fb-section-header" style="padding-left: 4px;">
+                <span>Profesionales destacados</span>
+                <i data-lucide="search" style="width: 15px; height: 15px;"></i>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 2px;">
+                {% for pro in recommended_pros %}
+                    <a href="{% url 'professional_detail' pro.id %}" class="fb-contact-row">
+                        <div class="fb-contact-avatar-wrap">
+                            <div class="fb-menu-avatar">
                                 {{ pro.initials }}
                             </div>
-                            <div class="widget-pro-info">
-                                <strong class="widget-pro-name">{{ pro.name }}</strong>
-                                <span class="widget-pro-spec">{{ pro.specialty }}</span>
-                                <div class="widget-pro-rating">
-                                    <i data-lucide="star" style="width: 10px; height: 10px; fill: currentColor;"></i>
-                                    <span style="margin-left: 2px;">{{ pro.rating }}</span>
-                                </div>
-                            </div>
-                            <a href="{% url 'professional_detail' pro.id %}" class="widget-pro-link">
-                                Ver
-                            </a>
+                            <span class="fb-online-dot" title="Disponible"></span>
                         </div>
-                        {% empty %}
-                        <p style="font-size: 12px; color: var(--text-muted); margin: 0;">No hay sugerencias en este momento.</p>
-                        {% endfor %}
-                    </div>
-                </div>
-
-                <!-- Widget Tips -->
-                <div class="widget-card">
-                    <h4 class="widget-title">Consejos ObraYa</h4>
-                    <div style="display: flex; flex-direction: column; gap: 12px;">
-                        <div class="tip-item">
-                            <i data-lucide="shield-check" class="tip-icon" style="width: 16px; height: 16px;"></i>
-                            <span><strong>Garantía ObraYa:</strong> Paga a través de la plataforma para proteger tu dinero.</span>
+                        <div style="flex: 1; min-width: 0;">
+                            <strong style="display: block; font-size: 13px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ pro.name }}</strong>
+                            <span style="display: block; font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                {{ pro.specialty }} · ★ {{ pro.rating }}
+                            </span>
                         </div>
-                        <div class="tip-item">
-                            <i data-lucide="camera" class="tip-icon" style="width: 16px; height: 16px;"></i>
-                            <span><strong>Fotos Claras:</strong> Muestra detalles precisos del daño para recibir buenas cotizaciones.</span>
-                        </div>
-                        <div class="tip-item">
-                            <i data-lucide="message-square" class="tip-icon" style="width: 16px; height: 16px;"></i>
-                            <span><strong>Seguridad:</strong> Chatea siempre dentro de la plataforma.</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Widget Alianza -->
-                <div style="background: linear-gradient(135deg, #0b2f4f 0%, #1a4a7a 100%); border-radius: 16px; padding: 20px 16px; text-align: center; color: white;">
-                    <i data-lucide="handshake" style="width: 28px; height: 28px; margin-bottom: 8px; opacity: 0.9; display: inline-block;"></i>
-                    <h5 style="font-size: 13px; margin: 0 0 6px; font-weight: 800;">Próximamente: Alianzas</h5>
-                    <p style="font-size: 11px; opacity: 0.85; margin: 0 0 12px; line-height: 1.4;">
-                        Precios especiales en ferreterías y proveedores para nuestros profesionales.
-                    </p>
-                    <div style="display: flex; justify-content: center; gap: 6px; flex-wrap: wrap;">
-                        <span style="padding: 3px 10px; border-radius: 100px; font-size: 9px; font-weight: 700; background: rgba(255,255,255,0.15);">
-                            🏗️ Ferreterías
-                        </span>
-                        <span style="padding: 3px 10px; border-radius: 100px; font-size: 9px; font-weight: 700; background: rgba(255,255,255,0.15);">
-                            🧱 Materiales
-                        </span>
-                    </div>
-                </div>
-
+                    </a>
+                {% empty %}
+                    <p style="font-size: 12px; color: var(--muted); margin: 4px;">No hay profesionales sugeridos aún.</p>
+                {% endfor %}
             </div>
-        </aside>
-        
-    </div>
+        </div>
+
+        <hr class="fb-divider" style="margin: 4px 0;">
+
+        <!-- Consejos rápidos -->
+        <div>
+            <div class="fb-section-header" style="padding-left: 4px;">
+                <span>Consejos de contratación</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 10px; padding: 4px;">
+                <div style="display: flex; gap: 10px; align-items: flex-start; font-size: 12px; color: var(--muted); line-height: 1.4;">
+                    <i data-lucide="camera" style="width: 16px; height: 16px; color: var(--green); flex-shrink: 0; margin-top: 2px;"></i>
+                    <span><strong style="color: var(--text);">Fotos claras:</strong> Sube fotos del área a reparar para recibir cotizaciones exactas.</span>
+                </div>
+                <div style="display: flex; gap: 10px; align-items: flex-start; font-size: 12px; color: var(--muted); line-height: 1.4;">
+                    <i data-lucide="message-square" style="width: 16px; height: 16px; color: var(--blue); flex-shrink: 0; margin-top: 2px;"></i>
+                    <span><strong style="color: var(--text);">Acuerdos claros:</strong> Coordina materiales y tiempos dentro del chat de ObraYa.</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Banner Alianzas -->
+        <div style="background: linear-gradient(135deg, #0b2f4f 0%, #1a4a7a 100%); border-radius: 14px; padding: 16px; color: white;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                <i data-lucide="handshake" style="width: 20px; height: 20px;"></i>
+                <strong style="font-size: 13px;">Próximamente: Alianzas</strong>
+            </div>
+            <p style="font-size: 11px; opacity: 0.88; margin: 0; line-height: 1.4;">
+                Descuentos exclusivos en ferreterías y materiales para miembros de la comunidad ObraYa.
+            </p>
+        </div>
+
+    </aside>
+
 </div>
+
+<script>
+function scrollStories() {
+    const track = document.getElementById('storiesTrack');
+    if (!track) return;
+    const maxScroll = track.scrollWidth - track.clientWidth;
+    if (track.scrollLeft >= maxScroll - 10) {
+        track.scrollTo({ left: 0, behavior: 'smooth' });
+    } else {
+        track.scrollBy({ left: 260, behavior: 'smooth' });
+    }
+}
+</script>
 
 {% if user.is_authenticated and user.profile.role == 'PROFESSIONAL' %}
 <!-- Modal de Publicación -->
-<div id="publishModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(8px); z-index: 9999; align-items: center; justify-content: center; padding: 16px; opacity: 0; transition: opacity 0.2s ease-in-out;">
+<div id="publishModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); backdrop-filter: blur(8px); z-index: 9999; align-items: center; justify-content: center; padding: 16px; opacity: 0; transition: opacity 0.2s ease-in-out;">
     <div style="background: var(--surface); border: 1.5px solid var(--line); border-radius: 20px; width: 100%; max-width: 500px; box-shadow: var(--shadow); overflow: hidden; transform: scale(0.95); transition: transform 0.2s ease-in-out;">
         <!-- Cabecera -->
         <div style="display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--line);">
             <h3 style="margin: 0; font-size: 16px; font-weight: 800; color: var(--text);">Crear una publicación</h3>
-            <button onclick="closePublishModal()" style="background: transparent; border: none; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 4px; border-radius: 50%;" onmouseover="this.style.background='var(--surface-strong)';" onmouseout="this.style.background='transparent';">
+            <button type="button" onclick="closePublishModal()" style="background: transparent; border: none; color: var(--muted); cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 4px; border-radius: 50%;">
                 <i data-lucide="x" style="width: 20px; height: 20px;"></i>
             </button>
         </div>
@@ -680,23 +1143,23 @@
             {% csrf_token %}
             <!-- Info del Profesional -->
             <div style="display: flex; align-items: center; gap: 12px;">
-                <div class="avatar" style="width: 40px; height: 40px; font-size: 12px; background: linear-gradient(135deg, var(--green), #059669); color: white; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-weight: 800;">
+                <div class="fb-menu-avatar" style="width: 40px; height: 40px;">
                     {{ user.professional_profile.initials }}
                 </div>
                 <div>
                     <strong style="display: block; font-size: 14px; color: var(--text);">{{ user.professional_profile.name }}</strong>
-                    <span style="font-size: 12px; color: var(--text-muted); background: var(--surface-strong); padding: 2px 8px; border-radius: 100px; font-weight: 600;">Público en la Comunidad</span>
+                    <span style="font-size: 12px; color: var(--muted); background: var(--surface-strong); padding: 2px 8px; border-radius: 100px; font-weight: 600;">Público en la Comunidad</span>
                 </div>
             </div>
             <!-- Campo de Texto -->
             <textarea name="caption" rows="4" placeholder="¿Qué trabajo realizaste hoy? Explica los detalles..." maxlength="180" required style="width: 100%; border: none; resize: none; background: transparent; color: var(--text); font-size: 15px; outline: none; font-family: inherit; line-height: 1.5;"></textarea>
             
             <!-- Selector de Archivo -->
-            <label style="border: 2px dashed var(--line); border-radius: 14px; padding: 24px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; cursor: pointer; background: var(--surface-strong); transition: border-color 0.2s;" onmouseover="this.style.borderColor='var(--green)';" onmouseout="this.style.borderColor='var(--line)';">
+            <label style="border: 2px dashed var(--line); border-radius: 14px; padding: 24px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; cursor: pointer; background: var(--surface-strong); transition: border-color 0.2s;">
                 <input id="publishFileInput" type="file" name="portfolio_file" accept="image/*,video/*" required style="display: none;" onchange="handleFileSelected(this)">
                 <i id="uploadIcon" data-lucide="cloud-upload" style="width: 32px; height: 32px; color: var(--green);"></i>
                 <span id="uploadText" style="font-size: 13px; font-weight: 700; color: var(--text); text-align: center;">Subir foto o vídeo</span>
-                <span style="font-size: 11px; color: var(--text-muted);">Formatos admitidos: JPG, PNG, MP4, etc.</span>
+                <span style="font-size: 11px; color: var(--muted);">Formatos admitidos: JPG, PNG, MP4, etc.</span>
             </label>
             <!-- Vista Previa del Archivo Seleccionado -->
             <div id="filePreviewContainer" style="display: none; position: relative; border-radius: 12px; overflow: hidden; border: 1.5px solid var(--line); background: black; max-height: 200px;">
@@ -719,6 +1182,7 @@
 function openPublishModal(type) {
     const modal = document.getElementById('publishModal');
     const fileInput = document.getElementById('publishFileInput');
+    if (!modal || !fileInput) return;
     if (type === 'video') {
         fileInput.accept = 'video/*';
     } else if (type === 'photo') {
@@ -736,6 +1200,7 @@ function openPublishModal(type) {
 
 function closePublishModal() {
     const modal = document.getElementById('publishModal');
+    if (!modal) return;
     modal.style.opacity = '0';
     modal.querySelector('div').style.transform = 'scale(0.95)';
     setTimeout(() => {
@@ -793,19 +1258,18 @@ function clearSelectedFile(e) {
     const uploadText = document.getElementById('uploadText');
     const uploadIcon = document.getElementById('uploadIcon');
 
-    fileInput.value = '';
-    previewContainer.style.display = 'none';
-    imagePreview.src = '';
-    videoPreview.src = '';
-    uploadText.textContent = 'Subir foto o vídeo';
-    uploadIcon.setAttribute('data-lucide', 'cloud-upload');
+    if (fileInput) fileInput.value = '';
+    if (previewContainer) previewContainer.style.display = 'none';
+    if (imagePreview) imagePreview.src = '';
+    if (videoPreview) videoPreview.src = '';
+    if (uploadText) uploadText.textContent = 'Subir foto o vídeo';
+    if (uploadIcon) uploadIcon.setAttribute('data-lucide', 'cloud-upload');
     if (window.lucide) {
         window.lucide.createIcons();
     }
 }
 
-// Cerrar si se hace clic fuera del modal
-document.getElementById('publishModal').addEventListener('click', function(e) {
+document.getElementById('publishModal')?.addEventListener('click', function(e) {
     if (e.target === this) {
         closePublishModal();
     }

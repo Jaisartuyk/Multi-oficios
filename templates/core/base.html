@@ -315,8 +315,14 @@
 
         function fetchNotifs() {
             fetch('/api/notifications/')
-                .then(r => r.json())
+                .then(r => {
+                    if (!r.ok) return null;
+                    const ct = r.headers.get('content-type') || '';
+                    if (!ct.includes('application/json')) return null;
+                    return r.json();
+                })
                 .then(data => {
+                    if (!data) return;
                     if (data.unread_count > 0) {
                         badge.style.display = 'block';
                         
