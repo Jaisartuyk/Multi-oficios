@@ -1,379 +1,939 @@
 {% extends 'core/base.html' %}
 
-{% block title %}Panel profesional | ObraYa{% endblock %}
+{% block title %}Centro de Operaciones Profesional | ObraYa{% endblock %}
+
+{% block extra_css %}
+<style>
+    .pro-dashboard-wrap {
+        max-width: 1080px;
+        margin: 14px auto 40px;
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+    }
+
+    /* Hero Ejecutivo del Profesional */
+    .pro-dash-hero {
+        position: relative;
+        overflow: hidden;
+        border-radius: 24px;
+        padding: 24px 22px;
+        background:
+            radial-gradient(circle at 86% 18%, rgba(24, 167, 106, 0.42), transparent 44%),
+            radial-gradient(circle at 12% 85%, rgba(59, 130, 246, 0.3), transparent 48%),
+            linear-gradient(135deg, #0b2f4f 0%, #103d66 58%, #0e5245 100%);
+        color: #fff;
+        box-shadow: 0 18px 44px rgba(11, 47, 79, 0.22);
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+    }
+
+    @media (min-width: 820px) {
+        .pro-dash-hero {
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            padding: 28px 30px;
+        }
+    }
+
+    .pro-dash-identity {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .pro-dash-avatar {
+        width: 74px;
+        height: 74px;
+        border-radius: 50%;
+        border: 3px solid rgba(255, 255, 255, 0.85);
+        background: linear-gradient(135deg, var(--green), #059669);
+        color: #fff;
+        font-size: 24px;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        flex-shrink: 0;
+        box-shadow: 0 8px 22px rgba(0, 0, 0, 0.28);
+    }
+
+    .pro-dash-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .pro-dash-badges {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 6px;
+    }
+
+    .pro-dash-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 3px 10px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 800;
+        background: rgba(255, 255, 255, 0.16);
+        border: 1px solid rgba(255, 255, 255, 0.22);
+    }
+
+    .pro-dash-hero h1 {
+        margin: 0;
+        font-size: 24px;
+        font-weight: 800;
+        line-height: 1.15;
+    }
+
+    .pro-dash-sub {
+        margin: 4px 0 0;
+        font-size: 13px;
+        color: rgba(255, 255, 255, 0.84);
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .pro-dash-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        flex-shrink: 0;
+    }
+
+    .pro-dash-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 10px 16px;
+        border-radius: 14px;
+        font-size: 13px;
+        font-weight: 800;
+        text-decoration: none;
+        transition: transform 0.15s ease;
+    }
+
+    .pro-dash-btn:hover {
+        transform: translateY(-2px);
+    }
+
+    .pro-dash-btn.emerald {
+        background: #18a76a;
+        color: #fff;
+        box-shadow: 0 8px 20px rgba(24, 167, 106, 0.35);
+    }
+
+    .pro-dash-btn.glass {
+        background: rgba(255, 255, 255, 0.14);
+        color: #fff;
+        border: 1px solid rgba(255, 255, 255, 0.24);
+    }
+
+    /* 4 KPIs del Profesional */
+    .pro-dash-kpis {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+
+    @media (min-width: 820px) {
+        .pro-dash-kpis {
+            grid-template-columns: repeat(4, 1fr);
+        }
+    }
+
+    .pro-dash-kpi {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 16px;
+        box-shadow: 0 4px 16px rgba(11, 47, 79, 0.05);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .pro-dash-kpi-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 13px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .pro-dash-kpi strong {
+        display: block;
+        font-size: 20px;
+        font-weight: 800;
+        color: var(--text);
+        line-height: 1.1;
+    }
+
+    .pro-dash-kpi span {
+        display: block;
+        font-size: 11px;
+        color: var(--muted);
+        font-weight: 600;
+        margin-top: 3px;
+    }
+
+    /* Barra de Pestañas (Tabs) Moderna */
+    .pro-tabs-bar {
+        display: flex;
+        gap: 8px;
+        padding: 6px;
+        border-radius: 16px;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        box-shadow: 0 4px 16px rgba(11, 47, 79, 0.04);
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+
+    .pro-tabs-bar::-webkit-scrollbar {
+        display: none;
+    }
+
+    .pro-tab-btn {
+        flex: 1 0 auto;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 11px 16px;
+        border-radius: 12px;
+        font-size: 13px;
+        font-weight: 800;
+        color: var(--muted);
+        text-decoration: none;
+        transition: all 0.18s ease;
+        white-space: nowrap;
+    }
+
+    .pro-tab-btn:hover {
+        background: var(--surface-strong);
+        color: var(--text);
+    }
+
+    .pro-tab-btn.active {
+        background: linear-gradient(135deg, var(--navy), var(--blue));
+        color: #fff;
+        box-shadow: 0 6px 16px rgba(19, 93, 159, 0.25);
+    }
+
+    .pro-tab-count {
+        padding: 2px 8px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 800;
+        background: rgba(16, 32, 51, 0.08);
+        color: inherit;
+    }
+
+    .pro-tab-btn.active .pro-tab-count {
+        background: rgba(255, 255, 255, 0.22);
+        color: #fff;
+    }
+
+    /* Tarjetas de Sección */
+    .pro-section-box {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 22px;
+        padding: 22px;
+        box-shadow: 0 6px 22px rgba(11, 47, 79, 0.05);
+    }
+
+    .pro-job-card {
+        background: var(--surface);
+        border: 1.5px solid var(--line);
+        border-radius: 20px;
+        padding: 20px;
+        box-shadow: 0 6px 20px rgba(11, 47, 79, 0.05);
+        transition: border-color 0.2s ease;
+    }
+
+    .pro-job-card.quoted-by-me {
+        border-color: var(--green);
+    }
+
+    .pro-alert-banner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 12px;
+        padding: 14px 18px;
+        border-radius: 16px;
+        background: rgba(245, 158, 11, 0.12);
+        border: 1px solid rgba(245, 158, 11, 0.35);
+        color: var(--text);
+        margin-bottom: 16px;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<section class="dashboard-heading profile-hero" style="justify-content: space-between; flex-wrap: wrap;">
-    <div style="display: flex; align-items: center; gap: 14px;">
-        <div class="avatar big" style="overflow: hidden; position: relative;">
-            {% if professional.avatar_url %}
-                <img src="{{ professional.avatar_url }}" alt="{{ professional.name }}" style="width: 100%; height: 100%; object-fit: cover;">
-            {% else %}
-                {{ professional.initials }}
-            {% endif %}
-        </div>
-        <div>
-            <span class="eyebrow"><i data-lucide="badge-check"></i> {{ professional.level }}</span>
-            <h1>{{ professional.name }}</h1>
-            <p>{{ professional.specialty }} · {{ professional.location }}</p>
-        </div>
-    </div>
-    <button type="button" class="secondary-button" style="padding: 0 18px; min-height: 42px; font-size: 13px;" onclick="document.getElementById('recharge-card')?.scrollIntoView({behavior:'smooth', block:'center'})">
-        <i data-lucide="coins"></i> Recargar créditos ({{ professional.credits }})
-    </button>
-</section>
+<div class="pro-dashboard-wrap">
 
-<section class="metric-strip reputation-grid">
-    <article><strong>★ {{ professional.rating }}</strong><span>Calificación</span></article>
-    <article><strong>{{ professional.jobs }}</strong><span>Completados</span></article>
-    <article><strong>{{ professional.credits }}</strong><span>Créditos disponibles</span></article>
-</section>
-
-<section class="dashboard-section" id="professional-profile">
-    <div class="section-title">
-        <h2>Perfil, foto y cobertura</h2>
-        <span>Información pública</span>
-    </div>
-
-    <form method="post" class="surface-form" enctype="multipart/form-data">
-        {% csrf_token %}
-        <input type="hidden" name="action" value="update_profile">
-
-        <!-- Foto de Perfil Real -->
-        <div style="display: flex; align-items: center; gap: 14px; padding: 12px; border-radius: 14px; background: var(--surface-strong); border: 1px solid var(--line);">
-            <div class="avatar big" id="avatarPreviewContainer" style="width: 58px; height: 58px; overflow: hidden; flex-shrink: 0;">
+    <!-- ======================================================================
+         CABECERA EJECUTIVA DEL PROFESIONAL (SIEMPRE VISIBLE)
+         ====================================================================== -->
+    <section class="pro-dash-hero">
+        <div class="pro-dash-identity">
+            <div class="pro-dash-avatar">
                 {% if professional.avatar_url %}
-                    <img id="avatarPreviewImg" src="{{ professional.avatar_url }}" alt="{{ professional.name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                    <img src="{{ professional.avatar_url }}" alt="{{ professional.name }}">
                 {% else %}
-                    <span id="avatarInitialsSpan">{{ professional.initials }}</span>
-                    <img id="avatarPreviewImg" alt="{{ professional.name }}" style="display: none; width: 100%; height: 100%; object-fit: cover;">
+                    {{ professional.initials }}
                 {% endif %}
             </div>
-            <div style="flex: 1; min-width: 0;">
-                <strong style="display: block; font-size: 13px; color: var(--text); margin-bottom: 4px;">Foto de perfil profesional</strong>
-                <span style="display: block; font-size: 11px; color: var(--muted); margin-bottom: 8px;">Una foto real de tu rostro o trabajando genera 3x más confianza en los clientes.</span>
-                <input type="file" name="avatar_file" accept="image/*" onchange="previewAvatarFile(this)" style="font-size: 12px; padding: 6px 10px; min-height: auto;">
-            </div>
-        </div>
-
-        <div class="form-grid-2">
-            <label>Disponibilidad
-                <select name="available">
-                    <option value="Disponible hoy" {% if professional.available == "Disponible hoy" %}selected{% endif %}>Disponible hoy</option>
-                    <option value="Agenda abierta" {% if professional.available == "Agenda abierta" %}selected{% endif %}>Agenda abierta</option>
-                    <option value="No disponible temporalmente" {% if professional.available == "No disponible temporalmente" %}selected{% endif %}>No disponible</option>
-                </select>
-            </label>
-            <label>Especialidad
-                <input name="specialty" maxlength="200" value="{{ professional.specialty }}" required>
-            </label>
-        </div>
-        <div class="form-grid-2">
-            <label>Sector
-                <div class="input-with-action">
-                    <input id="location_input" name="location" maxlength="200" value="{{ professional.location }}" required>
-                    <button id="btn-location" class="icon-button" type="button" aria-label="Usar mi ubicación">
-                        <i data-lucide="locate-fixed"></i>
-                    </button>
-                </div>
-            </label>
-            <label>Radio de cobertura
-                <div class="range-field">
-                    <input id="coverage-radius" type="range" name="coverage_radius_km" min="1" max="100" value="{{ professional.coverage_radius_km }}">
-                    <output for="coverage-radius">{{ professional.coverage_radius_km }} km</output>
-                </div>
-            </label>
-        </div>
-        <input id="lat_input" type="hidden" name="lat" value="{{ professional.lat|stringformat:'f' }}">
-        <input id="lng_input" type="hidden" name="lng" value="{{ professional.lng|stringformat:'f' }}">
-        <label>Sobre mí
-            <textarea name="about" maxlength="3000" rows="4">{{ professional.about }}</textarea>
-        </label>
-        <button class="primary-button" type="submit">
-            <i data-lucide="save"></i>Guardar perfil
-        </button>
-    </form>
-
-    <!-- Módulo de Auto-Recarga de Créditos -->
-    <div id="recharge-card" class="subsection-title">
-        <div class="section-title">
-            <h2>Recargar créditos</h2>
-            <span>1 crédito = 1 cotización enviada</span>
-        </div>
-        <form method="post" class="surface-form" enctype="multipart/form-data">
-            {% csrf_token %}
-            <input type="hidden" name="action" value="request_recharge">
-            <div class="credit-packages-grid">
-                <label class="credit-package-card">
-                    <input type="radio" name="package" value="5">
-                    <div>
-                        <span class="credit-package-badge">Inicial</span>
-                        <strong>5 Créditos</strong>
-                        <span class="credit-package-price">$5.00</span>
-                        <small>$1.00 por cotización</small>
-                    </div>
-                </label>
-                <label class="credit-package-card popular">
-                    <input type="radio" name="package" value="15" checked>
-                    <div>
-                        <span class="credit-package-badge">Más popular · Ahorra 20%</span>
-                        <strong>15 Créditos</strong>
-                        <span class="credit-package-price">$12.00</span>
-                        <small>$0.80 por cotización</small>
-                    </div>
-                </label>
-                <label class="credit-package-card">
-                    <input type="radio" name="package" value="35">
-                    <div>
-                        <span class="credit-package-badge">Maestro Pro · Ahorra 28%</span>
-                        <strong>35 Créditos</strong>
-                        <span class="credit-package-price">$25.00</span>
-                        <small>$0.71 por cotización</small>
-                    </div>
-                </label>
-            </div>
-
-            <div class="form-grid-2">
-                <label>Método de pago
-                    <select name="payment_method">
-                        <option value="DEUNA">DeUna! (Acreditación rápida)</option>
-                        <option value="TRANSFERENCIA">Transferencia Bancaria</option>
-                    </select>
-                </label>
-                <label>Número de comprobante / referencia
-                    <input name="receipt_reference" maxlength="200" placeholder="Ej: Comprobante #094821" required>
-                </label>
-            </div>
-            <label>Captura del comprobante (Opcional)
-                <input type="file" name="receipt_file" accept="image/*" style="padding: 8px 12px;">
-            </label>
-            <button class="secondary-button" type="submit">
-                <i data-lucide="coins"></i> Enviar comprobante para activar créditos
-            </button>
-        </form>
-
-        {% if my_recharges %}
-        <div style="margin-top: 12px; padding: 12px 14px; border-radius: 12px; background: var(--surface); border: 1px solid var(--line);">
-            <strong style="display: block; font-size: 12px; color: var(--muted); margin-bottom: 8px; text-transform: uppercase;">Últimas recargas</strong>
-            <div style="display: flex; flex-direction: column; gap: 6px;">
-                {% for rec in my_recharges %}
-                <div style="display: flex; align-items: center; justify-content: space-between; font-size: 12px; padding: 4px 0; border-bottom: 1px dashed var(--line);">
-                    <span><strong>+{{ rec.credits_added }} créditos</strong> (${{ rec.amount_paid }} · {{ rec.get_payment_method_display }})</span>
-                    <span class="status-pill {% if rec.status == 'APPROVED' %}status-completed{% elif rec.status == 'REJECTED' %}status-cancelled{% else %}status-in_progress{% endif %}">
-                        {{ rec.get_status_display }}
+            <div>
+                <div class="pro-dash-badges">
+                    <span class="pro-dash-pill">
+                        <span style="width: 7px; height: 7px; border-radius: 50%; background: #37d98c;"></span>
+                        {{ professional.available }}
+                    </span>
+                    <span class="pro-dash-pill">
+                        <i data-lucide="badge-check" style="width: 12px; height: 12px;"></i>
+                        {{ professional.level }}
                     </span>
                 </div>
+                <h1>{{ professional.name }}</h1>
+                <div class="pro-dash-sub">
+                    <span><i data-lucide="wrench" style="width: 13px; height: 13px; vertical-align: middle;"></i> {{ professional.specialty }}</span>
+                    <span>·</span>
+                    <span><i data-lucide="map-pin" style="width: 13px; height: 13px; vertical-align: middle;"></i> {{ professional.location }} (Radio {{ professional.coverage_radius_km }} km)</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="pro-dash-actions">
+            <a href="#credits-section" data-pro-tab="#credits-section" class="pro-dash-btn emerald">
+                <i data-lucide="coins" style="width: 16px; height: 16px;"></i>
+                <span>{{ professional.credits }} Créditos · Recargar</span>
+            </a>
+            <a href="{% url 'professional_detail' professional.id %}" class="pro-dash-btn glass">
+                <i data-lucide="external-link" style="width: 15px; height: 15px;"></i>
+                <span>Ver perfil público</span>
+            </a>
+            <a href="{% url 'feed' %}" class="pro-dash-btn glass">
+                <i data-lucide="rss" style="width: 15px; height: 15px;"></i>
+                <span>Comunidad</span>
+            </a>
+        </div>
+    </section>
+
+    <!-- ======================================================================
+         4 TARJETAS KPI DEL PROFESIONAL (SIEMPRE VISIBLES)
+         ====================================================================== -->
+    <section class="pro-dash-kpis" aria-label="Resumen de desempeño">
+        <article class="pro-dash-kpi">
+            <div class="pro-dash-kpi-icon" style="background: rgba(245, 158, 11, 0.14); color: #f59e0b;">
+                <i data-lucide="star"></i>
+            </div>
+            <div>
+                <strong>★ {{ professional.rating }}</strong>
+                <span>{{ professional.punctuality }}% puntualidad</span>
+            </div>
+        </article>
+
+        <article class="pro-dash-kpi">
+            <div class="pro-dash-kpi-icon" style="background: rgba(24, 167, 106, 0.14); color: var(--green);">
+                <i data-lucide="wallet"></i>
+            </div>
+            <div>
+                <strong>${{ total_earned }}</strong>
+                <span>{{ professional.jobs }} obras completadas</span>
+            </div>
+        </article>
+
+        <article class="pro-dash-kpi">
+            <div class="pro-dash-kpi-icon" style="background: rgba(59, 130, 246, 0.14); color: #3b82f6;">
+                <i data-lucide="briefcase-business"></i>
+            </div>
+            <div>
+                <strong>{{ pending_jobs|length }} disponibles</strong>
+                <span>{{ active_quotes_count }} cotizaciones activas</span>
+            </div>
+        </article>
+
+        <article class="pro-dash-kpi">
+            <div class="pro-dash-kpi-icon" style="background: rgba(139, 92, 246, 0.14); color: #8b5cf6;">
+                <i data-lucide="coins"></i>
+            </div>
+            <div>
+                <strong>{{ professional.credits }} créditos</strong>
+                <span>{{ active_assigned_count }} obras en curso</span>
+            </div>
+        </article>
+    </section>
+
+    <!-- ======================================================================
+         NAVEGACIÓN DE PESTAÑAS INTERNAS (ESCRITORIO Y MÓVIL)
+         ====================================================================== -->
+    <nav class="pro-tabs-bar" aria-label="Secciones del panel profesional">
+        <a href="#job-market" data-pro-tab="#job-market" class="pro-tab-btn">
+            <i data-lucide="briefcase-business" style="width: 17px; height: 17px;"></i>
+            <span>Bolsa de Trabajo</span>
+            <span class="pro-tab-count">{{ pending_jobs|length }}</span>
+        </a>
+        <a href="#my-jobs" data-pro-tab="#my-jobs" class="pro-tab-btn">
+            <i data-lucide="clipboard-check" style="width: 17px; height: 17px;"></i>
+            <span>Mis Trabajos</span>
+            <span class="pro-tab-count">{{ jobs|length }}</span>
+        </a>
+        <a href="#professional-profile" data-pro-tab="#professional-profile" class="pro-tab-btn">
+            <i data-lucide="user-round" style="width: 17px; height: 17px;"></i>
+            <span>Perfil y Portafolio</span>
+            <span class="pro-tab-count">{{ professional.portfolio_items.count }}</span>
+        </a>
+        <a href="#credits-section" data-pro-tab="#credits-section" class="pro-tab-btn">
+            <i data-lucide="coins" style="width: 17px; height: 17px;"></i>
+            <span>Créditos y Recargas</span>
+            <span class="pro-tab-count">{{ professional.credits }}</span>
+        </a>
+    </nav>
+
+    <!-- ======================================================================
+         PESTAÑA 1: BOLSA DE TRABAJO (#job-market)
+         ====================================================================== -->
+    <section id="job-market">
+        {% if professional.credits == 0 %}
+            <div class="pro-alert-banner">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <i data-lucide="alert-triangle" style="color: #d97706; width: 22px; height: 22px; flex-shrink: 0;"></i>
+                    <div>
+                        <strong style="display: block; font-size: 14px;">Te quedaste sin créditos disponibles</strong>
+                        <span style="font-size: 12px; color: var(--muted);">Recarga un paquete de créditos para enviar nuevas cotizaciones a los clientes.</span>
+                    </div>
+                </div>
+                <a href="#credits-section" class="primary-button" style="min-height: 38px; padding: 0 16px; font-size: 12px; text-decoration: none;">
+                    Recargar ahora
+                </a>
+            </div>
+        {% endif %}
+
+        <div class="section-title" style="margin-bottom: 14px;">
+            <div>
+                <h2 style="margin: 0; font-size: 20px;">Oportunidades en tu radio ({{ professional.coverage_radius_km }} km)</h2>
+                <small style="color: var(--muted); font-size: 12px;">Enviar una nueva propuesta cuesta 1 crédito · Editar tu propuesta enviada es gratis</small>
+            </div>
+        </div>
+
+        <div class="workflow-list">
+            {% for job in pending_jobs %}
+                <article class="pro-job-card {% if job.my_quote %}quoted-by-me{% endif %}">
+                    <header class="workflow-card__header">
+                        <div>
+                            <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 6px;">
+                                <span class="status-pill status-{{ job.status|lower }}">{{ job.get_status_display }}</span>
+                                {% if job.my_quote %}
+                                    <span style="padding: 4px 10px; border-radius: 999px; background: var(--green-soft); color: var(--green); font-size: 11px; font-weight: 800;">
+                                        ✓ Tu propuesta: ${{ job.my_quote.amount }} ({{ job.my_quote.estimated_days }} días)
+                                    </span>
+                                {% endif %}
+                                {% if job.distance_km %}
+                                    <span style="padding: 4px 9px; border-radius: 999px; background: var(--surface-strong); color: var(--blue); font-size: 11px; font-weight: 800;">
+                                        📍 A {{ job.distance_km }}
+                                    </span>
+                                {% endif %}
+                            </div>
+                            <h3 style="font-size: 18px; margin: 0;">{{ job.title }}</h3>
+                        </div>
+                        <time style="font-size: 12px; color: var(--muted); flex-shrink: 0;">{{ job.created_at|timesince }} atrás</time>
+                    </header>
+
+                    {% if job.image_url %}
+                        <div style="margin: 12px 0; border-radius: 14px; overflow: hidden; border: 1px solid var(--line); max-height: 230px;">
+                            <img src="{{ job.image_url }}" alt="Foto del daño subida por el cliente" loading="lazy" style="width: 100%; height: 230px; object-fit: cover; display: block;">
+                        </div>
+                    {% endif %}
+
+                    <p class="workflow-description">{{ job.description }}</p>
+
+                    <div class="workflow-meta">
+                        <span><i data-lucide="wallet"></i>Ref. IA: {{ job.estimated_price|default:"A cotizar" }}</span>
+                        <span><i data-lucide="clock"></i>Tiempo ref: {{ job.estimated_time|default:"A definir" }}</span>
+                        {% if job.address %}<span><i data-lucide="map-pin"></i>{{ job.address }}</span>{% endif %}
+                        <span><i data-lucide="users"></i>{{ job.quotes_count }} propuesta{{ job.quotes_count|pluralize:"s" }}</span>
+                    </div>
+
+                    <details class="workflow-details" {% if job.my_quote %}open{% endif %}>
+                        <summary>
+                            {% if job.my_quote %}
+                                Editar mi propuesta enviada (${{ job.my_quote.amount }} · Sin costo de crédito)
+                            {% else %}
+                                Enviar propuesta formal al cliente (1 crédito)
+                            {% endif %}
+                        </summary>
+                        <form method="post" class="compact-form">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="submit_quote">
+                            <input type="hidden" name="job_id" value="{{ job.id }}">
+                            <div class="form-grid-2">
+                                <label>Monto total de tu oferta ($ USD)
+                                    <input type="number" name="amount" min="1" step="0.01" required placeholder="Ej: 65.00" value="{{ job.my_quote.amount|default:'' }}">
+                                </label>
+                                <label>Días estimados de ejecución
+                                    <input type="number" name="estimated_days" min="1" max="365" required placeholder="Ej: 2" value="{{ job.my_quote.estimated_days|default:'' }}">
+                                </label>
+                            </div>
+                            <label>Alcance, materiales y garantía que ofreces
+                                <textarea name="message" rows="3" maxlength="1000" placeholder="Detalla qué incluye tu mano de obra, experiencia similar y garantía...">{{ job.my_quote.message|default:'' }}</textarea>
+                            </label>
+                            <button class="primary-button" type="submit" {% if professional.credits == 0 and not job.my_quote %}disabled{% endif %}>
+                                <i data-lucide="send"></i>
+                                {% if job.my_quote %}Actualizar propuesta (0 créditos){% else %}Enviar propuesta al cliente (1 crédito){% endif %}
+                            </button>
+                        </form>
+                    </details>
+                </article>
+            {% empty %}
+                <div class="empty-state">
+                    <i data-lucide="briefcase"></i>
+                    <h3>No hay solicitudes pendientes en tu radio actual</h3>
+                    <p>Puedes ampliar tu radio de cobertura en km desde la pestaña "Perfil y Portafolio".</p>
+                    <a href="#professional-profile" class="secondary-button" style="padding: 0 18px; text-decoration: none;">Ampliar radio de cobertura</a>
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <!-- ======================================================================
+         PESTAÑA 2: MIS TRABAJOS ASIGNADOS (#my-jobs)
+         ====================================================================== -->
+    <section id="my-jobs" style="display: none;">
+        <div class="section-title" style="margin-bottom: 14px;">
+            <div>
+                <h2 style="margin: 0; font-size: 20px;">Mis trabajos y contrataciones</h2>
+                <small style="color: var(--muted); font-size: 12px;">Coordina con el cliente por el chat oficial, inicia la obra y solicita la confirmación al terminar</small>
+            </div>
+        </div>
+
+        <div class="workflow-list">
+            {% for job in jobs %}
+                <article class="pro-job-card">
+                    <header class="workflow-card__header">
+                        <div>
+                            <span class="status-pill status-{{ job.status|lower }}">{{ job.get_status_display }}</span>
+                            <h3 style="font-size: 18px; margin-top: 8px;">{{ job.title }}</h3>
+                        </div>
+                        {% if job.selected_quote %}
+                            <div style="text-align: right;">
+                                <strong style="display: block; font-size: 22px; color: var(--green); line-height: 1.1;">${{ job.selected_quote.amount }}</strong>
+                                <small style="font-size: 11px; color: var(--muted); font-weight: 700;">Plazo: {{ job.selected_quote.estimated_days }} día{{ job.selected_quote.estimated_days|pluralize:"s" }}</small>
+                            </div>
+                        {% endif %}
+                    </header>
+
+                    <!-- Stepper Visual de 5 Etapas -->
+                    {% if job.status != 'CANCELLED' %}
+                        <div class="job-stepper" aria-label="Progreso del servicio">
+                            <div class="job-step completed">
+                                <span class="job-step__dot">1</span>
+                                <small>Publicado</small>
+                            </div>
+                            <div class="job-step completed">
+                                <span class="job-step__dot">2</span>
+                                <small>Cotizado</small>
+                            </div>
+                            <div class="job-step completed">
+                                <span class="job-step__dot">3</span>
+                                <small>Asignado</small>
+                            </div>
+                            <div class="job-step {% if job.status == 'IN_PROGRESS' or job.status == 'AWAITING_CONFIRMATION' or job.status == 'COMPLETED' %}completed{% endif %}">
+                                <span class="job-step__dot">4</span>
+                                <small>En obra</small>
+                            </div>
+                            <div class="job-step {% if job.status == 'COMPLETED' %}completed{% endif %}">
+                                <span class="job-step__dot">5</span>
+                                <small>Finalizado</small>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    {% if job.image_url %}
+                        <div style="margin: 12px 0; border-radius: 14px; overflow: hidden; border: 1px solid var(--line); max-height: 210px;">
+                            <img src="{{ job.image_url }}" alt="Foto del trabajo" loading="lazy" style="width: 100%; height: 210px; object-fit: cover; display: block;">
+                        </div>
+                    {% endif %}
+
+                    <p class="workflow-description">{{ job.description }}</p>
+
+                    <!-- Datos del Cliente -->
+                    <div class="assigned-professional">
+                        <div class="avatar">{{ job.client.username|slice:":2"|upper }}</div>
+                        <div>
+                            <small>Cliente contratante</small>
+                            <strong>{{ job.client.first_name|default:job.client.username }}</strong>
+                            {% if job.address %}<span>📍 {{ job.address }}</span>{% endif %}
+                        </div>
+                        {% if job.client.profile.phone %}
+                            <a class="icon-button" href="https://wa.me/{{ job.client.profile.whatsapp_number }}" target="_blank" rel="noopener" aria-label="Contactar por WhatsApp" title="WhatsApp del cliente">
+                                <i data-lucide="message-circle"></i>
+                            </a>
+                        {% endif %}
+                    </div>
+
+                    <!-- Estado del Pago del Cliente -->
+                    {% if job.payment %}
+                        <div class="payment-status">
+                            <i data-lucide="shield-check"></i>
+                            <span>
+                                Pago registrado (${{ job.payment.amount }} vía {{ job.payment.get_method_display }}):
+                                <strong>{{ job.payment.get_status_display }}</strong>
+                                · Garantía: {{ job.payment.get_guarantee_status_display }}
+                            </span>
+                        </div>
+                    {% endif %}
+
+                    <!-- Reseña Verificada del Cliente (si ya fue calificado) -->
+                    {% if job.review %}
+                        <div style="margin-top: 12px; padding: 12px 14px; border-radius: 12px; background: var(--green-soft); border: 1px solid rgba(24, 167, 106, 0.25); font-size: 13px;">
+                            <strong style="color: var(--green); display: block; margin-bottom: 4px;">
+                                ★ {{ job.review.rating }}/5 — Reseña verificada del cliente
+                            </strong>
+                            <span style="color: var(--text);">{{ job.review.comment|default:"Cliente satisfecho con el servicio." }}</span>
+                        </div>
+                    {% endif %}
+
+                    {% if job.chat_room %}
+                        <div style="margin: 12px 0 4px; width: 100%;">
+                            <a href="{% url 'chat_room_view' job.chat_room.id %}" class="secondary-button" style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; text-decoration: none;">
+                                <i data-lucide="message-square"></i>
+                                {% if job.chat_room.is_active %}
+                                    Abrir Chat en vivo con el Cliente
+                                {% else %}
+                                    Ver Historial de Chat (Cerrado)
+                                {% endif %}
+                            </a>
+                        </div>
+                    {% endif %}
+
+                    <div class="workflow-actions">
+                        {% if job.status == 'ACCEPTED' %}
+                            <form method="post">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="start_job">
+                                <input type="hidden" name="job_id" value="{{ job.id }}">
+                                <button class="primary-button" type="submit">
+                                    <i data-lucide="play"></i> Iniciar ejecución de obra
+                                </button>
+                            </form>
+                        {% elif job.status == 'IN_PROGRESS' %}
+                            <form method="post">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="mark_finished">
+                                <input type="hidden" name="job_id" value="{{ job.id }}">
+                                <button class="primary-button" type="submit">
+                                    <i data-lucide="check-circle"></i> Marcar obra terminada y pedir confirmación
+                                </button>
+                            </form>
+                        {% elif job.status == 'AWAITING_CONFIRMATION' %}
+                            <span class="empty-inline">
+                                <i data-lucide="hourglass"></i> Esperando que el cliente confirme la finalización en su panel.
+                            </span>
+                        {% endif %}
+
+                        {% if job.status == 'ACCEPTED' or job.status == 'IN_PROGRESS' %}
+                            <form method="post">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="cancel_job">
+                                <input type="hidden" name="job_id" value="{{ job.id }}">
+                                <button class="danger-text-button" type="submit">
+                                    Cancelar asignación (devuelve 1 crédito)
+                                </button>
+                            </form>
+                        {% endif %}
+                    </div>
+                </article>
+            {% empty %}
+                <div class="empty-state">
+                    <i data-lucide="clipboard-check"></i>
+                    <h3>Aún no tienes trabajos asignados</h3>
+                    <p>Ve a la Bolsa de Trabajo y envía propuestas claras para que los clientes te seleccionen.</p>
+                    <a href="#job-market" class="primary-button" style="padding: 0 20px; text-decoration: none;">Ver Bolsa de Trabajo</a>
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <!-- ======================================================================
+         PESTAÑA 3: PERFIL Y PORTAFOLIO (#professional-profile)
+         ====================================================================== -->
+    <section id="professional-profile" style="display: none;">
+        <div class="pro-section-box" style="margin-bottom: 20px;">
+            <div class="section-title" style="margin-bottom: 16px;">
+                <div>
+                    <h2 style="margin: 0; font-size: 19px;">Datos de tu Perfil Público y Cobertura</h2>
+                    <small style="color: var(--muted); font-size: 12px;">Esta información se muestra en tu perfil público, en el mapa y en Comunidad</small>
+                </div>
+            </div>
+
+            <form method="post" class="surface-form" enctype="multipart/form-data" style="border: none; padding: 0;">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="update_profile">
+
+                <!-- Subida de Foto de Perfil Real -->
+                <div style="display: flex; align-items: center; gap: 14px; padding: 14px; border-radius: 16px; background: var(--surface-strong); border: 1px solid var(--line);">
+                    <div class="avatar big" id="avatarPreviewContainer" style="width: 64px; height: 64px; overflow: hidden; flex-shrink: 0;">
+                        {% if professional.avatar_url %}
+                            <img id="avatarPreviewImg" src="{{ professional.avatar_url }}" alt="{{ professional.name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                        {% else %}
+                            <span id="avatarInitialsSpan">{{ professional.initials }}</span>
+                            <img id="avatarPreviewImg" alt="{{ professional.name }}" style="display: none; width: 100%; height: 100%; object-fit: cover;">
+                        {% endif %}
+                    </div>
+                    <div style="flex: 1; min-width: 0;">
+                        <strong style="display: block; font-size: 14px; color: var(--text); margin-bottom: 3px;">Foto de perfil profesional</strong>
+                        <span style="display: block; font-size: 12px; color: var(--muted); margin-bottom: 8px;">Muestra tu rostro o uniforme de trabajo para generar máxima confianza.</span>
+                        <input type="file" name="avatar_file" accept="image/*" onchange="previewAvatarFile(this)" style="font-size: 12px; padding: 6px 10px; min-height: auto;">
+                    </div>
+                </div>
+
+                <div class="form-grid-2">
+                    <label>Nombre público o comercial
+                        <input name="name" maxlength="150" value="{{ professional.name }}" required placeholder="Ej: Maestro Carlos Pérez / Sertec">
+                    </label>
+                    <label>WhatsApp de contacto (activa botón en Comunidad)
+                        <input name="phone" maxlength="20" value="{{ user.profile.phone|default:'' }}" placeholder="Ej: 0991234567">
+                    </label>
+                </div>
+
+                <div class="form-grid-3">
+                    <label>Disponibilidad actual
+                        <select name="available">
+                            <option value="Disponible hoy" {% if professional.available == "Disponible hoy" %}selected{% endif %}>🟢 Disponible hoy</option>
+                            <option value="Agenda abierta" {% if professional.available == "Agenda abierta" %}selected{% endif %}>📅 Agenda abierta</option>
+                            <option value="No disponible temporalmente" {% if professional.available == "No disponible temporalmente" %}selected{% endif %}>⏸️ No disponible</option>
+                        </select>
+                    </label>
+                    <label>Especialidad principal
+                        <input name="specialty" list="specialties-datalist" maxlength="200" value="{{ professional.specialty }}" required placeholder="Ej: Electricidad, Plomería...">
+                        <datalist id="specialties-datalist">
+                            {% for cat_name in categories_list %}
+                                <option value="{{ cat_name }}"></option>
+                            {% endfor %}
+                        </datalist>
+                    </label>
+                    <label>Experiencia
+                        <input name="experience" maxlength="50" value="{{ professional.experience }}" placeholder="Ej: 5 años">
+                    </label>
+                </div>
+
+                <div class="form-grid-2">
+                    <label>Sector base en Guayaquil / Ecuador
+                        <div class="input-with-action">
+                            <input id="location_input" name="location" maxlength="200" value="{{ professional.location }}" required>
+                            <button id="btn-location" class="icon-button" type="button" aria-label="Usar mi ubicación" title="Actualizar con mi GPS">
+                                <i data-lucide="locate-fixed"></i>
+                            </button>
+                        </div>
+                    </label>
+                    <label>Radio de cobertura para recibir alertas
+                        <div class="range-field">
+                            <input id="coverage-radius" type="range" name="coverage_radius_km" min="1" max="100" value="{{ professional.coverage_radius_km }}">
+                            <output for="coverage-radius">{{ professional.coverage_radius_km }} km</output>
+                        </div>
+                    </label>
+                </div>
+
+                <input id="lat_input" type="hidden" name="lat" value="{{ professional.lat|stringformat:'f' }}">
+                <input id="lng_input" type="hidden" name="lng" value="{{ professional.lng|stringformat:'f' }}">
+
+                <label>Presentación profesional (Sobre mí)
+                    <textarea name="about" maxlength="3000" rows="4" placeholder="Describe tu experiencia, herramientas, certificaciones y tipos de obra que realizas...">{{ professional.about }}</textarea>
+                </label>
+
+                <button class="primary-button" type="submit">
+                    <i data-lucide="save"></i> Guardar cambios del perfil
+                </button>
+            </form>
+        </div>
+
+        <!-- Portafolio Conectado con Comunidad e Historias -->
+        <div class="pro-section-box">
+            <div class="section-title" style="margin-bottom: 12px;">
+                <div>
+                    <h2 style="margin: 0; font-size: 19px;">Portafolio de Trabajos Reales</h2>
+                    <small style="color: var(--muted); font-size: 12px;">Cada foto o video que subas aquí aparece automáticamente en tu Perfil Público y en el Feed / Historias de Comunidad</small>
+                </div>
+            </div>
+
+            <form method="post" class="surface-form compact-form" enctype="multipart/form-data" style="margin-bottom: 18px;">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="add_portfolio">
+                <div class="form-grid-2">
+                    <label>Foto o Video del Trabajo
+                        <input type="file" name="portfolio_file" accept="image/*,video/*" required style="padding: 8px 12px;">
+                    </label>
+                    <label>Descripción del trabajo realizado
+                        <input name="caption" maxlength="180" placeholder="Ej: Instalación de luminarias LED y revisión de tablero..." required>
+                    </label>
+                </div>
+                <button class="secondary-button" type="submit">
+                    <i data-lucide="upload-cloud"></i> Publicar en mi portafolio y en Comunidad
+                </button>
+            </form>
+
+            <div class="portfolio-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 14px;">
+                {% for item in professional.portfolio_items.all %}
+                    <figure class="portfolio-item" style="position: relative; overflow: hidden; border-radius: 14px; border: 1px solid var(--line); padding: 8px; background: var(--surface-strong); margin: 0;">
+                        {% if item.is_video %}
+                            <video src="{{ item.image_url }}" controls style="width: 100%; height: 180px; object-fit: cover; border-radius: 10px; background: #000;" preload="metadata"></video>
+                        {% else %}
+                            <img src="{{ item.image_url }}" alt="{{ item.caption|default:'Trabajo realizado' }}" loading="lazy" style="width: 100%; height: 180px; object-fit: cover; border-radius: 10px;">
+                        {% endif %}
+                        <figcaption style="margin-top: 8px; font-size: 12px; color: var(--text); font-weight: 600;">
+                            {{ item.caption|default:"Trabajo realizado" }}
+                            <span style="display: block; font-size: 10px; color: var(--muted); font-weight: 400; margin-top: 2px;">{{ item.created_at|date:"d/m/Y" }}</span>
+                        </figcaption>
+                        <form method="post" style="position: absolute; top: 14px; right: 14px;">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="remove_portfolio">
+                            <input type="hidden" name="item_id" value="{{ item.id }}">
+                            <button class="icon-button" type="submit" aria-label="Eliminar imagen" style="background: rgba(0,0,0,0.65); color: white; border: none; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                                <i data-lucide="trash-2" style="width: 15px; height: 15px;"></i>
+                            </button>
+                        </form>
+                    </figure>
+                {% empty %}
+                    <div class="empty-inline" style="grid-column: 1 / -1; padding: 16px 0;">
+                        <i data-lucide="images"></i> Aún no has subido fotos o videos. ¡Publica tu primer trabajo para destacar en Comunidad!
+                    </div>
                 {% endfor %}
             </div>
         </div>
-        {% endif %}
-    </div>
+    </section>
 
-    <div class="section-title subsection-title">
-        <h2>Portafolio</h2>
-        <span>Imágenes públicas</span>
-    </div>
-    <form method="post" class="surface-form compact-form" enctype="multipart/form-data">
-        {% csrf_token %}
-        <input type="hidden" name="action" value="add_portfolio">
-        <label>Foto o Video del Trabajo
-            <input type="file" name="portfolio_file" accept="image/*,video/*" required style="width: 100%; padding: 8px 12px; border: 1.5px solid var(--line); border-radius: 12px; background: var(--surface-strong); color: var(--text);">
-        </label>
-        <label>Descripción / Comentario
-            <input name="caption" maxlength="180" placeholder="Ej: Remodelación de cocina, instalación eléctrica...">
-        </label>
-        <button class="secondary-button" type="submit">Añadir al portafolio</button>
-    </form>
-    <div class="portfolio-grid">
-        {% for item in professional.portfolio_items.all %}
-        <figure class="portfolio-item" style="position: relative; overflow: hidden; border-radius: 12px; border: 1px solid var(--line); padding: 8px; background: var(--surface);">
-            {% if item.is_video %}
-            <video src="{{ item.image_url }}" controls style="width: 100%; height: 180px; object-fit: cover; border-radius: 8px; background: #000;" preload="metadata"></video>
-            {% else %}
-            <img src="{{ item.image_url }}" alt="{{ item.caption|default:'Trabajo realizado' }}" loading="lazy" style="width: 100%; height: 180px; object-fit: cover; border-radius: 8px;">
-            {% endif %}
-            <figcaption style="margin-top: 8px; font-size: 13px; color: var(--muted); font-weight: 500;">{{ item.caption|default:"Trabajo realizado" }}</figcaption>
-            <form method="post" style="position: absolute; top: 12px; right: 12px;">
+    <!-- ======================================================================
+         PESTAÑA 4: CRÉDITOS Y RECARGAS (#credits-section)
+         ====================================================================== -->
+    <section id="credits-section" style="display: none;">
+        <div class="pro-section-box" id="recharge-card">
+            <div class="section-title" style="margin-bottom: 14px;">
+                <div>
+                    <h2 style="margin: 0; font-size: 20px;">Comprar paquete de créditos</h2>
+                    <small style="color: var(--muted); font-size: 12px;">
+                        Cada cotización nueva consume 1 crédito · Si el cliente reabre la solicitud o cancelas, el crédito regresa a tu cuenta automáticamente.
+                    </small>
+                </div>
+                <span style="padding: 6px 14px; border-radius: 999px; background: var(--green-soft); color: var(--green); font-size: 13px; font-weight: 800;">
+                    Saldo actual: {{ professional.credits }} créditos
+                </span>
+            </div>
+
+            <form method="post" class="surface-form" enctype="multipart/form-data" style="border: none; padding: 0;">
                 {% csrf_token %}
-                <input type="hidden" name="action" value="remove_portfolio">
-                <input type="hidden" name="item_id" value="{{ item.id }}">
-                <button class="icon-button" type="submit" aria-label="Eliminar imagen" style="background: rgba(0,0,0,0.6); color: white; border: none; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer;"><i data-lucide="trash-2" style="width: 16px; height: 16px;"></i></button>
-            </form>
-        </figure>
-        {% empty %}
-        <div class="empty-inline"><i data-lucide="images"></i>Añade trabajos reales para aumentar tu confianza.</div>
-        {% endfor %}
-    </div>
-</section>
+                <input type="hidden" name="action" value="request_recharge">
 
-<section class="dashboard-section" id="job-market">
-    <div class="section-title">
-        <h2>Oportunidades cercanas</h2>
-        <span>Cotizar cuesta 1 crédito</span>
-    </div>
-    <div class="workflow-list">
-        {% for job in pending_jobs %}
-        <article class="workflow-card" style="border-radius: 18px; padding: 20px;">
-            <header class="workflow-card__header">
-                <div>
-                    <span class="status-pill status-{{ job.status|lower }}">{{ job.get_status_display }}</span>
-                    <h3 style="font-size: 18px; margin-top: 8px;">{{ job.title }}</h3>
-                </div>
-                <time>{{ job.created_at|date:"d/m/Y" }}</time>
-            </header>
-
-            {% if job.image_url %}
-            <div style="margin: 12px 0; border-radius: 14px; overflow: hidden; border: 1px solid var(--line); max-height: 220px;">
-                <img src="{{ job.image_url }}" alt="Foto del daño subida por el cliente" loading="lazy" style="width: 100%; height: 220px; object-fit: cover; display: block;">
-            </div>
-            {% endif %}
-
-            <p class="workflow-description">{{ job.description }}</p>
-            <div class="workflow-meta">
-                <span><i data-lucide="wallet"></i>{{ job.estimated_price }}</span>
-                <span><i data-lucide="clock"></i>{{ job.estimated_time }}</span>
-                {% if job.address %}<span><i data-lucide="map-pin"></i>{{ job.address }}</span>{% endif %}
-            </div>
-            <details class="workflow-details" {% if job.my_quote %}open{% endif %}>
-                <summary>{% if job.my_quote %}Editar mi cotización (${{ job.my_quote.amount }}){% else %}Enviar cotización al cliente{% endif %}</summary>
-                <form method="post" class="compact-form">
-                    {% csrf_token %}
-                    <input type="hidden" name="action" value="submit_quote">
-                    <input type="hidden" name="job_id" value="{{ job.id }}">
-                    <div class="form-grid-2">
-                        <label>Monto total ($)
-                            <input type="number" name="amount" min="1" step="0.01" required value="{{ job.my_quote.amount|default:'' }}">
-                        </label>
-                        <label>Días estimados
-                            <input type="number" name="estimated_days" min="1" max="365" required value="{{ job.my_quote.estimated_days|default:'' }}">
-                        </label>
-                    </div>
-                    <label>Alcance y condiciones
-                        <textarea name="message" rows="3" maxlength="1000" placeholder="Detalla qué incluye tu mano de obra y garantía...">{{ job.my_quote.message|default:'' }}</textarea>
+                <div class="credit-packages-grid">
+                    <label class="credit-package-card">
+                        <input type="radio" name="package" value="5">
+                        <div>
+                            <span class="credit-package-badge">Paquete Inicial</span>
+                            <strong>5 Créditos</strong>
+                            <span class="credit-package-price">$5.00</span>
+                            <small>$1.00 por cotización</small>
+                        </div>
                     </label>
-                    <button class="primary-button" type="submit" {% if professional.credits == 0 and not job.my_quote %}disabled{% endif %}>
-                        <i data-lucide="send"></i>{% if job.my_quote %}Actualizar propuesta{% else %}Enviar propuesta (1 crédito){% endif %}
-                    </button>
-                </form>
-            </details>
-        </article>
-        {% empty %}
-        <div class="empty-state">
-            <i data-lucide="briefcase"></i>
-            <h3>No hay oportunidades nuevas</h3>
-            <p>Te avisaremos cuando aparezca un trabajo dentro de tu cobertura.</p>
+                    <label class="credit-package-card popular">
+                        <input type="radio" name="package" value="15" checked>
+                        <div>
+                            <span class="credit-package-badge">Más popular · Ahorra 20%</span>
+                            <strong>15 Créditos</strong>
+                            <span class="credit-package-price">$12.00</span>
+                            <small>$0.80 por cotización</small>
+                        </div>
+                    </label>
+                    <label class="credit-package-card">
+                        <input type="radio" name="package" value="35">
+                        <div>
+                            <span class="credit-package-badge">Maestro Pro · Ahorra 28%</span>
+                            <strong>35 Créditos</strong>
+                            <span class="credit-package-price">$25.00</span>
+                            <small>$0.71 por cotización</small>
+                        </div>
+                    </label>
+                </div>
+
+                <div class="form-grid-2">
+                    <label>Método de pago utilizado
+                        <select name="payment_method">
+                            <option value="DEUNA">DeUna! (Verificación rápida)</option>
+                            <option value="TRANSFERENCIA">Transferencia Bancaria</option>
+                        </select>
+                    </label>
+                    <label>Número de comprobante / referencia
+                        <input name="receipt_reference" maxlength="200" placeholder="Ej: Comprobante #094821" required>
+                    </label>
+                </div>
+
+                <label>Subir captura o foto del comprobante (Opcional)
+                    <input type="file" name="receipt_file" accept="image/*" style="padding: 8px 12px;">
+                </label>
+
+                <button class="primary-button" type="submit">
+                    <i data-lucide="coins"></i> Enviar comprobante para activar créditos
+                </button>
+            </form>
+
+            <!-- Historial de Recargas del Profesional -->
+            <div style="margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--line);">
+                <h3 style="margin: 0 0 12px; font-size: 15px; font-weight: 800; color: var(--text);">Historial de tus recargas</h3>
+                {% if my_recharges %}
+                    <div class="responsive-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Paquete</th>
+                                    <th>Monto</th>
+                                    <th>Método / Ref.</th>
+                                    <th>Estado</th>
+                                    <th>Fecha</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for rec in my_recharges %}
+                                    <tr>
+                                        <td><strong>+{{ rec.credits_added }} créditos</strong></td>
+                                        <td>${{ rec.amount_paid }}</td>
+                                        <td>
+                                            {{ rec.get_payment_method_display }}
+                                            {% if rec.receipt_reference %}<br><small style="color: var(--muted);">{{ rec.receipt_reference }}</small>{% endif %}
+                                        </td>
+                                        <td>
+                                            <span class="status-pill {% if rec.status == 'APPROVED' %}status-completed{% elif rec.status == 'REJECTED' %}status-cancelled{% else %}status-in_progress{% endif %}">
+                                                {{ rec.get_status_display }}
+                                            </span>
+                                        </td>
+                                        <td>{{ rec.created_at|date:"d/m/Y H:i" }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p style="font-size: 13px; color: var(--muted); margin: 0;">Aún no tienes solicitudes de recarga registradas.</p>
+                {% endif %}
+            </div>
         </div>
-        {% endfor %}
-    </div>
-</section>
+    </section>
 
-<section class="dashboard-section" id="my-jobs">
-    <div class="section-title">
-        <h2>Mis trabajos</h2>
-        <span>Seguimiento operativo</span>
-    </div>
-    <div class="workflow-list">
-        {% for job in jobs %}
-        <article class="workflow-card" style="border-radius: 18px; padding: 20px;">
-            <header class="workflow-card__header">
-                <div>
-                    <span class="status-pill status-{{ job.status|lower }}">{{ job.get_status_display }}</span>
-                    <h3 style="font-size: 18px; margin-top: 8px;">{{ job.title }}</h3>
-                </div>
-                {% if job.selected_quote %}<strong style="font-size: 20px; color: var(--green);">${{ job.selected_quote.amount }}</strong>{% endif %}
-            </header>
-
-            <!-- Barra de Progreso Visual (Stepper) -->
-            {% if job.status != 'CANCELLED' %}
-            <div class="job-stepper" aria-label="Progreso del servicio">
-                <div class="job-step completed">
-                    <span class="job-step__dot">1</span>
-                    <small>Publicado</small>
-                </div>
-                <div class="job-step completed">
-                    <span class="job-step__dot">2</span>
-                    <small>Cotizado</small>
-                </div>
-                <div class="job-step completed">
-                    <span class="job-step__dot">3</span>
-                    <small>Asignado</small>
-                </div>
-                <div class="job-step {% if job.status == 'IN_PROGRESS' or job.status == 'AWAITING_CONFIRMATION' or job.status == 'COMPLETED' %}completed{% endif %}">
-                    <span class="job-step__dot">4</span>
-                    <small>En obra</small>
-                </div>
-                <div class="job-step {% if job.status == 'COMPLETED' %}completed{% endif %}">
-                    <span class="job-step__dot">5</span>
-                    <small>Finalizado</small>
-                </div>
-            </div>
-            {% endif %}
-
-            {% if job.image_url %}
-            <div style="margin: 12px 0; border-radius: 14px; overflow: hidden; border: 1px solid var(--line); max-height: 200px;">
-                <img src="{{ job.image_url }}" alt="Foto del trabajo" loading="lazy" style="width: 100%; height: 200px; object-fit: cover; display: block;">
-            </div>
-            {% endif %}
-
-            <p class="workflow-description">{{ job.description }}</p>
-            <div class="assigned-professional">
-                <div class="avatar">{{ job.client.username|slice:":2"|upper }}</div>
-                <div><small>Cliente</small><strong>{{ job.client.username }}</strong></div>
-                {% if job.client.profile.phone %}
-                <a class="icon-button" href="https://wa.me/{{ job.client.profile.whatsapp_number }}" target="_blank" rel="noopener" aria-label="Contactar por WhatsApp">
-                    <i data-lucide="message-circle"></i>
-                </a>
-                {% endif %}
-            </div>
-            {% if job.chat_room %}
-            <div style="margin: 10px 0; width: 100%;">
-                <a href="{% url 'chat_room_view' job.chat_room.id %}" class="secondary-button" style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; text-decoration: none;">
-                    <i data-lucide="message-square"></i>
-                    {% if job.chat_room.is_active %}
-                        Chat con el Cliente
-                    {% else %}
-                        Ver Historial de Chat (Cerrado)
-                    {% endif %}
-                </a>
-            </div>
-            {% endif %}
-            <div class="workflow-actions">
-                {% if job.status == 'ACCEPTED' %}
-                <form method="post">
-                    {% csrf_token %}
-                    <input type="hidden" name="action" value="start_job">
-                    <input type="hidden" name="job_id" value="{{ job.id }}">
-                    <button class="primary-button" type="submit"><i data-lucide="play"></i>Iniciar obra</button>
-                </form>
-                {% elif job.status == 'IN_PROGRESS' %}
-                <form method="post">
-                    {% csrf_token %}
-                    <input type="hidden" name="action" value="mark_finished">
-                    <input type="hidden" name="job_id" value="{{ job.id }}">
-                    <button class="primary-button" type="submit"><i data-lucide="check"></i>Solicitar confirmación</button>
-                </form>
-                {% elif job.status == 'AWAITING_CONFIRMATION' %}
-                <span class="empty-inline"><i data-lucide="hourglass"></i>Esperando confirmación del cliente.</span>
-                {% endif %}
-                {% if job.status == 'ACCEPTED' or job.status == 'IN_PROGRESS' %}
-                <form method="post">
-                    {% csrf_token %}
-                    <input type="hidden" name="action" value="cancel_job">
-                    <input type="hidden" name="job_id" value="{{ job.id }}">
-                    <button class="danger-text-button" type="submit">Cancelar asignación</button>
-                </form>
-                {% endif %}
-            </div>
-        </article>
-        {% empty %}
-        <div class="empty-state">
-            <i data-lucide="clipboard-check"></i>
-            <h3>Aún no tienes trabajos seleccionados</h3>
-            <p>Envía cotizaciones claras y competitivas.</p>
-        </div>
-        {% endfor %}
-    </div>
-</section>
+</div>
 
 {% if google_maps_api_key %}
 <script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key|urlencode }}&libraries=places"></script>

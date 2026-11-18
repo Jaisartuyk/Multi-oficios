@@ -114,28 +114,30 @@ function initProfessionalDashboard() {
     const sections = {
         '#professional-profile': document.getElementById('professional-profile'),
         '#job-market': document.getElementById('job-market'),
-        '#my-jobs': document.getElementById('my-jobs')
+        '#my-jobs': document.getElementById('my-jobs'),
+        '#credits-section': document.getElementById('credits-section'),
     };
 
     if (!sections['#professional-profile'] && !sections['#job-market'] && !sections['#my-jobs']) {
         return;
     }
 
-    const hero = document.querySelector('.profile-hero');
-    const stats = document.querySelector('.reputation-grid');
-    const navLinks = document.querySelectorAll('.bottom-nav a');
+    const navLinks = document.querySelectorAll('.bottom-nav a, [data-pro-tab]');
 
     function switchTab() {
-        const hash = window.location.hash || '#professional-profile';
-        const validHashes = Object.keys(sections);
-        const activeHash = validHashes.includes(hash) ? hash : '#professional-profile';
+        let hash = window.location.hash || '#job-market';
+        if (hash === '#recharge-card') {
+            hash = '#credits-section';
+        }
+        const validHashes = Object.keys(sections).filter((k) => sections[k]);
+        const activeHash = validHashes.includes(hash) ? hash : (validHashes[0] || '#professional-profile');
 
         for (const [key, section] of Object.entries(sections)) {
             if (section) {
                 if (key === activeHash) {
                     section.style.display = 'block';
                     section.style.opacity = '0';
-                    section.style.transition = 'opacity 0.25s ease-in-out';
+                    section.style.transition = 'opacity 0.22s ease-in-out';
                     section.offsetHeight; // trigger reflow
                     section.style.opacity = '1';
                 } else {
@@ -144,12 +146,9 @@ function initProfessionalDashboard() {
             }
         }
 
-        if (hero) hero.style.display = (activeHash === '#professional-profile') ? 'block' : 'none';
-        if (stats) stats.style.display = (activeHash === '#professional-profile') ? 'grid' : 'none';
-
-        navLinks.forEach(link => {
-            const linkHref = link.getAttribute('href');
-            if (linkHref && linkHref.includes(activeHash)) {
+        navLinks.forEach((link) => {
+            const target = link.dataset.proTab || link.getAttribute('href') || '';
+            if (target && target.includes(activeHash)) {
                 link.classList.add('active');
             } else {
                 link.classList.remove('active');

@@ -639,10 +639,18 @@ def professional_dashboard(request):
 
     if request.method == 'POST':
         action = request.POST.get('action')
+        target_hash = '#professional-profile'
         try:
             if action == 'update_profile':
+                new_name = request.POST.get('name', '').strip()[:150]
+                if new_name:
+                    professional.name = new_name
+                    parts = [p[0] for p in new_name.split() if p]
+                    if parts:
+                        professional.initials = ''.join(parts[:2]).upper()
                 professional.available = request.POST.get('available', professional.available)
-                professional.specialty = request.POST.get('specialty', professional.specialty)[:200]
+                professional.specialty = request.POST.get('specialty', professional.specialty).strip()[:200]
+                professional.experience = request.POST.get('experience', professional.experience).strip()[:50] or professional.experience
                 professional.about = request.POST.get('about', professional.about)[:3000]
                 professional.location = request.POST.get('location', professional.location)[:200]
                 professional.coverage_radius_km = max(
@@ -658,8 +666,15 @@ def professional_dashboard(request):
                 if avatar_file:
                     professional.avatar_url = upload_file_to_r2_or_local(avatar_file, 'avatars')
                 professional.save()
+
+                if 'phone' in request.POST and hasattr(request.user, 'profile'):
+                    request.user.profile.phone = request.POST.get('phone', '').strip()[:20]
+                    request.user.profile.save(update_fields=['phone'])
+
                 messages.success(request, 'Perfil actualizado correctamente.')
+                target_hash = '#professional-profile'
             elif action == 'request_recharge':
+                target_hash = '#credits-section'
                 package = request.POST.get('package', '15')
                 packages_map = {
                     '5': (5.00, 5),
@@ -687,6 +702,7 @@ def professional_dashboard(request):
                     f'Solicitud de +{credits_added} créditos enviada. Se acreditarán tras verificar tu comprobante.',
                 )
             elif action == 'submit_quote':
+                target_hash = '#job-market'
                 form = QuoteForm(request.POST)
                 if not form.is_valid():
                     raise WorkflowError('Revisa monto, tiempo y mensaje de la cotización.')
@@ -695,17 +711,21 @@ def professional_dashboard(request):
                     request.POST.get('job_id'),
                     form.cleaned_data,
                 )
-                messages.success(request, 'Cotización enviada. Se descontó un crédito.')
+                messages.success(request, 'Propuesta enviada al cliente correctamente.')
             elif action == 'start_job':
+                target_hash = '#my-jobs'
                 start_job(professional.id, request.POST.get('job_id'))
-                messages.success(request, 'Trabajo iniciado.')
+                messages.success(request, 'Trabajo iniciado. El cliente fue notificado.')
             elif action in {'mark_finished', 'complete_job'}:
+                target_hash = '#my-jobs'
                 mark_job_finished(professional.id, request.POST.get('job_id'))
-                messages.success(request, 'Trabajo enviado al cliente para confirmación.')
+                messages.success(request, 'Trabajo marcado como terminado. Esperando confirmación del cliente.')
             elif action == 'cancel_job':
+                target_hash = '#my-jobs'
                 cancel_assignment(professional.id, request.POST.get('job_id'))
-                messages.success(request, 'Asignación cancelada y crédito devuelto.')
+                messages.success(request, 'Asignación cancelada y crédito devuelto a tu cuenta.')
             elif action == 'add_portfolio':
+                target_hash = '#professional-profile'
                 form = PortfolioItemForm(request.POST, request.FILES)
                 if not form.is_valid():
                     raise WorkflowError('Revisa el archivo y la descripción del portafolio.')
@@ -717,9 +737,10 @@ def professional_dashboard(request):
                 else:
                     raise WorkflowError('Debes subir una foto o video para el portafolio.')
                 item.save()
-                messages.success(request, 'Archivo añadido al portafolio de manera pública.')
+                messages.success(request, 'Trabajo publicado en tu portafolio y en el Feed de Comunidad.')
 
             elif action == 'remove_portfolio':
+                target_hash = '#professional-profile'
                 PortfolioItem.objects.filter(
                     pk=request.POST.get('item_id'),
                     professional=professional,
@@ -727,33 +748,49 @@ def professional_dashboard(request):
                 messages.success(request, 'Elemento eliminado del portafolio.')
         except (JobRequest.DoesNotExist, Professional.DoesNotExist, WorkflowError, ValueError) as error:
             messages.error(request, str(error) or 'No se pudo completar la acción.')
-        return redirect('professional_dashboard')
+        from django.urls import reverse
+        return redirect(f"{reverse('professional_dashboard')}{target_hash}")
 
     jobs = (
         JobRequest.objects.filter(professional=professional)
-        .select_related('client__profile', 'selected_quote', 'chat_room')
+        .select_related('client__profile', 'selected_quote', 'chat_room', 'payment', 'review')
         .order_by('-created_at')
     )
-    pending_jobs = list(
+    raw_pending_jobs = list(
         JobRequest.objects.filter(status__in=['PENDING', 'QUOTED'])
         .select_related('client__profile')
         .prefetch_related('quotes')
         .order_by('-created_at')
     )
-    pending_jobs = [
-        job
-        for job in pending_jobs
-        if job.lat is None
-        or job.lng is None
-        or haversine_km(job.lat, job.lng, professional.lat, professional.lng)
-        <= professional.coverage_radius_km
-    ]
+    pending_jobs = []
+    for job in raw_pending_jobs:
+        if job.lat is not None and job.lng is not None:
+            dist = haversine_km(job.lat, job.lng, professional.lat, professional.lng)
+            if dist <= professional.coverage_radius_km:
+                job.distance_km = f"{dist:.1f} km"
+                pending_jobs.append(job)
+        else:
+            job.distance_km = None
+            pending_jobs.append(job)
+
     own_quotes = {
         quote.job_id: quote
         for quote in professional.quotes.filter(job__in=pending_jobs)
     }
     for job in pending_jobs:
         job.my_quote = own_quotes.get(job.id)
+        job.quotes_count = len(job.quotes.all())
+
+    active_assigned_count = sum(
+        1 for j in jobs if j.status in {'ACCEPTED', 'IN_PROGRESS', 'AWAITING_CONFIRMATION'}
+    )
+    active_quotes_count = len(own_quotes)
+    total_earned = (
+        Payment.objects.filter(professional=professional, status__in=['VERIFIED', 'RELEASED'])
+        .aggregate(total=Sum('amount'))['total']
+        or 0
+    )
+    categories_list = list(Category.objects.values_list('name', flat=True))
 
     return render(request, 'core/professional_dashboard.html', {
         'professional': professional,
@@ -762,7 +799,11 @@ def professional_dashboard(request):
         'quote_form': QuoteForm(),
         'portfolio_form': PortfolioItemForm(),
         'google_maps_api_key': settings.GOOGLE_MAPS_API_KEY,
-        'my_recharges': professional.recharges.all()[:5],
+        'my_recharges': professional.recharges.all()[:6],
+        'active_assigned_count': active_assigned_count,
+        'active_quotes_count': active_quotes_count,
+        'total_earned': total_earned,
+        'categories_list': categories_list,
     })
 
 def professional_google_login(request):
