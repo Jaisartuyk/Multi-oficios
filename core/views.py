@@ -899,11 +899,77 @@ def notifications_mark_read(request):
 
 
 from django.contrib.auth.decorators import login_required
+from django.db.models import Q
+
+
+def _get_user_chat_rooms(user):
+    is_admin = getattr(getattr(user, 'profile', None), 'role', None) == 'ADMIN' or user.is_superuser
+    qs = ChatRoom.objects.select_related(
+        'job__client__profile',
+        'job__professional__user__profile',
+        'job__selected_quote',
+    ).prefetch_related('messages').order_by('-created_at')
+    if is_admin:
+        return list(qs[:20])
+    return list(qs.filter(Q(job__client=user) | Q(job__professional__user=user))[:20])
+
+
+def chats_list_api(request):
+    """Return active and recent chat rooms for the Facebook Messenger topbar & floating dock."""
+    if not request.user.is_authenticated:
+        return JsonResponse({'rooms': [], 'active_count': 0})
+
+    user = request.user
+    rooms = _get_user_chat_rooms(user)
+    items = []
+    active_count = 0
+    for r in rooms:
+        if r.is_active:
+            active_count += 1
+        is_client = (user == r.job.client)
+        pro = r.job.professional
+        if is_client and pro:
+            opp_name = pro.name
+            opp_avatar = pro.avatar_url or ''
+            opp_initials = pro.initials
+            opp_sub = pro.specialty
+            opp_phone = getattr(getattr(pro.user, 'profile', None), 'whatsapp_number', '') if pro.user else ''
+        else:
+            opp_name = r.job.client.first_name or r.job.client.username
+            opp_avatar = ''
+            opp_initials = (opp_name[:2] or 'CL').upper()
+            opp_sub = 'Cliente ObraYa'
+            opp_phone = getattr(getattr(r.job.client, 'profile', None), 'whatsapp_number', '')
+
+        all_msgs = list(r.messages.all())
+        last_m = all_msgs[-1] if all_msgs else None
+        last_text = (last_m.content or '[Archivo adjunto]') if last_m else 'Chat listo para coordinar'
+        last_time = last_m.created_at.strftime('%H:%M') if last_m else r.created_at.strftime('%d/%m')
+
+        items.append({
+            'id': r.id,
+            'job_title': r.job.title,
+            'is_active': r.is_active,
+            'opponent_name': opp_name,
+            'opponent_avatar': opp_avatar,
+            'opponent_initials': opp_initials,
+            'opponent_sub': opp_sub,
+            'opponent_phone': opp_phone,
+            'last_message': last_text[:65],
+            'last_time': last_time,
+            'url': f'/chat/{r.id}/',
+        })
+    return JsonResponse({'rooms': items, 'active_count': active_count})
+
 
 @login_required
 def chat_room_view(request, room_id):
     room = get_object_or_404(
-        ChatRoom.objects.select_related('job__client', 'job__professional__user'),
+        ChatRoom.objects.select_related(
+            'job__client__profile',
+            'job__professional__user__profile',
+            'job__selected_quote',
+        ),
         pk=room_id
     )
     user = request.user
@@ -968,14 +1034,41 @@ def chat_room_view(request, room_id):
             
     messages_list = room.messages.all().select_related('sender')
     
-    opponent_name = room.job.professional.name if is_client else room.job.client.username
-    if is_admin:
-        opponent_name = f"{room.job.client.username} y {room.job.professional.name if room.job.professional else 'Sin Profesional'}"
-        
+    pro = room.job.professional
+    if is_client and pro:
+        opponent_name = pro.name
+        opponent_avatar = pro.avatar_url or ''
+        opponent_initials = pro.initials
+        opponent_sub = f"{pro.specialty} · ★ {pro.rating}"
+        opponent_phone = getattr(getattr(pro.user, 'profile', None), 'whatsapp_number', '') if pro.user else ''
+        opponent_raw_phone = getattr(getattr(pro.user, 'profile', None), 'phone', '') if pro.user else ''
+    elif is_pro:
+        opponent_name = room.job.client.first_name or room.job.client.username
+        opponent_avatar = ''
+        opponent_initials = (opponent_name[:2] or 'CL').upper()
+        opponent_sub = 'Cliente verificado ObraYa'
+        opponent_phone = getattr(getattr(room.job.client, 'profile', None), 'whatsapp_number', '')
+        opponent_raw_phone = getattr(getattr(room.job.client, 'profile', None), 'phone', '')
+    else:
+        opponent_name = f"{room.job.client.username} ↔ {pro.name if pro else 'Sin Profesional'}"
+        opponent_avatar = pro.avatar_url if pro else ''
+        opponent_initials = pro.initials if pro else 'AD'
+        opponent_sub = 'Modo Auditoría Admin'
+        opponent_phone = ''
+        opponent_raw_phone = ''
+
+    user_rooms = _get_user_chat_rooms(user)
+
     return render(request, 'core/chat_room.html', {
         'room': room,
         'chat_messages': messages_list,
         'opponent_name': opponent_name,
+        'opponent_avatar': opponent_avatar,
+        'opponent_initials': opponent_initials,
+        'opponent_sub': opponent_sub,
+        'opponent_phone': opponent_phone,
+        'opponent_raw_phone': opponent_raw_phone,
+        'user_rooms': user_rooms,
         'is_client': is_client,
         'is_pro': is_pro,
     })

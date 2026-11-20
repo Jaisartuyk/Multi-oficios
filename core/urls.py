@@ -32,9 +32,10 @@ urlpatterns = [
     path('sw.js', views.serve_sw, name='service_worker'),
     path('manifest.json', views.serve_manifest, name='manifest'),
     path('offline/', views.offline, name='offline'),
-    # Notifications API
+    # Notifications & Messenger API
     path('api/notifications/', views.notifications_api, name='notifications_api'),
     path('api/notifications/read/', views.notifications_mark_read, name='notifications_mark_read'),
+    path('api/chats/', views.chats_list_api, name='chats_list_api'),
     # TikTok Ad Simulator
     path('tiktok-ad/', views.tiktok_ad, name='tiktok_ad'),
 ]

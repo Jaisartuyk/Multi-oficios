@@ -93,8 +93,14 @@
             </a>
             <div style="display: flex; gap: 8px; align-items: center; position: relative;">
                 {% if user.is_authenticated %}
+                    <!-- Facebook Messenger Button -->
+                    <button class="icon-button" type="button" id="messenger-btn" aria-label="Chats" title="Messenger de ObraYa" style="position: relative; cursor: pointer;">
+                        <i data-lucide="message-circle"></i>
+                        <span id="messenger-badge" style="display: none; position: absolute; top: 2px; right: 2px; min-width: 17px; height: 17px; padding: 0 4px; background: #e41e3f; color: #fff; font-size: 10px; font-weight: 800; border-radius: 999px; border: 2px solid var(--surface); align-items: center; justify-content: center;">0</span>
+                    </button>
+
                     <!-- Notification Bell -->
-                    <button class="icon-button" type="button" id="notif-bell" aria-label="Notificaciones" title="Notificaciones" style="position: relative;">
+                    <button class="icon-button" type="button" id="notif-bell" aria-label="Notificaciones" title="Notificaciones" style="position: relative; cursor: pointer;">
                         <i data-lucide="bell"></i>
                         <span id="notif-badge" style="display: none; position: absolute; top: 4px; right: 4px; width: 10px; height: 10px; background: #dc3545; border-radius: 50%; border: 2px solid var(--surface);"></span>
                     </button>
@@ -166,13 +172,24 @@
 
         <!-- Notification Panel (hidden by default) -->
         {% if user.is_authenticated %}
-        <div id="notif-panel" style="display: none; position: fixed; top: 60px; right: 8px; left: 8px; max-width: 400px; margin-left: auto; z-index: 100; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); padding: 12px; max-height: 400px; overflow-y: auto;">
+        <div id="notif-panel" style="display: none; position: fixed; top: 60px; right: 8px; left: 8px; max-width: 400px; margin-left: auto; z-index: 1100; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); padding: 12px; max-height: 400px; overflow-y: auto;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                 <strong style="font-size: 15px;">Notificaciones</strong>
                 <button type="button" id="notif-mark-all" style="background: none; border: none; color: var(--green); font-size: 12px; font-weight: 600; cursor: pointer;">Marcar todas leídas</button>
             </div>
             <div id="notif-list">
                 <p style="color: var(--muted); font-size: 13px; text-align: center; padding: 20px 0;">Sin notificaciones nuevas</p>
+            </div>
+        </div>
+
+        <!-- Messenger Panel (hidden by default) -->
+        <div id="messenger-panel" style="display: none; position: fixed; top: 60px; right: 8px; left: 8px; max-width: 360px; margin-left: auto; z-index: 1100; background: var(--surface); border: 1px solid var(--line); border-radius: 18px; box-shadow: var(--shadow); padding: 14px; max-height: 420px; overflow-y: auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <strong style="font-size: 18px; font-weight: 800;">Chats</strong>
+                <span style="font-size: 11px; color: var(--muted); font-weight: 600;">Messenger ObraYa</span>
+            </div>
+            <div id="messenger-rooms-list" style="display: flex; flex-direction: column; gap: 4px;">
+                <p style="color: var(--muted); font-size: 13px; text-align: center; padding: 18px 0;">Cargando conversaciones...</p>
             </div>
         </div>
         {% endif %}
@@ -453,6 +470,280 @@
     })();
     {% endif %}
     </script>
+
+    {% if user.is_authenticated and request.resolver_match.url_name != 'chat_room_view' %}
+    <!-- Ventana Flotante Estilo Facebook Messenger (Esquina Inferior Derecha) -->
+    <div id="fb-floating-dock" style="display: none; position: fixed; bottom: 0; right: 20px; width: 338px; max-width: calc(100vw - 24px); height: 450px; background: var(--surface); border: 1px solid var(--line); border-bottom: none; border-radius: 14px 14px 0 0; box-shadow: 0 12px 40px rgba(0,0,0,0.22); z-index: 9998; flex-direction: column; overflow: hidden; transition: height 0.2s ease;">
+        <!-- Cabecera de la Ventana Flotante (Igual a Facebook Messenger) -->
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 10px; background: var(--surface); border-bottom: 1px solid var(--line); box-shadow: 0 1px 4px rgba(0,0,0,0.05);">
+            <a id="fb-dock-full-link" href="#" style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: var(--text); min-width: 0; flex: 1;">
+                <div style="position: relative; width: 36px; height: 36px; flex-shrink: 0;">
+                    <div id="fb-dock-avatar" style="width: 100%; height: 100%; border-radius: 50%; background: linear-gradient(135deg, #7c3aed, #0084ff); color: #fff; font-size: 12px; font-weight: 800; display: flex; align-items: center; justify-content: center; overflow: hidden;"></div>
+                    <span id="fb-dock-online" style="position: absolute; bottom: 0; right: 0; width: 10px; height: 10px; border-radius: 50%; background: #22c55e; border: 2px solid var(--surface);"></span>
+                </div>
+                <div style="min-width: 0;">
+                    <div style="display: flex; align-items: center; gap: 3px;">
+                        <strong id="fb-dock-name" style="font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"></strong>
+                        <i data-lucide="chevron-down" style="width: 13px; height: 13px; color: #7c3aed; flex-shrink: 0;"></i>
+                    </div>
+                    <span id="fb-dock-sub" style="display: block; font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Activo(a) ahora</span>
+                </div>
+            </a>
+            <div style="display: flex; align-items: center; gap: 2px; flex-shrink: 0;">
+                <a id="fb-dock-phone" href="#" target="_blank" rel="noopener" style="display: none; width: 30px; height: 30px; border-radius: 50%; color: #7c3aed; align-items: center; justify-content: center;" title="Contactar">
+                    <i data-lucide="phone" style="width: 16px; height: 16px;"></i>
+                </a>
+                <a id="fb-dock-expand" href="#" style="width: 30px; height: 30px; border-radius: 50%; color: #7c3aed; display: flex; align-items: center; justify-content: center;" title="Abrir en pantalla completa">
+                    <i data-lucide="maximize-2" style="width: 15px; height: 15px;"></i>
+                </a>
+                <button type="button" onclick="toggleMinimizeFbDock()" style="width: 30px; height: 30px; border-radius: 50%; border: none; background: transparent; color: #7c3aed; display: flex; align-items: center; justify-content: center; cursor: pointer;" title="Minimizar">
+                    <i data-lucide="minus" style="width: 17px; height: 17px;"></i>
+                </button>
+                <button type="button" onclick="closeFbDock()" style="width: 30px; height: 30px; border-radius: 50%; border: none; background: transparent; color: #7c3aed; display: flex; align-items: center; justify-content: center; cursor: pointer;" title="Cerrar">
+                    <i data-lucide="x" style="width: 18px; height: 18px;"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Cinta del Trabajo -->
+        <div id="fb-dock-jobbar" style="padding: 5px 10px; background: var(--surface-strong); border-bottom: 1px solid var(--line); font-size: 11px; color: var(--muted); text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"></div>
+
+        <!-- Mensajes del Dock Flotante -->
+        <div id="fb-dock-messages" style="flex: 1; padding: 12px 10px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; background: var(--surface);"></div>
+
+        <!-- Barra Inferior Aa + Like estilo Messenger -->
+        <form id="fb-dock-form" style="padding: 8px; border-top: 1px solid var(--line); background: var(--surface); display: flex; align-items: center; gap: 4px;">
+            <a id="fb-dock-attach-link" href="#" style="width: 32px; height: 32px; border-radius: 50%; color: #0084ff; display: flex; align-items: center; justify-content: center; flex-shrink: 0;" title="Subir foto o grabar audio">
+                <i data-lucide="image" style="width: 18px; height: 18px;"></i>
+            </a>
+            <div style="flex: 1; display: flex; align-items: center; background: var(--surface-strong); border-radius: 999px; padding: 5px 12px;">
+                <input id="fb-dock-input" type="text" placeholder="Aa" autocomplete="off" style="width: 100%; border: none; background: transparent; color: var(--text); font-size: 13px; outline: none;">
+            </div>
+            <button type="button" id="fb-dock-thumb" onclick="sendFbDockQuick('👍')" style="width: 32px; height: 32px; border-radius: 50%; border: none; background: transparent; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center;">👍</button>
+            <button type="submit" id="fb-dock-send" style="display: none; width: 32px; height: 32px; border-radius: 50%; border: none; background: #0084ff; color: #fff; cursor: pointer; align-items: center; justify-content: center;">
+                <i data-lucide="send" style="width: 14px; height: 14px;"></i>
+            </button>
+        </form>
+    </div>
+
+    <script>
+    (function () {
+        const msgBtn = document.getElementById('messenger-btn');
+        const msgBadge = document.getElementById('messenger-badge');
+        const msgPanel = document.getElementById('messenger-panel');
+        const msgList = document.getElementById('messenger-rooms-list');
+        const dock = document.getElementById('fb-floating-dock');
+        const dockMessages = document.getElementById('fb-dock-messages');
+        const dockForm = document.getElementById('fb-dock-form');
+        const dockInput = document.getElementById('fb-dock-input');
+        const dockThumb = document.getElementById('fb-dock-thumb');
+        const dockSend = document.getElementById('fb-dock-send');
+
+        let msgPanelOpen = false;
+        let activeDockRoom = null;
+        let dockMinimized = false;
+        let dockLastMsgId = 0;
+        let dockPollTimer = null;
+        let cachedRooms = [];
+
+        function getCsrf() {
+            const v = document.cookie.match('(^|;)\\s*csrftoken\\s*=\\s*([^;]+)');
+            return v ? v.pop() : '';
+        }
+
+        function loadMessengerRooms() {
+            fetch('/api/chats/')
+                .then(r => r.ok ? r.json() : null)
+                .then(data => {
+                    if (!data) return;
+                    cachedRooms = data.rooms || [];
+                    if (msgBadge) {
+                        if (data.active_count > 0) {
+                            msgBadge.textContent = data.active_count;
+                            msgBadge.style.display = 'inline-flex';
+                        } else {
+                            msgBadge.style.display = 'none';
+                        }
+                    }
+                    if (!msgList) return;
+                    if (!cachedRooms.length) {
+                        msgList.innerHTML = '<p style="color: var(--muted); font-size: 13px; text-align: center; padding: 18px 0;">Aún no tienes chats activos.<br><small>Se crean automáticamente al aceptar una cotización.</small></p>';
+                        return;
+                    }
+                    msgList.innerHTML = '';
+                    cachedRooms.forEach(room => {
+                        const row = document.createElement('div');
+                        row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:12px;cursor:pointer;transition:background 0.15s;';
+                        row.onmouseover = () => row.style.background = 'var(--surface-strong)';
+                        row.onmouseout = () => row.style.background = 'transparent';
+                        row.onclick = () => {
+                            msgPanelOpen = false;
+                            msgPanel.style.display = 'none';
+                            openFbDock(room);
+                        };
+                        const avatarContent = room.opponent_avatar
+                            ? `<img src="${room.opponent_avatar}" style="width:100%;height:100%;object-fit:cover;">`
+                            : room.opponent_initials;
+                        row.innerHTML = `
+                            <div style="position:relative;width:44px;height:44px;flex-shrink:0;">
+                                <div style="width:100%;height:100%;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#0084ff);color:#fff;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;overflow:hidden;">${avatarContent}</div>
+                                ${room.is_active ? '<span style="position:absolute;bottom:0;right:0;width:11px;height:11px;border-radius:50%;background:#22c55e;border:2px solid var(--surface);"></span>' : ''}
+                            </div>
+                            <div style="min-width:0;flex:1;">
+                                <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;">
+                                    <strong style="font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${room.opponent_name}</strong>
+                                    <small style="font-size:10px;color:var(--muted);flex-shrink:0;">${room.last_time}</small>
+                                </div>
+                                <span style="display:block;font-size:11px;color:#0084ff;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${room.job_title}</span>
+                                <span style="display:block;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${room.last_message}</span>
+                            </div>
+                        `;
+                        msgList.appendChild(row);
+                    });
+                })
+                .catch(() => {});
+        }
+
+        window.openFbDock = function (room) {
+            if (!dock) return;
+            activeDockRoom = room;
+            dockMinimized = false;
+            dock.style.height = '450px';
+            dock.style.display = 'flex';
+            dockLastMsgId = 0;
+            dockMessages.innerHTML = '';
+
+            document.getElementById('fb-dock-name').textContent = room.opponent_name;
+            document.getElementById('fb-dock-sub').textContent = room.is_active ? 'Activo(a) ahora' : 'Finalizado';
+            document.getElementById('fb-dock-jobbar').innerHTML = `🛡️ Obra: <strong style="color:var(--text);">${room.job_title}</strong>`;
+            document.getElementById('fb-dock-full-link').href = room.url;
+            document.getElementById('fb-dock-expand').href = room.url;
+            document.getElementById('fb-dock-attach-link').href = room.url;
+            document.getElementById('fb-dock-avatar').innerHTML = room.opponent_avatar
+                ? `<img src="${room.opponent_avatar}" style="width:100%;height:100%;object-fit:cover;">`
+                : room.opponent_initials;
+
+            const phoneLink = document.getElementById('fb-dock-phone');
+            if (phoneLink) {
+                if (room.opponent_phone) {
+                    phoneLink.href = 'https://wa.me/' + room.opponent_phone;
+                    phoneLink.style.display = 'flex';
+                } else {
+                    phoneLink.style.display = 'none';
+                }
+            }
+
+            dockForm.style.display = room.is_active ? 'flex' : 'none';
+            pollDockMessages();
+            clearInterval(dockPollTimer);
+            dockPollTimer = setInterval(pollDockMessages, 3500);
+            if (window.lucide) window.lucide.createIcons();
+        };
+
+        window.toggleMinimizeFbDock = function () {
+            if (!dock) return;
+            dockMinimized = !dockMinimized;
+            dock.style.height = dockMinimized ? '54px' : '450px';
+        };
+
+        window.closeFbDock = function () {
+            clearInterval(dockPollTimer);
+            activeDockRoom = null;
+            if (dock) dock.style.display = 'none';
+        };
+
+        function appendDockMsg(m) {
+            if (!dockMessages || dockMessages.querySelector(`[data-dmsg="${m.id}"]`)) return;
+            const row = document.createElement('div');
+            row.dataset.dmsg = m.id;
+            row.style.cssText = `display:flex;align-items:flex-end;gap:6px;max-width:85%;align-self:${m.is_me ? 'flex-end' : 'flex-start'};`;
+            const isEmoji = (m.content === '👍' && !m.file_url);
+            const bubbleStyle = isEmoji
+                ? 'font-size:28px;padding:2px;'
+                : (m.is_me
+                    ? 'background:linear-gradient(135deg,#7c3aed,#0084ff);color:#fff;padding:8px 12px;border-radius:16px 16px 4px 16px;font-size:13px;line-height:1.35;'
+                    : 'background:var(--surface-strong);color:var(--text);padding:8px 12px;border-radius:16px 16px 16px 4px;font-size:13px;line-height:1.35;');
+            let mediaHtml = '';
+            if (m.file_url) {
+                if (m.file_type === 'image') {
+                    mediaHtml = `<a href="${m.file_url}" target="_blank"><img src="${m.file_url}" style="max-width:100%;max-height:140px;border-radius:10px;display:block;margin-top:4px;"></a>`;
+                } else if (m.file_type === 'audio') {
+                    mediaHtml = `<audio src="${m.file_url}" controls style="max-width:190px;height:32px;display:block;margin-top:4px;"></audio>`;
+                } else {
+                    mediaHtml = `<a href="${m.file_url}" target="_blank" style="color:inherit;text-decoration:underline;font-size:12px;display:block;margin-top:4px;">Ver archivo ↗</a>`;
+                }
+            }
+            const miniAv = m.is_me ? '' : `<div style="width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#0084ff);color:#fff;font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;">${activeDockRoom.opponent_avatar ? `<img src="${activeDockRoom.opponent_avatar}" style="width:100%;height:100%;object-fit:cover;">` : activeDockRoom.opponent_initials}</div>`;
+            row.innerHTML = `${miniAv}<div style="${bubbleStyle}">${m.content ? `<span>${m.content}</span>` : ''}${mediaHtml}</div>`;
+            dockMessages.appendChild(row);
+            dockMessages.scrollTop = dockMessages.scrollHeight;
+            if (m.id > dockLastMsgId) dockLastMsgId = m.id;
+        }
+
+        function pollDockMessages() {
+            if (!activeDockRoom || document.hidden) return;
+            fetch(`/chat/${activeDockRoom.id}/api/?last_id=${dockLastMsgId}`)
+                .then(r => r.ok ? r.json() : null)
+                .then(data => {
+                    if (!data || !data.messages) return;
+                    data.messages.forEach(appendDockMsg);
+                })
+                .catch(() => {});
+        }
+
+        window.sendFbDockQuick = function (text) {
+            if (!activeDockRoom) return;
+            const fd = new FormData();
+            fd.append('content', text);
+            fetch(`/chat/${activeDockRoom.id}/api/`, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': getCsrf() },
+                body: fd
+            })
+                .then(r => r.ok ? r.json() : null)
+                .then(data => { if (data && data.message) appendDockMsg(data.message); })
+                .catch(() => {});
+        };
+
+        if (dockInput) {
+            dockInput.addEventListener('input', function () {
+                const hasVal = dockInput.value.trim().length > 0;
+                if (dockThumb) dockThumb.style.display = hasVal ? 'none' : 'flex';
+                if (dockSend) dockSend.style.display = hasVal ? 'flex' : 'none';
+            });
+        }
+
+        if (dockForm) {
+            dockForm.addEventListener('submit', function (e) {
+                e.preventDefault();
+                const txt = dockInput.value.trim();
+                if (!txt || !activeDockRoom) return;
+                dockInput.value = '';
+                if (dockThumb) dockThumb.style.display = 'flex';
+                if (dockSend) dockSend.style.display = 'none';
+                window.sendFbDockQuick(txt);
+            });
+        }
+
+        if (msgBtn && msgPanel) {
+            msgBtn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                msgPanelOpen = !msgPanelOpen;
+                msgPanel.style.display = msgPanelOpen ? 'block' : 'none';
+                if (msgPanelOpen) loadMessengerRooms();
+            });
+            document.addEventListener('click', function (e) {
+                if (msgPanelOpen && !msgPanel.contains(e.target) && e.target !== msgBtn && !msgBtn.contains(e.target)) {
+                    msgPanelOpen = false;
+                    msgPanel.style.display = 'none';
+                }
+            });
+        }
+
+        loadMessengerRooms();
+    })();
+    </script>
+    {% endif %}
 
     <!-- PWA Install Banner -->
     <div id="pwa-install-banner" style="display: none; position: fixed; bottom: 80px; left: 16px; right: 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); padding: 16px; z-index: 9999; align-items: center; justify-content: space-between; gap: 12px; animation: slideUp 0.4s ease-out;">

@@ -1,155 +1,792 @@
 {% extends 'core/base.html' %}
 
-{% block title %}Chat - {{ room.job.title }} | ObraYa{% endblock %}
+{% block title %}Messenger · {{ opponent_name }} | ObraYa{% endblock %}
+
+{% block extra_css %}
+<style>
+    .fb-messenger-layout {
+        max-width: 1020px;
+        margin: 12px auto 32px;
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 16px;
+        height: calc(100vh - 155px);
+        min-height: 540px;
+        max-height: 760px;
+    }
+
+    @media (min-width: 860px) {
+        .fb-messenger-layout {
+            grid-template-columns: 310px minmax(0, 1fr);
+            height: calc(100vh - 120px);
+        }
+    }
+
+    /* Lista Lateral de Conversaciones (Escritorio) */
+    .fb-msg-sidebar {
+        display: none;
+        flex-direction: column;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(11, 47, 79, 0.08);
+    }
+
+    @media (min-width: 860px) {
+        .fb-msg-sidebar {
+            display: flex;
+        }
+    }
+
+    .fb-msg-sidebar-head {
+        padding: 16px 18px 12px;
+        border-bottom: 1px solid var(--line);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .fb-msg-sidebar-head h2 {
+        margin: 0;
+        font-size: 20px;
+        font-weight: 800;
+        color: var(--text);
+    }
+
+    .fb-msg-rooms-list {
+        flex: 1;
+        overflow-y: auto;
+        padding: 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .fb-msg-room-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 12px;
+        border-radius: 12px;
+        text-decoration: none;
+        color: var(--text);
+        transition: background 0.15s;
+    }
+
+    .fb-msg-room-item:hover {
+        background: var(--surface-strong);
+    }
+
+    .fb-msg-room-item.active {
+        background: rgba(0, 132, 255, 0.12);
+    }
+
+    .fb-msg-avatar-wrap {
+        position: relative;
+        width: 46px;
+        height: 46px;
+        flex-shrink: 0;
+    }
+
+    .fb-msg-avatar {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #7c3aed, #0084ff);
+        color: #fff;
+        font-weight: 800;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+
+    .fb-msg-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .fb-msg-online-dot {
+        position: absolute;
+        bottom: 1px;
+        right: 1px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #22c55e;
+        border: 2px solid var(--surface);
+    }
+
+    /* Ventana Principal Estilo Facebook Messenger */
+    .fb-messenger-window {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 14px 40px rgba(0, 0, 0, 0.12);
+    }
+
+    /* Cabecera Messenger (Igual a la captura de Facebook) */
+    .fb-msg-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 10px 14px;
+        background: var(--surface);
+        border-bottom: 1px solid var(--line);
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+        z-index: 5;
+    }
+
+    .fb-msg-user-info {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+        text-decoration: none;
+        color: var(--text);
+        padding: 4px 6px;
+        border-radius: 10px;
+        transition: background 0.15s;
+    }
+
+    .fb-msg-user-info:hover {
+        background: var(--surface-strong);
+    }
+
+    .fb-msg-user-name {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 15px;
+        font-weight: 800;
+        color: var(--text);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .fb-msg-user-status {
+        display: block;
+        font-size: 12px;
+        color: var(--muted);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .fb-msg-header-actions {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        flex-shrink: 0;
+    }
+
+    .fb-msg-header-btn {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        border: none;
+        background: transparent;
+        color: #7c3aed;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        text-decoration: none;
+        transition: background 0.15s, transform 0.15s;
+    }
+
+    .fb-msg-header-btn:hover {
+        background: rgba(124, 58, 237, 0.1);
+        transform: scale(1.06);
+    }
+
+    /* Cinta Superior de Contexto (Estilo "Faltan mensajes / Restaurar ahora" de Messenger) */
+    .fb-msg-subbar {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 7px 14px;
+        background: var(--surface);
+        border-bottom: 1px solid var(--line);
+        font-size: 12px;
+        color: var(--muted);
+        text-align: center;
+    }
+
+    .fb-msg-subbar strong {
+        color: #0084ff;
+        font-weight: 700;
+    }
+
+    /* Área de Mensajes */
+    .fb-msg-body {
+        flex: 1;
+        padding: 16px 14px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        background: var(--surface);
+        scroll-behavior: smooth;
+    }
+
+    /* Filas de Burbujas estilo Messenger */
+    .fb-bubble-row {
+        display: flex;
+        align-items: flex-end;
+        gap: 8px;
+        max-width: 82%;
+    }
+
+    .fb-bubble-row.theirs {
+        align-self: flex-start;
+    }
+
+    .fb-bubble-row.mine {
+        align-self: flex-end;
+        flex-direction: row-reverse;
+    }
+
+    .fb-bubble-mini-avatar {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #7c3aed, #0084ff);
+        color: #fff;
+        font-size: 10px;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        overflow: hidden;
+        margin-bottom: 2px;
+    }
+
+    .fb-bubble-mini-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .fb-bubble-col {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    .fb-bubble-row.mine .fb-bubble-col {
+        align-items: flex-end;
+    }
+
+    .fb-bubble-row.theirs .fb-bubble-col {
+        align-items: flex-start;
+    }
+
+    .fb-bubble {
+        padding: 9px 14px;
+        border-radius: 18px;
+        font-size: 14px;
+        line-height: 1.4;
+        word-break: break-word;
+    }
+
+    .fb-bubble-row.theirs .fb-bubble {
+        background: #e4e6eb;
+        color: #050505;
+        border-bottom-left-radius: 4px;
+    }
+
+    [data-theme="dark"] .fb-bubble-row.theirs .fb-bubble {
+        background: #252f3d;
+        color: #eff6fb;
+    }
+
+    .fb-bubble-row.mine .fb-bubble {
+        background: linear-gradient(135deg, #7c3aed 0%, #0084ff 100%);
+        color: #fff;
+        border-bottom-right-radius: 4px;
+        box-shadow: 0 2px 8px rgba(124, 58, 237, 0.25);
+    }
+
+    .fb-bubble.emoji-only {
+        background: transparent !important;
+        box-shadow: none !important;
+        font-size: 36px;
+        padding: 2px 4px;
+    }
+
+    .fb-bubble-time {
+        font-size: 10px;
+        color: var(--muted);
+        padding: 0 6px;
+    }
+
+    /* Botón Flotante Circular de Bajar al Final (Igual a la captura) */
+    .fb-scroll-bottom-btn {
+        display: none;
+        position: absolute;
+        bottom: 78px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+        color: #7c3aed;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        z-index: 6;
+        transition: transform 0.15s;
+    }
+
+    .fb-scroll-bottom-btn:hover {
+        transform: translateX(-50%) scale(1.08);
+    }
+
+    /* Franja de Respuestas Rápidas y Emojis */
+    .fb-quick-replies {
+        display: flex;
+        gap: 6px;
+        overflow-x: auto;
+        scrollbar-width: none;
+        padding: 6px 12px;
+        border-top: 1px solid var(--line);
+        background: var(--surface);
+    }
+
+    .fb-quick-replies::-webkit-scrollbar {
+        display: none;
+    }
+
+    .fb-quick-chip {
+        flex-shrink: 0;
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: var(--surface-strong);
+        border: 1px solid var(--line);
+        color: var(--text);
+        font-size: 11px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.15s, border-color 0.15s;
+    }
+
+    .fb-quick-chip:hover {
+        border-color: #0084ff;
+        color: #0084ff;
+    }
+
+    /* Barra Inferior de Entrada estilo Messenger */
+    .fb-msg-footer {
+        position: relative;
+        padding: 8px 10px 10px;
+        background: var(--surface);
+        border-top: 1px solid var(--line);
+    }
+
+    .fb-msg-toolbar {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .fb-tool-btn {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        border: none;
+        background: transparent;
+        color: #0084ff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        flex-shrink: 0;
+        transition: background 0.15s, transform 0.15s;
+    }
+
+    .fb-tool-btn:hover {
+        background: rgba(0, 132, 255, 0.1);
+        transform: scale(1.06);
+    }
+
+    .fb-pill-input-wrap {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        background: #f0f2f5;
+        border-radius: 999px;
+        padding: 4px 8px 4px 14px;
+        min-height: 38px;
+    }
+
+    [data-theme="dark"] .fb-pill-input-wrap {
+        background: #252f3d;
+    }
+
+    .fb-pill-textarea {
+        flex: 1;
+        border: none;
+        background: transparent;
+        color: var(--text);
+        font-size: 14px;
+        outline: none;
+        resize: none;
+        max-height: 90px;
+        line-height: 1.35;
+        padding: 4px 0;
+    }
+
+    .fb-emoji-popover {
+        display: none;
+        position: absolute;
+        bottom: 56px;
+        right: 16px;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 8px 10px;
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+        gap: 6px;
+        z-index: 15;
+    }
+
+    .fb-emoji-popover.open {
+        display: flex;
+    }
+
+    .fb-emoji-choice {
+        border: none;
+        background: transparent;
+        font-size: 22px;
+        cursor: pointer;
+        padding: 4px;
+        border-radius: 8px;
+        transition: transform 0.15s, background 0.15s;
+    }
+
+    .fb-emoji-choice:hover {
+        transform: scale(1.25);
+        background: var(--surface-strong);
+    }
+
+    .blinking-dot {
+        animation: blink-animation 1s infinite alternate;
+    }
+    @keyframes blink-animation {
+        from { opacity: 1; }
+        to { opacity: 0.3; }
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<section class="dashboard-heading" style="margin-bottom: 16px;">
-    <div>
-        <span class="eyebrow"><i data-lucide="message-square"></i> Chat de Coordinación</span>
-        <h1 style="font-size: 24px; margin: 4px 0;">{{ opponent_name }}</h1>
-        <p style="margin: 0; font-size: 13px; color: var(--muted);">Trabajo: <strong>{{ room.job.title }}</strong></p>
-    </div>
-    <a class="secondary-button" href="{% if is_client %}{% url 'client_dashboard' %}{% else %}{% url 'professional_dashboard' %}{% endif %}">
-        <i data-lucide="arrow-left"></i>Volver
-    </a>
-</section>
+<div class="fb-messenger-layout">
 
-<section class="dashboard-section" style="max-width: 680px; margin: 0 auto; display: flex; flex-direction: column; height: 60vh; background: var(--surface); border: 1px solid var(--line); border-radius: 24px; overflow: hidden; box-shadow: var(--shadow-sm);">
-    
-    <!-- Messages Container -->
-    <div id="chat-messages-container" style="flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; background: var(--surface-strong);">
-        {% for msg in chat_messages %}
-            <div class="message-wrapper" data-msg-id="{{ msg.id }}" style="align-self: {% if msg.sender == request.user %}flex-end{% else %}flex-start{% endif %}; max-width: 80%; display: flex; flex-direction: column; align-items: {% if msg.sender == request.user %}flex-end{% else %}flex-start{% endif %};">
-                <div style="background: {% if msg.sender == request.user %}var(--green){% else %}var(--surface){% endif %}; color: {% if msg.sender == request.user %}white{% else %}var(--text){% endif %}; {% if msg.sender != request.user %}border: 1px solid var(--line);{% endif %} padding: 10px 14px; border-radius: {% if msg.sender == request.user %}18px 18px 2px 18px{% else %}18px 18px 18px 2px{% endif %}; font-size: 14px; box-shadow: 0 2px 6px rgba(0,0,0,0.04);">
-                    {% if msg.sender != request.user %}
-                        <strong style="display: block; font-size: 11px; color: var(--green); margin-bottom: 2px;">{{ msg.sender.username }}</strong>
-                    {% endif %}
-                    
-                    {% if msg.content %}
-                        <p style="margin: 0; white-space: pre-wrap; line-height: 1.4;">{{ msg.content }}</p>
-                    {% endif %}
-                    
-                    {% if msg.file_url %}
-                        <div style="margin-top: 6px; border-radius: 8px; overflow: hidden;">
-                            {% if msg.file_type == 'image' %}
-                                <a href="{{ msg.file_url }}" target="_blank"><img src="{{ msg.file_url }}" style="max-width: 100%; max-height: 220px; object-fit: cover; display: block; border-radius: 8px;" alt="Imagen"></a>
-                            {% elif msg.file_type == 'audio' %}
-                                <audio src="{{ msg.file_url }}" controls style="max-width: 100%; display: block;"></audio>
-                            {% elif msg.file_type == 'video' %}
-                                <video src="{{ msg.file_url }}" controls style="max-width: 100%; max-height: 220px; display: block; border-radius: 8px;" preload="metadata"></video>
+    <!-- ======================================================================
+         PANEL IZQUIERDO: LISTA DE CONVERSACIONES (ESCRITORIO)
+         ====================================================================== -->
+    <aside class="fb-msg-sidebar">
+        <div class="fb-msg-sidebar-head">
+            <h2>Chats</h2>
+            <a href="{% if is_client %}{% url 'client_dashboard' %}{% elif is_pro %}{% url 'professional_dashboard' %}#my-jobs{% else %}{% url 'admin_panel' %}{% endif %}"
+               style="font-size: 12px; font-weight: 700; color: #0084ff; text-decoration: none;">
+                ← Mi Panel
+            </a>
+        </div>
+        <div class="fb-msg-rooms-list">
+            {% for r in user_rooms %}
+                <a href="{% url 'chat_room_view' r.id %}" class="fb-msg-room-item {% if r.id == room.id %}active{% endif %}">
+                    <div class="fb-msg-avatar-wrap">
+                        <div class="fb-msg-avatar">
+                            {% if is_client and r.job.professional and r.job.professional.avatar_url %}
+                                <img src="{{ r.job.professional.avatar_url }}" alt="{{ r.job.professional.name }}">
+                            {% elif is_client and r.job.professional %}
+                                {{ r.job.professional.initials }}
                             {% else %}
-                                <a href="{{ msg.file_url }}" target="_blank" style="color: {% if msg.sender == request.user %}white{% else %}var(--green){% endif %}; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; text-decoration: underline; font-size: 13px;">
-                                    <i data-lucide="file"></i> Ver archivo adjunto
-                                </a>
+                                {{ r.job.client.username|slice:":2"|upper }}
+                            {% endif %}
+                        </div>
+                        {% if r.is_active %}<span class="fb-msg-online-dot"></span>{% endif %}
+                    </div>
+                    <div style="min-width: 0; flex: 1;">
+                        <strong style="display: block; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                            {% if is_client and r.job.professional %}
+                                {{ r.job.professional.name }}
+                            {% else %}
+                                {{ r.job.client.first_name|default:r.job.client.username }}
+                            {% endif %}
+                        </strong>
+                        <span style="display: block; font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                            {{ r.job.title }}
+                        </span>
+                    </div>
+                </a>
+            {% endfor %}
+        </div>
+    </aside>
+
+    <!-- ======================================================================
+         VENTANA DE CHAT ESTILO FACEBOOK MESSENGER
+         ====================================================================== -->
+    <section class="fb-messenger-window" aria-label="Ventana de Messenger">
+
+        <!-- Cabecera Messenger (Igual a la captura de Facebook) -->
+        <header class="fb-msg-header">
+            <a href="{% if is_client and room.job.professional %}{% url 'professional_detail' room.job.professional.id %}{% else %}#{% endif %}" class="fb-msg-user-info">
+                <div class="fb-msg-avatar-wrap" style="width: 40px; height: 40px;">
+                    <div class="fb-msg-avatar">
+                        {% if opponent_avatar %}
+                            <img src="{{ opponent_avatar }}" alt="{{ opponent_name }}">
+                        {% else %}
+                            {{ opponent_initials }}
+                        {% endif %}
+                    </div>
+                    {% if room.is_active %}<span class="fb-msg-online-dot"></span>{% endif %}
+                </div>
+                <div style="min-width: 0;">
+                    <div class="fb-msg-user-name">
+                        <span>{{ opponent_name }}</span>
+                        <i data-lucide="chevron-down" style="width: 14px; height: 14px; color: #7c3aed;"></i>
+                    </div>
+                    <span class="fb-msg-user-status">
+                        {% if room.is_active %}Activo(a) ahora{% else %}Trabajo finalizado{% endif %} · {{ opponent_sub }}
+                    </span>
+                </div>
+            </a>
+
+            <div class="fb-msg-header-actions">
+                {% if opponent_raw_phone %}
+                    <a href="tel:{{ opponent_raw_phone }}" class="fb-msg-header-btn" title="Llamar por teléfono">
+                        <i data-lucide="phone" style="width: 18px; height: 18px;"></i>
+                    </a>
+                {% endif %}
+                {% if opponent_phone %}
+                    <a href="https://wa.me/{{ opponent_phone }}" target="_blank" rel="noopener" class="fb-msg-header-btn" title="Abrir WhatsApp">
+                        <i data-lucide="video" style="width: 19px; height: 19px;"></i>
+                    </a>
+                {% endif %}
+                <a href="{% if is_client %}{% url 'client_dashboard' %}{% elif is_pro %}{% url 'professional_dashboard' %}#my-jobs{% else %}{% url 'admin_panel' %}{% endif %}"
+                   class="fb-msg-header-btn" title="Minimizar">
+                    <i data-lucide="minus" style="width: 19px; height: 19px;"></i>
+                </a>
+                <a href="{% if is_client %}{% url 'client_dashboard' %}{% elif is_pro %}{% url 'professional_dashboard' %}#my-jobs{% else %}{% url 'admin_panel' %}{% endif %}"
+                   class="fb-msg-header-btn" title="Cerrar chat">
+                    <i data-lucide="x" style="width: 20px; height: 20px;"></i>
+                </a>
+            </div>
+        </header>
+
+        <!-- Sub-barra informativa (Estilo Messenger) -->
+        <div class="fb-msg-subbar">
+            <i data-lucide="shield-check" style="width: 14px; height: 14px; color: #0084ff; flex-shrink: 0;"></i>
+            <span>
+                Obra: <strong style="color: var(--text);">{{ room.job.title }}</strong>
+                {% if room.job.selected_quote %} · Acordado: <strong>${{ room.job.selected_quote.amount }}</strong>{% endif %}
+            </span>
+        </div>
+
+        <!-- Contenedor de Mensajes -->
+        <div id="chat-messages-container" class="fb-msg-body">
+            <div style="text-align: center; font-size: 11px; color: var(--muted); font-weight: 600; margin: 4px 0 8px;">
+                {{ room.created_at|date:"D, H:i" }}
+            </div>
+
+            {% for msg in chat_messages %}
+                <div class="message-wrapper fb-bubble-row {% if msg.sender == request.user %}mine{% else %}theirs{% endif %}" data-msg-id="{{ msg.id }}">
+                    {% if msg.sender != request.user %}
+                        <div class="fb-bubble-mini-avatar" title="{{ msg.sender.username }}">
+                            {% if opponent_avatar %}
+                                <img src="{{ opponent_avatar }}" alt="{{ opponent_name }}">
+                            {% else %}
+                                {{ opponent_initials }}
                             {% endif %}
                         </div>
                     {% endif %}
-                </div>
-                <small style="color: var(--muted); font-size: 10px; margin-top: 4px; {% if msg.sender == request.user %}margin-right: 4px;{% else %}margin-left: 4px;{% endif %}">{{ msg.created_at|date:"H:i" }}</small>
-            </div>
-        {% empty %}
-            <div id="no-messages-placeholder" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--muted); text-align: center; padding: 20px;">
-                <i data-lucide="message-square" style="width: 48px; height: 48px; margin-bottom: 8px; color: var(--green); opacity: 0.5;"></i>
-                <p style="margin: 0; font-weight: 500;">¡El chat está listo!</p>
-                <p style="margin: 4px 0 0 0; font-size: 12px;">Comienza a escribir y coordinar los detalles del servicio.</p>
-            </div>
-        {% endfor %}
-    </div>
 
-    <!-- Input Form -->
-    <div style="padding: 16px; background: var(--surface); border-top: 1px solid var(--line);">
+                    <div class="fb-bubble-col">
+                        <div class="fb-bubble {% if msg.content == '👍' and not msg.file_url %}emoji-only{% endif %}">
+                            {% if msg.content %}
+                                <p style="margin: 0; white-space: pre-wrap;">{{ msg.content }}</p>
+                            {% endif %}
+
+                            {% if msg.file_url %}
+                                <div style="margin-top: {% if msg.content %}6px{% else %}0{% endif %}; border-radius: 12px; overflow: hidden;">
+                                    {% if msg.file_type == 'image' %}
+                                        <a href="{{ msg.file_url }}" target="_blank">
+                                            <img src="{{ msg.file_url }}" style="max-width: 100%; max-height: 230px; object-fit: cover; display: block; border-radius: 12px;" alt="Imagen">
+                                        </a>
+                                    {% elif msg.file_type == 'audio' %}
+                                        <audio src="{{ msg.file_url }}" controls style="max-width: 240px; height: 36px; display: block;"></audio>
+                                    {% elif msg.file_type == 'video' %}
+                                        <video src="{{ msg.file_url }}" controls style="max-width: 100%; max-height: 230px; display: block; border-radius: 12px;" preload="metadata"></video>
+                                    {% else %}
+                                        <a href="{{ msg.file_url }}" target="_blank" style="color: inherit; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; text-decoration: underline; font-size: 13px;">
+                                            <i data-lucide="file" style="width: 15px; height: 15px;"></i> Ver archivo adjunto
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <span class="fb-bubble-time">{{ msg.created_at|date:"H:i" }}</span>
+                    </div>
+                </div>
+            {% empty %}
+                <div id="no-messages-placeholder" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--muted); text-align: center; padding: 20px;">
+                    <div class="fb-msg-avatar" style="width: 64px; height: 64px; font-size: 20px; margin-bottom: 10px;">
+                        {% if opponent_avatar %}
+                            <img src="{{ opponent_avatar }}" alt="{{ opponent_name }}">
+                        {% else %}
+                            {{ opponent_initials }}
+                        {% endif %}
+                    </div>
+                    <strong style="font-size: 16px; color: var(--text);">{{ opponent_name }}</strong>
+                    <p style="margin: 4px 0 0; font-size: 12px;">Coordina horario, materiales y dirección del servicio por aquí.</p>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Botón Flotante Circular de Bajar al Final (Igual a la captura de Messenger) -->
+        <button type="button" id="scroll-bottom-btn" class="fb-scroll-bottom-btn" onclick="scrollToBottom()" aria-label="Ir al último mensaje">
+            <i data-lucide="arrow-down" style="width: 18px; height: 18px;"></i>
+        </button>
+
         {% if room.is_active %}
-            <form id="chat-form" style="display: flex; flex-direction: column; gap: 10px;">
-                {% csrf_token %}
-                <div style="display: flex; gap: 8px; align-items: center; position: relative;">
-                    
-                    <!-- Paperclip / Attach File -->
-                    <label id="attach-file-btn" style="cursor: pointer; display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 50%; background: var(--surface-strong); border: 1.5px solid var(--line); color: var(--muted); transition: all 0.2s; flex-shrink: 0;" class="file-btn-hover" title="Adjuntar archivo (Imagen, Video, Doc)">
-                        <input type="file" name="file" id="chat-file-input" style="display: none;" accept="image/*,audio/*,video/*,application/pdf">
-                        <i data-lucide="paperclip" style="width: 20px; height: 20px;"></i>
-                    </label>
-                    
-                    <!-- Microphone / Record Audio -->
-                    <button type="button" id="mic-btn" style="cursor: pointer; display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 50%; background: var(--surface-strong); border: 1.5px solid var(--line); color: var(--muted); transition: all 0.2s; flex-shrink: 0;" title="Grabar nota de voz">
-                        <i data-lucide="mic" id="mic-icon" style="width: 20px; height: 20px;"></i>
-                    </button>
-                    
-                    <!-- Voice Recording Status Box -->
-                    <div id="recording-status-box" style="display: none; align-items: center; gap: 10px; flex: 1; min-height: 44px; padding: 0 16px; background: rgba(239, 68, 68, 0.08); border: 1.5px solid rgba(239, 68, 68, 0.25); border-radius: 22px; color: #ef4444; font-size: 14px; font-weight: 600;">
-                        <span class="blinking-dot" style="width: 10px; height: 10px; background: #ef4444; border-radius: 50%; display: inline-block;"></span>
-                        <span>Grabando: <span id="recording-timer">00:00</span></span>
-                        
-                        <!-- Cancel Voice Record -->
-                        <button type="button" id="cancel-record-btn" style="margin-left: auto; background: none; border: none; color: var(--muted); cursor: pointer; font-size: 12px; display: flex; align-items: center; gap: 4px; font-weight: 700;">
-                            <i data-lucide="trash-2" style="width: 16px; height: 16px; color: #ef4444;"></i> Descartar
+            <!-- Respuestas Rápidas -->
+            <div class="fb-quick-replies">
+                <button type="button" class="fb-quick-chip" onclick="sendQuickText('👋 ¡Hola! Quedo atento para coordinar.')">👋 ¡Hola!</button>
+                <button type="button" class="fb-quick-chip" onclick="sendQuickText('🚗 Ya estoy en camino al domicilio.')">🚗 En camino</button>
+                <button type="button" class="fb-quick-chip" onclick="sendQuickText('📍 Ya llegué al sector indicado.')">📍 Ya llegué</button>
+                <button type="button" class="fb-quick-chip" onclick="sendQuickText('✅ De acuerdo con el presupuesto y horario.')">✅ Confirmado</button>
+                <button type="button" class="fb-quick-chip" onclick="sendQuickText('📸 Te envío foto del avance del trabajo.')">📸 Foto de avance</button>
+            </div>
+
+            <!-- Barra Inferior Estilo Facebook Messenger -->
+            <div class="fb-msg-footer">
+                <!-- Popover de Emojis -->
+                <div id="emoji-popover" class="fb-emoji-popover">
+                    <button type="button" class="fb-emoji-choice" onclick="insertEmoji('👍')">👍</button>
+                    <button type="button" class="fb-emoji-choice" onclick="insertEmoji('👋')">👋</button>
+                    <button type="button" class="fb-emoji-choice" onclick="insertEmoji('😊')">😊</button>
+                    <button type="button" class="fb-emoji-choice" onclick="insertEmoji('🛠️')">🛠️</button>
+                    <button type="button" class="fb-emoji-choice" onclick="insertEmoji('✅')">✅</button>
+                    <button type="button" class="fb-emoji-choice" onclick="insertEmoji('🙏')">🙏</button>
+                    <button type="button" class="fb-emoji-choice" onclick="insertEmoji('🎉')">🎉</button>
+                </div>
+
+                <form id="chat-form" style="display: flex; flex-direction: column; gap: 8px;">
+                    {% csrf_token %}
+                    <div class="fb-msg-toolbar">
+                        <!-- Botón Micrófono (Nota de voz) -->
+                        <button type="button" id="mic-btn" class="fb-tool-btn" title="Grabar nota de voz">
+                            <i data-lucide="mic" id="mic-icon" style="width: 20px; height: 20px;"></i>
+                        </button>
+
+                        <!-- Botón Imagen / Archivo -->
+                        <label id="attach-file-btn" class="fb-tool-btn" title="Enviar foto, video o documento">
+                            <input type="file" name="file" id="chat-file-input" style="display: none;" accept="image/*,audio/*,video/*,application/pdf">
+                            <i data-lucide="image" style="width: 20px; height: 20px;"></i>
+                        </label>
+
+                        <!-- Caja de Estado cuando está grabando audio -->
+                        <div id="recording-status-box" style="display: none; align-items: center; gap: 10px; flex: 1; min-height: 38px; padding: 0 14px; background: rgba(239, 68, 68, 0.1); border: 1.5px solid rgba(239, 68, 68, 0.3); border-radius: 999px; color: #ef4444; font-size: 13px; font-weight: 700;">
+                            <span class="blinking-dot" style="width: 9px; height: 9px; background: #ef4444; border-radius: 50%; display: inline-block;"></span>
+                            <span>Grabando <span id="recording-timer">00:00</span></span>
+                            <button type="button" id="cancel-record-btn" style="margin-left: auto; background: none; border: none; color: #ef4444; cursor: pointer; font-size: 12px; display: flex; align-items: center; gap: 4px; font-weight: 700;">
+                                <i data-lucide="trash-2" style="width: 15px; height: 15px;"></i> Cancelar
+                            </button>
+                        </div>
+
+                        <!-- Píldora "Aa" con botón de Emoji adentro (Igual a Facebook Messenger) -->
+                        <div id="pill-input-container" class="fb-pill-input-wrap">
+                            <textarea name="content" id="chat-textarea" class="fb-pill-textarea" placeholder="Aa" rows="1" oninput="handleInputState(this)"></textarea>
+                            <button type="button" class="fb-tool-btn" style="width: 30px; height: 30px;" onclick="toggleEmojiPopover()" title="Emojis">
+                                <i data-lucide="smile" style="width: 19px; height: 19px;"></i>
+                            </button>
+                        </div>
+
+                        <!-- Botón 👍 (Like instantáneo) cuando está vacío / Botón ➤ (Enviar) cuando hay texto -->
+                        <button type="button" id="thumb-like-btn" class="fb-tool-btn" onclick="sendQuickText('👍')" title="Enviar Me gusta" style="font-size: 20px;">
+                            👍
+                        </button>
+                        <button type="submit" id="send-btn" class="fb-tool-btn" style="display: none; background: #0084ff; color: #fff;" aria-label="Enviar mensaje" title="Enviar">
+                            <i data-lucide="send" style="width: 16px; height: 16px;"></i>
                         </button>
                     </div>
 
-                    <!-- Text input textarea -->
-                    <textarea name="content" id="chat-textarea" placeholder="Escribe un mensaje..." rows="1" style="flex: 1; min-height: 44px; max-height: 120px; padding: 12px 16px; border: 1.5px solid var(--line); border-radius: 22px; background: var(--surface-strong); color: var(--text); outline: none; font-size: 14px; resize: none; line-height: 1.3;" oninput="adjustTextareaHeight(this)"></textarea>
-                    
-                    <!-- Send Button -->
-                    <button type="submit" id="send-btn" class="primary-button" style="width: 44px; height: 44px; min-height: auto; border-radius: 50%; padding: 0; display: flex; align-items: center; justify-content: center; flex-shrink: 0;" aria-label="Enviar mensaje">
-                        <i data-lucide="send" style="width: 18px; height: 18px; margin-left: 2px;"></i>
-                    </button>
-                </div>
-                
-                <!-- Selected file preview panel (Images/Docs) -->
-                <div id="file-preview-panel" style="display: none; align-items: center; justify-content: space-between; background: var(--surface-strong); border: 1px dashed var(--line); padding: 8px 12px; border-radius: 12px;">
-                    <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text);">
-                        <i data-lucide="file-check" style="color: var(--green); width: 18px; height: 18px;"></i>
-                        <span id="file-name-label" style="font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 240px;"></span>
+                    <!-- Vista previa de archivo adjunto -->
+                    <div id="file-preview-panel" style="display: none; align-items: center; justify-content: space-between; background: var(--surface-strong); border: 1px dashed var(--line); padding: 6px 12px; border-radius: 12px;">
+                        <div style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text);">
+                            <i data-lucide="file-check" style="color: #0084ff; width: 16px; height: 16px;"></i>
+                            <span id="file-name-label" style="font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 240px;"></span>
+                        </div>
+                        <button type="button" onclick="clearSelectedFile()" style="background: none; border: none; color: #d14343; cursor: pointer; display: flex; align-items: center; font-size: 11px; font-weight: 700; gap: 4px;">
+                            <i data-lucide="x" style="width: 14px; height: 14px;"></i> Quitar
+                        </button>
                     </div>
-                    <button type="button" onclick="clearSelectedFile()" style="background: none; border: none; color: #d14343; cursor: pointer; display: flex; align-items: center; font-size: 12px; font-weight: 700; gap: 4px;">
-                        <i data-lucide="x" style="width: 16px; height: 16px;"></i> Quitar
-                    </button>
-                </div>
-            </form>
+                </form>
+            </div>
         {% else %}
-            <div style="display: flex; align-items: center; gap: 10px; background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.25); padding: 12px 16px; border-radius: 16px; color: #8b5600;">
-                <i data-lucide="lock" style="width: 20px; height: 20px; flex-shrink: 0;"></i>
-                <p style="margin: 0; font-size: 13px; font-weight: 500; line-height: 1.4;">
-                    Este chat se ha cerrado automáticamente porque el trabajo ha sido completado.
-                </p>
+            <div style="padding: 12px 16px; background: var(--surface-strong); border-top: 1px solid var(--line); text-align: center; font-size: 12px; color: var(--muted); font-weight: 600;">
+                🔒 Esta conversación se cerró porque el servicio fue completado.
             </div>
         {% endif %}
-    </div>
-</section>
+
+    </section>
+
+</div>
 
 <script>
     const roomId = {{ room.id }};
-    const currentUserId = {{ request.user.id }};
+    const opponentAvatarUrl = "{{ opponent_avatar|default:''|escapejs }}";
+    const opponentInitials = "{{ opponent_initials|default:'OB'|escapejs }}";
     const chatContainer = document.getElementById('chat-messages-container');
+    const scrollBottomBtn = document.getElementById('scroll-bottom-btn');
     const chatForm = document.getElementById('chat-form');
     const chatTextarea = document.getElementById('chat-textarea');
+    const pillInputContainer = document.getElementById('pill-input-container');
     const fileInput = document.getElementById('chat-file-input');
     const filePanel = document.getElementById('file-preview-panel');
     const fileNameLabel = document.getElementById('file-name-label');
     const noMessagesPlaceholder = document.getElementById('no-messages-placeholder');
-    
+    const thumbLikeBtn = document.getElementById('thumb-like-btn');
+    const sendBtn = document.getElementById('send-btn');
+    const emojiPopover = document.getElementById('emoji-popover');
+
     // Audio Recorder variables
     const micBtn = document.getElementById('mic-btn');
-    const micIcon = document.getElementById('mic-icon');
     const recordingStatusBox = document.getElementById('recording-status-box');
     const recordingTimer = document.getElementById('recording-timer');
     const cancelRecordBtn = document.getElementById('cancel-record-btn');
     const attachFileBtn = document.getElementById('attach-file-btn');
-    const sendBtn = document.getElementById('send-btn');
-    
+
     let mediaRecorder = null;
     let audioChunks = [];
     let isRecording = false;
     let recordStartTime = null;
     let timerInterval = null;
 
-    // Track the last message ID to poll only new ones
     let lastMessageId = 0;
     const messageWrappers = document.querySelectorAll('.message-wrapper');
     if (messageWrappers.length > 0) {
         lastMessageId = parseInt(messageWrappers[messageWrappers.length - 1].getAttribute('data-msg-id'));
     }
 
-    // Auto scroll to bottom
     function scrollToBottom() {
         if (chatContainer) {
             chatContainer.scrollTop = chatContainer.scrollHeight;
@@ -157,22 +794,89 @@
     }
     scrollToBottom();
 
-    // Dynamic textarea height
-    function adjustTextareaHeight(el) {
-        el.style.height = 'auto';
-        el.style.height = (el.scrollHeight) + 'px';
+    // Mostrar u ocultar el botón circular de flecha hacia abajo
+    if (chatContainer && scrollBottomBtn) {
+        chatContainer.addEventListener('scroll', function () {
+            const distFromBottom = chatContainer.scrollHeight - chatContainer.scrollTop - chatContainer.clientHeight;
+            scrollBottomBtn.style.display = distFromBottom > 120 ? 'flex' : 'none';
+        });
     }
 
-    // Handle normal file selection preview
+    function updateSendButtonVisibility() {
+        if (!thumbLikeBtn || !sendBtn) return;
+        const hasText = chatTextarea && chatTextarea.value.trim().length > 0;
+        const hasFile = fileInput && fileInput.files && fileInput.files.length > 0;
+        if (hasText || hasFile) {
+            thumbLikeBtn.style.display = 'none';
+            sendBtn.style.display = 'flex';
+        } else {
+            thumbLikeBtn.style.display = 'flex';
+            sendBtn.style.display = 'none';
+        }
+    }
+
+    function handleInputState(el) {
+        el.style.height = 'auto';
+        el.style.height = Math.min(el.scrollHeight, 90) + 'px';
+        updateSendButtonVisibility();
+    }
+
+    // Enviar con Enter (Shift+Enter para salto de línea)
+    if (chatTextarea) {
+        chatTextarea.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                if (chatTextarea.value.trim().length > 0 || (fileInput && fileInput.files.length > 0)) {
+                    chatForm.requestSubmit();
+                }
+            }
+        });
+    }
+
+    function toggleEmojiPopover() {
+        if (emojiPopover) emojiPopover.classList.toggle('open');
+    }
+
+    function insertEmoji(emoji) {
+        if (!chatTextarea) return;
+        chatTextarea.value += emoji;
+        handleInputState(chatTextarea);
+        chatTextarea.focus();
+        if (emojiPopover) emojiPopover.classList.remove('open');
+    }
+
+    async function sendQuickText(text) {
+        const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
+        if (!csrfInput) return;
+        const formData = new FormData();
+        formData.append('csrfmiddlewaretoken', csrfInput.value);
+        formData.append('content', text);
+
+        try {
+            const response = await fetch(`/chat/${roomId}/api/`, {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-CSRFToken': csrfInput.value }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                appendMessage(data.message);
+                if (noMessagesPlaceholder) noMessagesPlaceholder.style.display = 'none';
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
     if (fileInput) {
-        fileInput.addEventListener('change', function() {
+        fileInput.addEventListener('change', function () {
             if (fileInput.files && fileInput.files.length > 0) {
-                const name = fileInput.files[0].name;
-                fileNameLabel.textContent = name;
+                fileNameLabel.textContent = fileInput.files[0].name;
                 filePanel.style.display = 'flex';
             } else {
                 clearSelectedFile();
             }
+            updateSendButtonVisibility();
         });
     }
 
@@ -181,64 +885,55 @@
             fileInput.value = '';
             filePanel.style.display = 'none';
         }
+        updateSendButtonVisibility();
     }
 
-    // AUDIO RECORDER LOGIC
+    // Grabadora de notas de voz
     if (micBtn) {
-        micBtn.addEventListener('click', async function() {
+        micBtn.addEventListener('click', async function () {
             if (!isRecording) {
-                // Start Recording
                 try {
                     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                     mediaRecorder = new MediaRecorder(stream);
                     audioChunks = [];
-                    
-                    mediaRecorder.addEventListener("dataavailable", event => {
+
+                    mediaRecorder.addEventListener('dataavailable', event => {
                         audioChunks.push(event.data);
                     });
 
-                    mediaRecorder.addEventListener("stop", () => {
+                    mediaRecorder.addEventListener('stop', () => {
                         if (audioChunks.length > 0 && isRecording === false) {
-                            // User did not discard: compile and send
                             const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
                             sendAudioMessage(audioBlob);
                         }
-                        // Stop all audio tracks to release microphone
                         stream.getTracks().forEach(track => track.stop());
                     });
 
                     mediaRecorder.start();
                     isRecording = true;
                     recordStartTime = Date.now();
-                    
-                    // Update UI
-                    micBtn.style.background = '#ef4444';
-                    micBtn.style.color = 'white';
-                    micBtn.style.borderColor = '#ef4444';
-                    chatTextarea.style.display = 'none';
-                    attachFileBtn.style.display = 'none';
-                    recordingStatusBox.style.display = 'flex';
-                    
-                    // Replace mic icon with stop/check icon
-                    micBtn.innerHTML = '<i data-lucide="check" style="width: 20px; height: 20px;"></i>';
-                    lucide.createIcons();
 
-                    // Start timer
+                    micBtn.style.background = '#ef4444';
+                    micBtn.style.color = '#fff';
+                    if (pillInputContainer) pillInputContainer.style.display = 'none';
+                    if (attachFileBtn) attachFileBtn.style.display = 'none';
+                    recordingStatusBox.style.display = 'flex';
+                    micBtn.innerHTML = '<i data-lucide="check" style="width: 18px; height: 18px;"></i>';
+                    if (window.lucide) lucide.createIcons();
+
                     clearInterval(timerInterval);
                     timerInterval = setInterval(updateTimer, 500);
                 } catch (err) {
-                    alert("No se pudo acceder al micrófono. Por favor permite los permisos.");
+                    alert('No se pudo acceder al micrófono. Verifica los permisos del navegador.');
                 }
             } else {
-                // Stop and Send Recording
                 stopRecording(false);
             }
         });
     }
 
     if (cancelRecordBtn) {
-        cancelRecordBtn.addEventListener('click', function() {
-            // Discard Recording
+        cancelRecordBtn.addEventListener('click', function () {
             stopRecording(true);
         });
     }
@@ -247,23 +942,19 @@
         if (isRecording) {
             isRecording = false;
             clearInterval(timerInterval);
-            
+
             if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-                if (discard) {
-                    audioChunks = []; // Clear chunks so stop listener doesn't send it
-                }
+                if (discard) audioChunks = [];
                 mediaRecorder.stop();
             }
 
-            // Restore UI
-            micBtn.style.background = 'var(--surface-strong)';
-            micBtn.style.color = 'var(--muted)';
-            micBtn.style.borderColor = 'var(--line)';
-            chatTextarea.style.display = 'block';
-            attachFileBtn.style.display = 'flex';
+            micBtn.style.background = 'transparent';
+            micBtn.style.color = '#0084ff';
+            if (pillInputContainer) pillInputContainer.style.display = 'flex';
+            if (attachFileBtn) attachFileBtn.style.display = 'flex';
             recordingStatusBox.style.display = 'none';
             micBtn.innerHTML = '<i data-lucide="mic" id="mic-icon" style="width: 20px; height: 20px;"></i>';
-            lucide.createIcons();
+            if (window.lucide) lucide.createIcons();
         }
     }
 
@@ -279,44 +970,33 @@
         const formData = new FormData();
         const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
         formData.append('csrfmiddlewaretoken', csrfToken);
-        
-        // Append voice note file
-        const audioFile = new File([audioBlob], "voicenote.webm", { type: "audio/webm" });
+        const audioFile = new File([audioBlob], 'voicenote.webm', { type: 'audio/webm' });
         formData.append('file', audioFile);
 
         try {
             const response = await fetch(`/chat/${roomId}/api/`, {
                 method: 'POST',
                 body: formData,
-                headers: {
-                    'X-CSRFToken': csrfToken
-                }
+                headers: { 'X-CSRFToken': csrfToken }
             });
             if (response.ok) {
                 const data = await response.json();
                 appendMessage(data.message);
                 if (noMessagesPlaceholder) noMessagesPlaceholder.style.display = 'none';
-            } else {
-                console.error("Error enviando nota de voz");
             }
         } catch (error) {
-            console.error("Error de conexión:", error);
+            console.error(error);
         }
     }
 
-
-    // AJAX SEND NORMAL MESSAGES (TEXT/FILES)
     if (chatForm) {
-        chatForm.addEventListener('submit', async function(e) {
+        chatForm.addEventListener('submit', async function (e) {
             e.preventDefault();
-            const content = chatTextarea.value.strip ? chatTextarea.value.strip() : chatTextarea.value.trim();
+            const content = chatTextarea.value.trim();
             const hasFile = fileInput.files && fileInput.files.length > 0;
-            
             if (!content && !hasFile) return;
 
             const formData = new FormData(chatForm);
-            
-            // Clear inputs immediately for better UX responsiveness
             chatTextarea.value = '';
             chatTextarea.style.height = 'auto';
             clearSelectedFile();
@@ -325,117 +1005,92 @@
                 const response = await fetch(`/chat/${roomId}/api/`, {
                     method: 'POST',
                     body: formData,
-                    headers: {
-                        'X-CSRFToken': formData.get('csrfmiddlewaretoken')
-                    }
+                    headers: { 'X-CSRFToken': formData.get('csrfmiddlewaretoken') }
                 });
-                
                 if (response.ok) {
                     const data = await response.json();
                     appendMessage(data.message);
                     if (noMessagesPlaceholder) noMessagesPlaceholder.style.display = 'none';
                 } else {
                     const errData = await response.json();
-                    alert(errData.error || "No se pudo enviar el mensaje.");
+                    alert(errData.error || 'No se pudo enviar el mensaje.');
                 }
             } catch (error) {
-                console.error("Error enviando mensaje:", error);
+                console.error(error);
             }
         });
     }
 
-    // APPEND MESSAGE TO DOM
     function appendMessage(msg) {
-        // Prevent duplicate appending
         if (document.querySelector(`[data-msg-id="${msg.id}"]`)) return;
 
         const isMe = msg.is_me;
         const msgDiv = document.createElement('div');
-        msgDiv.className = 'message-wrapper';
+        msgDiv.className = `message-wrapper fb-bubble-row ${isMe ? 'mine' : 'theirs'}`;
         msgDiv.setAttribute('data-msg-id', msg.id);
-        msgDiv.style.alignSelf = isMe ? 'flex-end' : 'flex-start';
-        msgDiv.style.maxWidth = '80%';
-        msgDiv.style.display = 'flex';
-        msgDiv.style.flexDirection = 'column';
-        msgDiv.style.alignItems = isMe ? 'flex-end' : 'flex-start';
 
         let fileHtml = '';
         if (msg.file_url) {
-            fileHtml = `<div style="margin-top: 6px; border-radius: 8px; overflow: hidden;">`;
+            fileHtml = `<div style="margin-top: ${msg.content ? '6px' : '0'}; border-radius: 12px; overflow: hidden;">`;
             if (msg.file_type === 'image') {
-                fileHtml += `<a href="${msg.file_url}" target="_blank"><img src="${msg.file_url}" style="max-width: 100%; max-height: 220px; object-fit: cover; display: block; border-radius: 8px;" alt="Imagen"></a>`;
+                fileHtml += `<a href="${msg.file_url}" target="_blank"><img src="${msg.file_url}" style="max-width: 100%; max-height: 230px; object-fit: cover; display: block; border-radius: 12px;" alt="Imagen"></a>`;
             } else if (msg.file_type === 'audio') {
-                fileHtml += `<audio src="${msg.file_url}" controls style="max-width: 100%; display: block;"></audio>`;
+                fileHtml += `<audio src="${msg.file_url}" controls style="max-width: 240px; height: 36px; display: block;"></audio>`;
             } else if (msg.file_type === 'video') {
-                fileHtml += `<video src="${msg.file_url}" controls style="max-width: 100%; max-height: 220px; display: block; border-radius: 8px;" preload="metadata"></video>`;
+                fileHtml += `<video src="${msg.file_url}" controls style="max-width: 100%; max-height: 230px; display: block; border-radius: 12px;" preload="metadata"></video>`;
             } else {
-                fileHtml += `<a href="${msg.file_url}" target="_blank" style="color: ${isMe ? 'white' : 'var(--green)'}; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; text-decoration: underline; font-size: 13px;"><i data-lucide="file"></i> Ver archivo adjunto</a>`;
+                fileHtml += `<a href="${msg.file_url}" target="_blank" style="color: inherit; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; text-decoration: underline; font-size: 13px;"><i data-lucide="file"></i> Ver archivo adjunto</a>`;
             }
             fileHtml += `</div>`;
         }
 
-        const senderHtml = isMe ? '' : `<strong style="display: block; font-size: 11px; color: var(--green); margin-bottom: 2px;">${msg.sender_username}</strong>`;
-        const contentHtml = msg.content ? `<p style="margin: 0; white-space: pre-wrap; line-height: 1.4;">${msg.content}</p>` : '';
+        const miniAvatarHtml = isMe ? '' : `
+            <div class="fb-bubble-mini-avatar">
+                ${opponentAvatarUrl ? `<img src="${opponentAvatarUrl}" alt="">` : opponentInitials}
+            </div>
+        `;
+        const isEmojiOnly = (msg.content === '👍' && !msg.file_url);
+        const contentHtml = msg.content ? `<p style="margin: 0; white-space: pre-wrap;">${msg.content}</p>` : '';
 
         msgDiv.innerHTML = `
-            <div style="background: ${isMe ? 'var(--green)' : 'var(--surface)'}; color: ${isMe ? 'white' : 'var(--text)'}; ${!isMe ? 'border: 1px solid var(--line);' : ''} padding: 10px 14px; border-radius: ${isMe ? '18px 18px 2px 18px' : '18px 18px 18px 2px'}; font-size: 14px; box-shadow: 0 2px 6px rgba(0,0,0,0.04);">
-                ${senderHtml}
-                ${contentHtml}
-                ${fileHtml}
+            ${miniAvatarHtml}
+            <div class="fb-bubble-col">
+                <div class="fb-bubble ${isEmojiOnly ? 'emoji-only' : ''}">
+                    ${contentHtml}
+                    ${fileHtml}
+                </div>
+                <span class="fb-bubble-time">${msg.created_at}</span>
             </div>
-            <small style="color: var(--muted); font-size: 10px; margin-top: 4px; ${isMe ? 'margin-right: 4px;' : 'margin-left: 4px;'}">${msg.created_at}</small>
         `;
 
         chatContainer.appendChild(msgDiv);
-        lucide.createIcons();
+        if (window.lucide) lucide.createIcons();
         scrollToBottom();
-        
+
         if (msg.id > lastMessageId) {
             lastMessageId = msg.id;
         }
     }
 
-
-    // REAL-TIME LONG POLLING
     async function pollNewMessages() {
+        if (document.hidden) return;
         try {
             const response = await fetch(`/chat/${roomId}/api/?last_id=${lastMessageId}`);
             if (response.ok) {
                 const data = await response.json();
-                
-                // If the chat is closed in backend, show warning/refresh
                 if (!data.is_active && chatForm) {
                     location.reload();
                 }
-
                 if (data.messages && data.messages.length > 0) {
                     if (noMessagesPlaceholder) noMessagesPlaceholder.style.display = 'none';
-                    data.messages.forEach(msg => {
-                        appendMessage(msg);
-                    });
+                    data.messages.forEach(msg => appendMessage(msg));
                 }
             }
         } catch (error) {
-            console.error("Error polling messages:", error);
+            console.error(error);
         }
     }
 
-    // Poll every 3 seconds
     setInterval(pollNewMessages, 3000);
 </script>
-
-<style>
-    .file-btn-hover:hover {
-        background: var(--surface) !important;
-        color: var(--green) !important;
-        border-color: var(--green) !important;
-    }
-    .blinking-dot {
-        animation: blink-animation 1s infinite alternate;
-    }
-    @keyframes blink-animation {
-        from { opacity: 1; }
-        to { opacity: 0.3; }
-    }
-</style>
 {% endblock %}
