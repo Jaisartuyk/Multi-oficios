@@ -204,14 +204,71 @@
     .match-item i {
         color: var(--blue);
     }
+
+    .ai-disclaimer-banner {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 14px 16px;
+        border-radius: 16px;
+        background: rgba(245, 158, 11, 0.12);
+        border: 1.5px solid rgba(245, 158, 11, 0.45);
+        color: var(--text);
+        margin-bottom: 16px;
+        font-size: 13px;
+        line-height: 1.45;
+    }
+
+    .ai-disclaimer-banner i,
+    .ai-disclaimer-banner svg {
+        color: #d97706;
+        flex-shrink: 0;
+        margin-top: 2px;
+    }
+
+    .ai-approx-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: rgba(245, 158, 11, 0.16);
+        color: #b45309;
+        font-size: 11px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+
+    [data-theme="dark"] .ai-approx-badge {
+        color: #fbbf24;
+    }
 </style>
 
 <section class="ai-panel">
-    <span class="eyebrow"><i data-lucide="sparkles"></i> Cotizador Inteligente + Visión IA</span>
+    <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px;">
+        <span class="eyebrow"><i data-lucide="sparkles"></i> Cotizador Inteligente + Visión IA</span>
+        <span class="ai-approx-badge">
+            <i data-lucide="info" style="width: 13px; height: 13px;"></i> Valor aproximado · No es precio final
+        </span>
+    </div>
     <h1 style="margin: 12px 0 8px 0; font-size: 26px; font-weight: 800; line-height: 1.1;">Describe tu trabajo o sube una foto</h1>
-    <p style="margin: 0 0 20px 0; font-size: 14px; color: var(--muted); line-height: 1.4;">
-        Nuestra IA analiza tu descripción y la foto del daño para calcular materiales, tiempo estimado y presupuesto referencial, notificándole al instante a los profesionales cercanos.
+    <p style="margin: 0 0 14px 0; font-size: 14px; color: var(--muted); line-height: 1.4;">
+        Nuestra IA analiza tu descripción y la foto del daño para darte una guía orientativa y notificar al instante a los profesionales cercanos.
     </p>
+
+    <!-- Etiqueta clara de aviso para el cliente -->
+    <div class="ai-disclaimer-banner" role="note">
+        <i data-lucide="alert-circle" style="width: 20px; height: 20px;"></i>
+        <div>
+            <strong style="display: block; font-size: 13px; color: #b45309; margin-bottom: 2px;">
+                Aviso importante sobre el precio
+            </strong>
+            <span>
+                El valor que genera la Inteligencia Artificial <strong>es solo un aproximado referencial</strong>. El <strong>precio real y definitivo de la cotización lo da el maestro profesional</strong> al evaluar tu solicitud.
+            </span>
+        </div>
+    </div>
     <form method="post" class="estimate-form" enctype="multipart/form-data">
         {% csrf_token %}
         <textarea name="brief" rows="4" placeholder="Ej: Pintar la sala de estar (4x3m) color blanco mate, reparar grieta con humedad en la pared y cambiar 2 tomacorrientes..." required></textarea>
@@ -248,11 +305,24 @@
 
 {% if result %}
 <section class="result-card">
-    <div class="section-title">
-        <h2>Cotización referencial</h2>
-        <span style="padding: 4px 10px; border-radius: 999px; background: var(--green-soft); color: var(--green); font-size: 11px; font-weight: 800;">
-            {% if result.source == 'gemini' %}✨ Analizado con Gemini IA{% else %}Estimador Inteligente{% endif %}
-        </span>
+    <div class="section-title" style="flex-wrap: wrap; gap: 8px;">
+        <h2>Estimación aproximada de la IA</h2>
+        <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+            <span class="ai-approx-badge">
+                <i data-lucide="alert-triangle" style="width: 12px; height: 12px;"></i> Solo referencial
+            </span>
+            <span style="padding: 4px 10px; border-radius: 999px; background: var(--green-soft); color: var(--green); font-size: 11px; font-weight: 800;">
+                {% if result.source == 'gemini' %}✨ Analizado con Gemini IA{% else %}Estimador Inteligente{% endif %}
+            </span>
+        </div>
+    </div>
+
+    <div class="ai-disclaimer-banner" style="margin-top: 10px; margin-bottom: 18px;">
+        <i data-lucide="hard-hat" style="width: 20px; height: 20px;"></i>
+        <div>
+            <strong>¿Cuál es el precio real?</strong>
+            Este monto es únicamente una guía aproximada generada por IA. <strong>Los maestros cercanos ya recibieron tu solicitud y te enviarán el valor real de su cotización</strong> a tu panel de cliente.
+        </div>
     </div>
 
     {% if result.image_url %}
@@ -293,11 +363,14 @@
             </div>
             
             <div class="quote-block">
-                <h3>Presupuesto</h3>
+                <h3>Presupuesto Aproximado (IA)</h3>
                 <div class="quote-value" style="color: var(--green);">
                     <i data-lucide="dollar-sign" style="width: 16px; height: 16px; display: inline-block; vertical-align: middle; margin-right: 2px;"></i>
                     {{ result.budget }}
                 </div>
+                <small style="display: block; margin-top: 6px; font-size: 11px; font-weight: 700; color: #b45309;">
+                    * El valor real lo cotiza el maestro
+                </small>
             </div>
         </div>
     </div>
